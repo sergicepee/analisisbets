@@ -105,7 +105,7 @@ const logoNameAliases: Record<string, string> = {
   wolves: "Wolverhampton_Wanderers", blackburn: "Blackburn_Rovers", bolton: "Bolton_Wanderers",
   preston: "Preston_North_End", lincoln: "Lincoln_City", norwich: "Norwich_City",
   "west brom": "West_Bromwich_Albion", swansea: "Swansea_City", charlton: "Charlton_Athletic",
-  derby: "Derby_County", qpr: "Queens_Park_Rangers", "sheffield utd": "Sheffield_United",
+  qpr: "Queens_Park_Rangers", "sheffield utd": "Sheffield_United",
   birmingham: "Birmingham_City", cardiff: "Cardiff_City", wrexham: "Wrexham_AFC",
   "sc paderborn 07": "SC_Paderborn", "1899 hoffenheim": "Hoffenheim", "fc schalke 04": "Schalke_04",
   "fsv mainz 05": "Mainz_05", "1 fc koln": "Cologne", "sc freiburg": "Freiburg", "fc augsburg": "Augsburg",
