@@ -6,7 +6,7 @@ import { Notice } from "@/components/ui";
 import { getFixtureStatsFor, getFixturesByDate, getPrediction, getTeamProfile } from "@/lib/apifootball";
 import { apiEnabled } from "@/lib/config";
 import { countryEs, dayMonthTime, errMsg, isDate, statusGroup, todayStr } from "@/lib/format";
-import { expectedFor, LINES, matchOverPct, poissonModel } from "@/lib/metrics";
+import { expectedFor, LINES, matchOverPct, ownPct, poissonModel } from "@/lib/metrics";
 import { csvLeagueById } from "@/lib/csvLeagues";
 import { calibrateCsvPicks } from "@/lib/csvCalibration";
 import type { Fixture, Metric, TeamProfile } from "@/lib/types";
@@ -15,7 +15,7 @@ import { t } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-type Pick = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number; sample: number; rawP?: number; calibrationN?: number };
+type Pick = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number; sample: number; teamSide?: "home" | "away"; rawP?: number; calibrationN?: number };
 type Result = "hit" | "miss" | "void" | "pending";
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
 const doneStatus = (f: Fixture) => statusGroup(f) === "finished";
@@ -58,6 +58,19 @@ function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<Re
       add(metric, `Menos de ${line} ${labels[metric]}`, 100 - over);
     }
   }
+  // Estadísticas del equipo por separado: evita que una cifra alta del rival
+  // esconda una tendencia fuerte del equipo elegido.
+  for (const metric of ["shotsOn", "corners", "cards"] as const) {
+    const label = labels[metric];
+    for (const [team, profile, side] of [[f.home, a, "home"], [f.away, b, "away"]] as const) {
+      for (const line of LINES[metric]) {
+        const p = ownPct(profile, metric, line);
+        if (p === null) continue;
+        const sample = profile.rows.filter((row) => row.sFor?.[metric] != null).length;
+        out.push({ f, market: metric, selection: `${team.name}: más de ${line} ${label}`, p, sample, teamSide: side });
+      }
+    }
+  }
   return out.filter((p) => Number.isFinite(p.p) && p.p >= 0 && p.p <= 100 && p.sample >= 8);
 }
 
@@ -83,8 +96,11 @@ function grade(p: Pick, stats: Awaited<ReturnType<typeof getFixtureStatsFor>> | 
     : p.market === "cards" ? [stats.home.cards, stats.away.cards]
       : [stats.home.shotsOn, stats.away.shotsOn];
   if (pair[0] === null || pair[1] === null) return "pending";
-  const value = pair[0] + pair[1];
-  const m = p.selection.match(/(Más|Menos) de ([\d.]+)/);
+  const teamMarket = p.selection.match(/^(.+): (más|menos) de ([\d.]+)/i);
+  const teamStat = p.teamSide ? (p.teamSide === "home" ? pair[0] : pair[1]) : null;
+  const value = p.teamSide ? teamStat : pair[0] + pair[1];
+  if (value === null) return "pending";
+  const m = teamMarket ? [teamMarket[0], teamMarket[2] === "más" ? "Más" : "Menos", teamMarket[3]] : p.selection.match(/(Más|Menos) de ([\d.]+)/);
   if (!m) return "pending";
   const line = Number(m[2]);
   if (value === line) return "void";
@@ -122,7 +138,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
     const cutoff = eligible.length ? Math.min(...eligible.map((fixture) => fixture.timestamp)) - 86400 : Date.now() / 1000;
     const calibrated = await calibrateCsvPicks(rawPicks, cutoff);
     // Omite selecciones triviales y conserva las que tienen una muestra sólida.
-    const ranked = calibrated.filter((pick) => pick.p >= 55 && pick.p <= 85 && pick.sample >= 8)
+    const ranked = calibrated.filter((pick) => pick.p > 60 && pick.p <= 85 && pick.sample >= 8)
       .sort((a, b) => b.p - a.p || b.sample - a.sample);
     const seen = new Set<number>();
     picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
@@ -139,7 +155,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-5xl">
         <div>
           <h1 className="text-3xl font-black">{t("La mejor combinada")}</h1>
-          <p className="mt-1 text-sm text-muted">Tres selecciones de partidos distintos, filtradas por probabilidad estimada y una muestra mínima de datos.</p>
+          <p className="mt-1 text-sm text-muted">Tres picks de partidos distintos con probabilidad estimada superior al 60 %. Incluye mercados de equipo y del partido.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         {error && <Notice tone="warn">{error}</Notice>}
@@ -174,7 +190,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           );
         })}
         <Notice>
-          Se analizan todos los partidos disponibles de las ligas con datos locales. Se descartan porcentajes extremos y muestras menores de ocho partidos por equipo; se muestra la probabilidad estimada, que no equivale a una cuota ofrecida por una casa de apuestas. Los picks históricos se recalculan con los datos disponibles y todavía no se guarda un registro diario congelado de las recomendaciones originales.
+          Se priorizan probabilidades estimadas superiores al 60 % y se descartan selecciones por encima del 85 % para evitar picks de cuota normalmente muy baja. La probabilidad es una estimación del modelo, no una garantía.
         </Notice>
       </main>
     </>

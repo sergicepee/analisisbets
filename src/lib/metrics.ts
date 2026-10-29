@@ -50,9 +50,17 @@ export function teamAvg(p: TeamProfile, m: Metric, side: "for" | "against"): num
 function venueAvg(p: TeamProfile, m: Metric, side: "for" | "against", homeVenue: boolean): number | null {
   const all = p.rows.filter((r) => rowVal(r, m, side) !== null);
   const venue = all.filter((r) => r.isHome === homeVenue);
-  const sample = venue.length >= MIN_SAMPLES ? venue : all;
   const halfLife = m === "goals" ? GOAL_HALF_LIFE_SECONDS : COUNT_HALF_LIFE_SECONDS;
-  return sample.length >= MIN_SAMPLES ? weightedMean(sample, (r) => rowVal(r, m, side), halfLife) : null;
+  if (all.length < MIN_SAMPLES) return null;
+  const overall = weightedMean(all, (r) => rowVal(r, m, side), halfLife);
+  if (overall === null) return null;
+  if (venue.length < MIN_SAMPLES) return overall;
+  const venueMean = weightedMean(venue, (r) => rowVal(r, m, side), halfLife);
+  if (venueMean === null) return overall;
+  // Venue splits are useful but noisy (often only 8–10 of the last 20 games).
+  // Shrink them toward the team's overall rate to avoid overreacting to a few games.
+  const venueWeight = venue.length / (venue.length + 5);
+  return venueMean * venueWeight + overall * (1 - venueWeight);
 }
 
 /**

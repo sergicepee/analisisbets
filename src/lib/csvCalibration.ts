@@ -5,7 +5,7 @@ import type { Fixture, Metric, TeamProfile } from "./types";
 type Observation = { p: number; y: number };
 type CalibrationBlock = { center: number; value: number; weight: number };
 type CalibrationModel = { n: number; blocks: CalibrationBlock[]; min: number; max: number };
-type Candidate = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number };
+type Candidate = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number; teamSide?: "home" | "away" };
 
 const calibrationCache = new Map<string, Promise<Map<string, CalibrationModel>>>();
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
@@ -125,6 +125,12 @@ export async function calibrateCsvPicks<T extends Candidate>(picks: T[], cutoff:
     const models = await modelFor(leagueId, cutoff);
     for (const pick of leaguePicks) {
       const rawP = pick.p;
+      // Team-only picks need their own historical calibration; applying the
+      // match-total model here would silently calibrate the wrong event.
+      if (pick.teamSide) {
+        calibrated.push({ ...pick, rawP, calibrationN: 0 });
+        continue;
+      }
       if (pick.market === "1x2") {
         const key = pick.selection === "Empate" ? "1x2:draw" : pick.selection === `${pick.f.home.name} gana` ? "1x2:home" : "1x2:away";
         const model = models.get(key);
