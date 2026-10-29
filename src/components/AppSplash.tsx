@@ -16,8 +16,8 @@ export function AppSplash() {
     }
 
     document.documentElement.dataset.appStandalone = "true";
-    const fadeTimer = window.setTimeout(() => setLeaving(true), 1_400);
-    const hideTimer = window.setTimeout(() => setVisible(false), 1_800);
+    const fadeTimer = window.setTimeout(() => setLeaving(true), 950);
+    const hideTimer = window.setTimeout(() => setVisible(false), 1_250);
     return () => {
       window.clearTimeout(fadeTimer);
       window.clearTimeout(hideTimer);
