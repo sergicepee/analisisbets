@@ -110,7 +110,7 @@ function grade(p: Pick, stats: Awaited<ReturnType<typeof getFixtureStatsFor>> | 
 
 const resultText: Record<Result, string> = { hit: "ACIERTO", miss: "FALLO", void: "DEVOLUCIÓN", pending: "PENDIENTE" };
 const resultStyle: Record<Result, string> = {
-  hit: "border-win/30 bg-win/10 text-win", miss: "border-loss/30 bg-loss/10 text-loss",
+  hit: "border-chartHit/30 bg-chartHit/10 text-chartHit", miss: "border-brand/30 bg-brand/10 text-brand",
   void: "border-line bg-panel text-muted", pending: "border-line bg-panel text-muted",
 };
 
@@ -179,9 +179,9 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
               </div>
               <div className="mt-2 text-center text-xs text-muted">{dayMonthTime(k.f.timestamp)}</div>
               <div className="mt-3 rounded-xl border border-line bg-bg/60 p-3">
-                <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "TAP"}</span><b className="text-2xl font-black text-win">{Math.round(k.p)}%</b></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "TAP"}</span><b className="text-2xl font-black text-chartHit">{Math.round(k.p)}%</b></div>
                 <div className="mt-1 text-base font-extrabold">{k.selection}</div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-win" style={{ width: `${k.p}%` }} /></div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-chartHit" style={{ width: `${k.p}%` }} /></div>
                 <div className="mt-2 text-[11px] text-muted">Muestra: {k.sample} partidos recientes por equipo{k.calibrationN ? ` · calibrado con ${k.calibrationN} partidos históricos` : " · sin calibración histórica suficiente"}.</div>
                 {result !== "pending" && score && <div className="mt-2 text-sm font-bold text-muted">Resultado final: <span className="text-white">{score}</span></div>}
                 {result === "pending" && doneStatus(k.f) && <div className="mt-2 text-xs text-muted">Resultado estadístico pendiente de actualizar.</div>}

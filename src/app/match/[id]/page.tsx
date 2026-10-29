@@ -121,7 +121,7 @@ function TeamCol({ teamId, leagueId, season, returnTo, name, logo, role, p }: { 
       <div className="text-[11px] text-muted">{role}</div>
       <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
         {form.map((r, i) => (
-          <span key={i} className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold text-black sm:h-5 sm:w-5 sm:text-[10px] ${r.result === "W" ? "bg-win" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
+          <span key={i} className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold text-black sm:h-5 sm:w-5 sm:text-[10px] ${r.result === "W" ? "bg-chartHit" : r.result === "D" ? "bg-warn" : "bg-brand"}`}>{r.result}</span>
         ))}
       </div>
     </div>
