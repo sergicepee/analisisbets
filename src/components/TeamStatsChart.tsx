@@ -71,7 +71,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
             const passes = game.value >= line;
             return <div key={`${game.timestamp}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
               <span className="mb-1 text-[10px] font-bold">{game.value}</span>
-              <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`w-3/4 max-w-6 rounded-t-sm ${passes ? "bg-chartHit" : "bg-loss"}`} style={{ height: `${barHeight}px` }} />
+              <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`w-3/4 max-w-6 rounded-t-sm ${passes ? "bg-chartHit" : "bg-brand"}`} style={{ height: `${barHeight}px` }} />
             </div>;
           })}
         </div>
@@ -83,7 +83,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
         </div>
       </div> : <p className="py-8 text-center text-sm text-muted">No hay datos de esta estadística.</p>}
     </div>
-    <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-muted"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-chartHit"/>Alcanza la línea</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-loss"/>No llega</span><span>Últimos {values.length} partidos</span></div>
+    <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-muted"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-chartHit"/>Alcanza la línea</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-brand"/>No llega</span><span>Últimos {values.length} partidos</span></div>
   </section>;
 }
 
