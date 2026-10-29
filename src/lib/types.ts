@@ -40,6 +40,8 @@ export interface TeamProfile { teamId: number; rows: TeamRow[] }
 
 export interface Prediction {
   home: number; draw: number; away: number; advice: string | null;
+  /** Medias de goles a favor/en contra en los últimos partidos, tal como las da API-Football. */
+  last5: { home: { gf: number; ga: number; n: number }; away: { gf: number; ga: number; n: number } } | null;
 }
 export interface LeagueInfo {
   id: number; name: string; type: string; country: string; flag: string | null; logo: string | null;

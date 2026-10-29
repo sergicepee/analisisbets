@@ -136,14 +136,23 @@ async function getFixtureStats(f: Fixture): Promise<StoredStats> {
   return s;
 }
 
+const planBlocked = async () => !!(await cacheGet("meta:planblock"));
+
 /** Últimos N partidos terminados. Si el plan no permite `last`, usa la temporada completa y recorta. */
 async function fetchLast(teamId: number, season?: number): Promise<Fixture[]> {
+  if (await planBlocked()) throw new ApiError("Free plans do not have access to this season", "api");
   try {
     return (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: TZ }, true)).map(normFixture);
   } catch (e) {
     if (!season || !(e instanceof ApiError) || e.kind !== "api") throw e;
-    const all = (await call("/fixtures", { team: teamId, season, status: "FT-AET-PEN", timezone: TZ }, true)).map(normFixture);
-    return all.sort((a, b) => a.timestamp - b.timestamp).slice(-FORM_MATCHES);
+    try {
+      const all = (await call("/fixtures", { team: teamId, season, status: "FT-AET-PEN", timezone: TZ }, true)).map(normFixture);
+      return all.sort((a, b) => a.timestamp - b.timestamp).slice(-FORM_MATCHES);
+    } catch (e2) {
+      // El plan no permite esta temporada: lo recordamos 6 h para no gastar cuota repitiendo la llamada.
+      if (e2 instanceof ApiError && /Free plans/i.test(e2.message)) await cacheSet("meta:planblock", true, 6 * H);
+      throw e2;
+    }
   }
 }
 
@@ -182,12 +191,19 @@ export async function getTeamProfile(teamId: number, withStats = true, season?: 
 // ── Predicciones de API-Football (1X2 y consejo) ──
 export async function getPrediction(fixtureId: number): Promise<Prediction | null> {
   if (!hasApiKey) return null;
-  return cached<Prediction | null>(`pred:${fixtureId}`, 12 * H, async () => {
+  return cached<Prediction | null>(`pred2:${fixtureId}`, 12 * H, async () => {
     const r = await call("/predictions", { fixture: fixtureId });
     const p = r[0]?.predictions;
     if (!p?.percent) return null;
-    const n = (s: string) => parseFloat(String(s).replace("%", ""));
-    return { home: n(p.percent.home), draw: n(p.percent.draw), away: n(p.percent.away), advice: p.advice ?? null };
+    const n = (x: string) => parseFloat(String(x).replace("%", ""));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const l5 = (t: any) => {
+      const g = t?.last_5?.goals;
+      const gf = parseFloat(g?.for?.average), ga = parseFloat(g?.against?.average);
+      return Number.isFinite(gf) && Number.isFinite(ga) ? { gf, ga, n: Number(t.last_5.played) || 5 } : null;
+    };
+    const h = l5(r[0]?.teams?.home), a = l5(r[0]?.teams?.away);
+    return { home: n(p.percent.home), draw: n(p.percent.draw), away: n(p.percent.away), advice: p.advice ?? null, last5: h && a ? { home: h, away: a } : null };
   });
 }
 
@@ -196,7 +212,7 @@ export async function getLeagueAverages(leagueId: number, season: number): Promi
   if (!hasApiKey) return null;
   const own = await leagueAvgFromStore(leagueId, season);
   // Goles por partido: de la clasificación (muestra grande, 1 llamada/día)
-  const goals = await cached<number | null>(`lgoals:${leagueId}:${season}`, D, async () => {
+  const goals = (await planBlocked()) ? null : await cached<number | null>(`lgoals:${leagueId}:${season}`, D, async () => {
     const r = await call("/standings", { league: leagueId, season });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const teams: any[] = (r[0]?.league?.standings ?? []).flat();

@@ -9,7 +9,7 @@ import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconShoe, IconSwap, 
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
 import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
 import { FORM_MATCHES } from "@/lib/config";
-import { countryEs, errMsg, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
+import { countryEs, errMsg, friendlyApiError, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import {
   LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, ownPct, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
 } from "@/lib/metrics";
@@ -19,6 +19,15 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const TABS = [["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget], ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard]] as const;
+/** Goles esperados: con nuestros datos si hay; si no, con las medias que da la predicción de la API. */
+function goalsExpected(pa: TeamProfile, pb: TeamProfile, pred: Awaited<ReturnType<typeof getPrediction>>) {
+  const own = expectedFor(pa, pb, "goals");
+  if (own) return { ...own, fromPrediction: false };
+  const l = pred?.last5;
+  if (!l) return null;
+  const home = (l.home.gf + l.away.ga) / 2, away = (l.away.gf + l.home.ga) / 2;
+  return { home, away, total: home + away, fromPrediction: true };
+}
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
 
 export default async function MatchPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
@@ -57,7 +66,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
             </Link>
           ))}
         </nav>
-        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. Motivo de la API: {profileErr ?? "sin datos"}</Notice> : null}
+        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. {profileErr ? friendlyApiError(profileErr) : "Sin datos suficientes."}</Notice> : null}
         {tab === "general" && <General f={f} pa={pa} pb={pb} />}
         {tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
         {tab === "tiros" && <Block f={f} pa={pa} pb={pb} metrics={["shots", "shotsOn"]} />}
@@ -122,7 +131,7 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
     getPrediction(f.id).catch(() => null),
     getLeagueAverages(f.leagueId, f.season).catch(() => null),
   ]);
-  const eg = expectedFor(pa, pb, "goals");
+  const eg = goalsExpected(pa, pb, pred);
   const model = eg ? poissonModel(eg.home, eg.away) : null;
   const p1x2 = pred ?? (model ? { home: model.home, draw: model.draw, away: model.away } : null);
   const ex = (m: Metric) => expectedFor(pa, pb, m)?.total ?? null;
@@ -138,6 +147,7 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   return (
     <div className="space-y-4">
       <Notice>Estimaciones previas al partido; no hay probabilidades en directo. Son estimaciones estadísticas, no garantías.</Notice>
+      {eg?.fromPrediction && <Notice>Goles estimados con la media de los últimos {pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).</Notice>}
       {p1x2 ? (
         <div>
           <div className="mb-1.5 flex justify-between text-sm font-bold">
@@ -174,8 +184,9 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 }
 
 // ───────────── Goles ─────────────
-function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
-  const eg = expectedFor(pa, pb, "goals");
+async function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+  const pred = await getPrediction(f.id).catch(() => null);
+  const eg = goalsExpected(pa, pb, pred);
   const h1 = halfExpected(pa, pb, 1), h2 = halfExpected(pa, pb, 2);
   const rows: TrendRow[] = [
     { label: "Goles esperados", kind: "num", a: eg?.home ?? null, b: eg?.away ?? null, m: eg?.total ?? null },

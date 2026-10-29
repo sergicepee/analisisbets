@@ -46,6 +46,9 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - Tiros/Córners/Tarjetas gastan llamadas la primera vez (1 + N por equipo); después quedan guardadas.
 - Vercel Hobby limita las funciones a 60 s: con plan gratis de API y pausa de 6,5 s, la primera carga de un partido puede tardar.
 
+## Limitación del plan gratuito de API‑Football
+El plan gratuito solo da acceso a las temporadas 2022–2024 en las consultas por temporada. Con él funcionan: listado de partidos del día, ficha, 1X2 y consejo de la predicción, y goles estimados (con las medias de los últimos 5 partidos que devuelve la predicción). **No** se pueden calcular promedios de tiros, tiros a puerta, córners y tarjetas, ni medias de liga, porque requieren la temporada actual. Con un plan de pago (ver precios vigentes en api-football.com/pricing) se activan solos, sin cambiar el código. La app recuerda el bloqueo 6 h para no gastar cuota.
+
 ## Cómo se calculan los datos (no se inventa nada)
 - **Esperado por equipo** = media(lo que produce, lo que el rival concede) en sus últimos N partidos; total = suma.
 - **Probabilidades** de más de 1,5/2,5 y ambos marcan: modelo de Poisson. **1X2**: predicciones de API‑Football si existen; si no, Poisson.

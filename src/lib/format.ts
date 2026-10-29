@@ -47,3 +47,12 @@ export function countryEs(name: string, flag: string | null): string {
 }
 export const leagueType = (t: string) => (t === "Cup" ? "Copa" : "Liga");
 export const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** Traduce errores conocidos de API-Football a un texto comprensible. */
+export function friendlyApiError(msg: string): string {
+  if (/Free plans/i.test(msg)) {
+    return "Tu plan gratuito de API-Football no da acceso a la temporada actual para estadísticas históricas (solo temporadas 2022–2024). Los promedios de tiros, córners y tarjetas necesitan un plan de pago. Mientras tanto se muestran los goles estimados con los últimos partidos que facilita la predicción de la API.";
+  }
+  if (/limit|quota|request/i.test(msg)) return "Se alcanzó el límite de solicitudes de la API. Se reinicia solo; mientras tanto se muestran los datos guardados.";
+  return msg;
+}
