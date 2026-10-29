@@ -1,0 +1,231 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Header } from "@/components/Header";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { MatchList } from "@/components/MatchList";
+import { Workspace } from "@/components/Workspace";
+import { Flag, Shield } from "@/components/Shield";
+import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconShoe, IconSwap, IconTarget } from "@/components/icons";
+import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
+import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
+import { FORM_MATCHES } from "@/lib/config";
+import { countryEs, errMsg, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
+import {
+  LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, ownPct, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
+} from "@/lib/metrics";
+import type { Fixture, LeagueAvg, Metric, TeamProfile } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+const TABS = [["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget], ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard]] as const;
+const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
+
+export default async function MatchPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
+  const id = Number(params.id);
+  if (!Number.isFinite(id)) notFound();
+  const tab = TABS.some((t) => t[0] === searchParams.tab) ? (searchParams.tab as string) : "general";
+  const date = isDate(searchParams.date) ? (searchParams.date as string) : todayStr();
+
+  let f: Fixture | null = null;
+  try { f = await getFixture(id); } catch (e) {
+    return <><Header back={`/?date=${date}`} /><main className="p-4"><Notice tone="warn">No se pudo cargar el partido: {errMsg(e)}</Notice></main></>;
+  }
+  if (!f) notFound();
+
+  const needStats = tab !== "goles";
+  const [pa0, pb0] = await Promise.all([
+    getTeamProfile(f.home.id, needStats).catch(() => null),
+    getTeamProfile(f.away.id, needStats).catch(() => null),
+  ]);
+  const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
+  const g = statusGroup(f);
+
+  return (
+    <>
+      <Header back={`/?date=${date}`} />
+      {g === "live" && <AutoRefresh seconds={45} />}
+      <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
+      <main className="space-y-4 px-4 pb-8 pt-4 lg:px-0">
+        <MatchHeader f={f} pa={pa} pb={pb} />
+        <nav className="flex border-b border-line">
+          {TABS.map(([key, label, Icon]) => (
+            <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
+              <Icon className="h-4 w-4" />{label}
+            </Link>
+          ))}
+        </nav>
+        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar (límite de la API o cobertura). Se muestran los datos disponibles.</Notice> : null}
+        {tab === "general" && <General f={f} pa={pa} pb={pb} />}
+        {tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
+        {tab === "tiros" && <Block f={f} pa={pa} pb={pb} metrics={["shots", "shotsOn"]} />}
+        {tab === "corners" && <Block f={f} pa={pa} pb={pb} metrics={["corners"]} />}
+        {tab === "tarjetas" && <Block f={f} pa={pa} pb={pb} metrics={["cards"]} />}
+      </main>
+      </Workspace>
+    </>
+  );
+}
+
+// ───────────── Cabecera ─────────────
+function MatchHeader({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+  const g = statusGroup(f);
+  const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
+  const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
+  const scorer = (e: Fixture["events"][number]) =>
+    `${e.player} ${e.minute}${e.extra ? `+${e.extra}` : ""}′${e.detail === "Own Goal" ? " (p.p.)" : e.detail === "Penalty" ? " (p)" : ""}`;
+  const forHome = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.away.id : e.teamId === f.home.id));
+  const forAway = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.home.id : e.teamId === f.away.id));
+  return (
+    <section className="card p-4">
+      <div className="flex items-center gap-2 text-sm font-bold text-brand"><Flag src={f.flag} />{countryEs(f.country, f.flag)} · {f.leagueName}{f.round ? ` · ${f.round}` : ""}</div>
+      <div className="mt-1 text-xs text-muted">{fullDateTime(f.timestamp)}{f.venue ? ` · ${f.venue}` : ""}</div>
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <TeamCol name={f.home.name} logo={f.home.logo} role="Local" p={pa} />
+        <div className="shrink-0 text-center">
+          {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
+            : g === "finished" ? (<><div className="text-3xl font-black">{score}</div><div className="mt-1 rounded-full border border-line px-3 py-0.5 text-xs text-muted">{f.statusShort}</div></>)
+            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mt-2 rounded-full border border-line px-3 py-1 text-xs text-muted">{timeStr(f.timestamp)} · {f.statusShort}</div></>)}
+        </div>
+        <TeamCol name={f.away.name} logo={f.away.logo} role="Visitante" p={pb} />
+      </div>
+      {(forHome.length > 0 || forAway.length > 0) && (
+        <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-muted">
+          <div className="space-y-0.5">{forHome.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
+          <div className="space-y-0.5 text-right">{forAway.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
+        </div>
+      )}
+    </section>
+  );
+}
+function TeamCol({ name, logo, role, p }: { name: string; logo: string | null; role: string; p: TeamProfile }) {
+  const form = p.rows.slice(-5);
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
+      <Shield src={logo} alt={name} size={52} />
+      <div className="max-w-full truncate text-lg font-extrabold">{name}</div>
+      <div className="text-[11px] text-muted">{role}</div>
+      <div className="mt-1 flex gap-1">
+        {form.map((r, i) => (
+          <span key={i} className={`flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-black ${r.result === "W" ? "bg-win" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ───────────── General ─────────────
+async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+  const [pred, lavg] = await Promise.all([
+    getPrediction(f.id).catch(() => null),
+    getLeagueAverages(f.leagueId, f.season).catch(() => null),
+  ]);
+  const eg = expectedFor(pa, pb, "goals");
+  const model = eg ? poissonModel(eg.home, eg.away) : null;
+  const p1x2 = pred ?? (model ? { home: model.home, draw: model.draw, away: model.away } : null);
+  const ex = (m: Metric) => expectedFor(pa, pb, m)?.total ?? null;
+  const L = lavg;
+
+  const prob = (label: string, Icon: typeof IconNet, v: number | null, ref: number | null | undefined) => (
+    <StatCard label={label} Icon={Icon} value={pct(v)} fill={v ?? 0} tone={tone(v, ref ?? null)} refValue={ref != null ? pct(ref) : null} />
+  );
+  const avgc = (label: string, Icon: typeof IconNet, v: number | null, ref: number | null | undefined, d = 1) => (
+    <StatCard label={label} Icon={Icon} value={num(v, d)} fill={v !== null && ref ? (v / (ref * 2)) * 100 : v !== null ? 40 : 0} tone={tone(v, ref ?? null)} refValue={ref != null ? num(ref, 1) : null} />
+  );
+
+  return (
+    <div className="space-y-4">
+      <Notice>Estimaciones previas al partido; no hay probabilidades en directo. Son estimaciones estadísticas, no garantías.</Notice>
+      {p1x2 ? (
+        <div>
+          <div className="mb-1.5 flex justify-between text-sm font-bold">
+            <span>{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
+            <span className="text-sky-400">Empate {Math.round(p1x2.draw)}%</span>
+            <span>{f.away.name} <span className="text-slate-300">{Math.round(p1x2.away)}%</span></span>
+          </div>
+          <div className="flex h-7 overflow-hidden rounded-full">
+            <div className="bg-win" style={{ width: `${p1x2.home}%` }} />
+            <div className="bg-drawbar" style={{ width: `${p1x2.draw}%` }} />
+            <div className="bg-slate-400/70" style={{ width: `${p1x2.away}%` }} />
+          </div>
+          {pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
+        </div>
+      ) : <Notice tone="warn">Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada).</Notice>}
+
+      <h2 className="pt-1 font-bold">Probabilidades clave</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {prob("Más de 2,5 goles", IconShoe, model?.over25 ?? null, L?.over25)}
+        {prob("Más de 1,5 goles", IconShoe, model?.over15 ?? null, L?.over15)}
+        {prob("Ambos marcan", IconSwap, model?.btts ?? null, L?.btts)}
+        {avgc("Promedio de goles", IconBall, eg?.total ?? null, L?.goals, 2)}
+        {avgc("Promedio de tarjetas", IconCard, ex("cards"), L?.cards)}
+        {avgc("Promedio de córners", IconCorner, ex("corners"), L?.corners)}
+        {avgc("Promedio de tiros", IconTarget, ex("shots"), L?.shots)}
+        {avgc("Promedio de tiros a puerta", IconNet, ex("shotsOn"), L?.shotsOn)}
+      </div>
+      <p className="text-[11px] text-muted">
+        Los colores comparan con la media de la liga (±10%): verde por encima, ámbar similar, rojo por debajo. Sin barra de referencia = media de liga aún no disponible.
+        Cálculo sobre los últimos {FORM_MATCHES} partidos de cada equipo (modelo de Poisson para goles).
+      </p>
+    </div>
+  );
+}
+
+// ───────────── Goles ─────────────
+function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+  const eg = expectedFor(pa, pb, "goals");
+  const h1 = halfExpected(pa, pb, 1), h2 = halfExpected(pa, pb, 2);
+  const rows: TrendRow[] = [
+    { label: "Goles esperados", kind: "num", a: eg?.home ?? null, b: eg?.away ?? null, m: eg?.total ?? null },
+    ...LINES.goals.map((l) => ({ label: `Más de ${num(l)}`, kind: "pct" as const, a: trendPct(pa, "goals", l), b: trendPct(pb, "goals", l), m: pooledPct(pa, pb, "goals", l) })),
+    { label: "Ambos equipos marcan", kind: "pct", a: bttsPct(pa), b: bttsPct(pb), m: pooledBtts(pa, pb) },
+  ];
+  const t = { homeName: f.home.name, awayName: f.away.name, homeLogo: f.home.logo, awayLogo: f.away.logo, d: 2 };
+  return (
+    <div className="space-y-4">
+      <TeamPair title="Goles esperados" totalLabel="Total esperado" total={eg?.total ?? null} home={eg?.home ?? null} away={eg?.away ?? null} {...t} />
+      <TrendTable title="Tendencias de goles" rows={rows} aName={f.home.name} bName={f.away.name} note={`Cada equipo: % de sus últimos ${FORM_MATCHES} partidos en que el total del partido superó la línea. “Partido”: muestra conjunta de ambos equipos.`} />
+      <TeamPair title="Potencial de gol 1.er tiempo" totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 1))}`} total={h1?.total ?? null} home={h1?.home ?? null} away={h1?.away ?? null} {...t} />
+      <TeamPair title="Potencial de gol 2.º tiempo" totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 2))}`} total={h2?.total ?? null} home={h2?.home ?? null} away={h2?.away ?? null} {...t} />
+    </div>
+  );
+}
+
+// ───────────── Tiros / Córners / Tarjetas ─────────────
+const TITLE: Record<string, [string, string, string]> = {
+  shots: ["Tiros totales", "Media combinada de tiros", "Tiros"],
+  shotsOn: ["Tiros a puerta", "Media combinada de tiros a puerta", "Tiros a puerta"],
+  corners: ["Córners", "Media combinada de córners", "Córners"],
+  cards: ["Tarjetas", "Total esperado de tarjetas", "Tarjetas"],
+};
+async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; metrics: Metric[] }) {
+  const lavg: LeagueAvg | null = await getLeagueAverages(f.leagueId, f.season).catch(() => null);
+  const t = { homeName: f.home.name, awayName: f.away.name, homeLogo: f.home.logo, awayLogo: f.away.logo };
+  const tm = metrics[metrics.length - 1];
+  const exp = expectedFor(pa, pb, tm);
+  const rows: TrendRow[] = [
+    { label: `Promedio de ${TITLE[tm][2].toLowerCase()}`, kind: "num", a: teamAvg(pa, tm, "for"), b: teamAvg(pb, tm, "for"), m: exp?.total ?? null },
+    ...LINES[tm].map((l) => ({ label: `Más de ${num(l)}`, kind: "pct" as const, a: ownPct(pa, tm, l), b: ownPct(pb, tm, l), m: pooledPct(pa, pb, tm, l) })),
+  ];
+  const noData = metrics.every((m) => expectedFor(pa, pb, m) === null);
+  return (
+    <div className="space-y-4">
+      {noData && <Notice tone="warn">Sin estadísticas suficientes para este partido: la liga puede no tener cobertura de estadísticas de partido, o la cuota de la API está agotada.</Notice>}
+      {metrics.map((m) => {
+        const e = expectedFor(pa, pb, m);
+        return <TeamPair key={m} title={TITLE[m][0]} totalLabel={TITLE[m][1]} total={e?.total ?? null} home={e?.home ?? null} away={e?.away ?? null} {...t} />;
+      })}
+      {lavg && lavg[tm] != null && <Notice>Media de liga (por partido, {lavg.n} partidos guardados): <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
+      {LINES[tm].length > 0 && (
+        <TrendTable
+          title={`Tendencias de ${TITLE[tm][0].toLowerCase()}`} rows={rows} aName={f.home.name} bName={f.away.name}
+          sub={`${TITLE[tm][2]} del equipo`} totalHead="Total del partido"
+          note={`Cada equipo: % de sus últimos ${FORM_MATCHES} partidos en que SU valor superó la línea. Total del partido: % de los partidos de ambos equipos en que la suma de los dos superó la línea.`}
+        />
+      )}
+      <Panel title="Cómo se calcula">
+        <p className="text-xs leading-relaxed text-muted">Valor esperado de cada equipo = media entre lo que produce habitualmente y lo que el rival suele conceder. El total es la suma. Son estimaciones sobre una muestra pequeña: úsalas como contexto, no como certeza.</p>
+      </Panel>
+    </div>
+  );
+}
