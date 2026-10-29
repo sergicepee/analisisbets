@@ -15,9 +15,13 @@ export default async function Page() {
   if (!user) redirect("/login");
   const auth = createAuthServer();
   const result = await auth.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
-  const { data: profile } = result.error
-    ? await auth.from("profiles").select("display_name").eq("id", user.id).maybeSingle()
-    : result;
+  let profile: { display_name: string | null; avatar_url: string | null } | null = result.data
+    ? { display_name: result.data.display_name, avatar_url: result.data.avatar_url }
+    : null;
+  if (result.error) {
+    const fallback = await auth.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+    profile = fallback.data ? { display_name: fallback.data.display_name, avatar_url: null } : null;
+  }
   const provider = (user.app_metadata?.provider as string | undefined) ?? "email";
   const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuario";
 
