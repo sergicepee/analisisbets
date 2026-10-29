@@ -20,8 +20,6 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const TABS = [["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget], ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard]] as const;
-const probabilityText = (value: number) => value >= 65 ? "text-chartHit" : value <= 35 ? "text-brand" : "text-warn";
-const probabilityFill = (value: number) => value >= 65 ? "bg-chartHit" : value <= 35 ? "bg-brand" : "bg-warn";
 /** Goles esperados: con nuestros datos si hay; si no, con las medias que da la predicción de la API. */
 function goalsExpected(pa: TeamProfile, pb: TeamProfile, pred: Awaited<ReturnType<typeof getPrediction>>) {
   const own = expectedFor(pa, pb, "goals");
@@ -157,14 +155,14 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
       {p1x2 ? (
         <div>
           <div className="mb-1.5 grid min-w-0 grid-cols-3 gap-1 text-center text-[11px] font-bold leading-tight sm:text-sm">
-            <span className="min-w-0 truncate">{f.home.name} <span className={probabilityText(p1x2.home)}>{Math.round(p1x2.home)}%</span></span>
-            <span className={`min-w-0 truncate ${probabilityText(p1x2.draw)}`}>{t("Empate")} {Math.round(p1x2.draw)}%</span>
-            <span className="min-w-0 truncate">{f.away.name} <span className={probabilityText(p1x2.away)}>{Math.round(p1x2.away)}%</span></span>
+            <span className="min-w-0 truncate">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
+            <span className="min-w-0 truncate text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
+            <span className="min-w-0 truncate">{f.away.name} <span className="text-chartHit">{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
-            <div className={`${probabilityFill(p1x2.home)} border-r-2 border-bg`} style={{ width: `${p1x2.home}%` }} />
-            <div className={`${probabilityFill(p1x2.draw)} border-r-2 border-bg`} style={{ width: `${p1x2.draw}%` }} />
-            <div className={probabilityFill(p1x2.away)} style={{ width: `${p1x2.away}%` }} />
+            <div className="border-r-2 border-bg bg-brand" style={{ width: `${p1x2.home}%` }} />
+            <div className="border-r-2 border-bg bg-drawbar" style={{ width: `${p1x2.draw}%` }} />
+            <div className="bg-chartHit" style={{ width: `${p1x2.away}%` }} />
           </div>
           {!model && pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
         </div>
