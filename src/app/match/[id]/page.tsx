@@ -162,8 +162,8 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
             <span className="min-w-0 truncate">{f.away.name} <span className={probabilityText(p1x2.away)}>{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
-            <div className={probabilityFill(p1x2.home)} style={{ width: `${p1x2.home}%` }} />
-            <div className={probabilityFill(p1x2.draw)} style={{ width: `${p1x2.draw}%` }} />
+            <div className={`${probabilityFill(p1x2.home)} border-r-2 border-bg`} style={{ width: `${p1x2.home}%` }} />
+            <div className={`${probabilityFill(p1x2.draw)} border-r-2 border-bg`} style={{ width: `${p1x2.draw}%` }} />
             <div className={probabilityFill(p1x2.away)} style={{ width: `${p1x2.away}%` }} />
           </div>
           {!model && pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
