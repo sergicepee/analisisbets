@@ -68,7 +68,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       <Header back={`/?date=${date}`} />
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
-      <main className="space-y-4 px-6 pb-8 pt-4 sm:px-4 lg:px-0">
+      <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         <MatchHeader f={f} pa={pa} pb={pb} returnTo={`/match/${f.id}?date=${date}`} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
