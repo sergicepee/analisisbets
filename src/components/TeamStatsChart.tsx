@@ -55,7 +55,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
       </select>
     </label>
     <div className="mt-3 grid grid-cols-3 divide-x divide-line rounded-lg bg-bg/70 py-2 text-center">
-      <div><div className="text-[10px] text-muted">Tasa de acierto</div><b className="text-sm text-win">{hitRate}%</b></div>
+      <div><div className="text-[10px] text-muted">Tasa de acierto</div><b className="text-sm text-chartHit">{hitRate}%</b></div>
       <div><div className="text-[10px] text-muted">Promedio</div><b className="text-sm">{average.toFixed(1)}</b></div>
       <div><div className="text-[10px] text-muted">Mediana</div><b className="text-sm">{median.toFixed(1)}</b></div>
     </div>
@@ -71,7 +71,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
             const passes = game.value >= line;
             return <div key={`${game.timestamp}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
               <span className="mb-1 text-[10px] font-bold">{game.value}</span>
-              <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`w-3/4 max-w-6 rounded-t-sm ${passes ? "bg-win" : "bg-loss"}`} style={{ height: `${barHeight}px` }} />
+              <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`w-3/4 max-w-6 rounded-t-sm ${passes ? "bg-chartHit" : "bg-loss"}`} style={{ height: `${barHeight}px` }} />
             </div>;
           })}
         </div>
@@ -83,7 +83,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
         </div>
       </div> : <p className="py-8 text-center text-sm text-muted">No hay datos de esta estadística.</p>}
     </div>
-    <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-muted"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-win"/>Alcanza la línea</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-loss"/>No llega</span><span>Últimos {values.length} partidos</span></div>
+    <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-muted"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-chartHit"/>Alcanza la línea</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-loss"/>No llega</span><span>Últimos {values.length} partidos</span></div>
   </section>;
 }
 

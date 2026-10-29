@@ -13,6 +13,7 @@ const config: Config = {
         brand: { DEFAULT: "#ff3347", dark: "#d51f32" },
         win: "#ff3347",
         loss: "#a92536",
+        chartHit: "#22c55e",
         warn: "#eab308",
         drawbar: "#68737d",
       },
