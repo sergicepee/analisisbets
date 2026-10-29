@@ -62,8 +62,8 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
 
   return createPortal((
-    <div className="fixed inset-0 z-[100] flex h-[100dvh] items-center justify-center overflow-hidden overscroll-none bg-black/75 p-4 max-sm:p-0" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-line bg-bg p-5 overscroll-contain max-sm:h-[100dvh] max-sm:max-h-none max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:pb-[calc(env(safe-area-inset-bottom)+1rem)] max-sm:pt-[calc(env(safe-area-inset-top)+1rem)]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden overscroll-none bg-black/75 p-4 max-sm:p-0" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-line bg-bg p-5 overscroll-contain max-sm:h-full max-sm:min-h-full max-sm:max-h-none max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:pb-[calc(env(safe-area-inset-bottom)+1rem)] max-sm:pt-[calc(env(safe-area-inset-top)+1rem)]" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-black sm:text-3xl">{t("Ajustes")}</h2>
           <button onClick={onClose} aria-label={t("Cerrar")} className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-card"><IconClose className="h-5 w-5" /></button>
