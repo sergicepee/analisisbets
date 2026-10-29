@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { BRAND } from "@/lib/config";
 import { I18nProvider } from "@/components/I18nProvider";
 import { getLang, getTheme } from "@/lib/prefs";
+import { AppSplash } from "@/components/AppSplash";
 
 export const metadata: Metadata = {
   title: `${BRAND.name} · Análisis de fútbol`,
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={lang} data-theme={getTheme()}>
       <body>
+        <AppSplash />
         <I18nProvider lang={lang}>
         <div className="mx-auto min-h-screen max-w-3xl pb-24 lg:max-w-[1400px] lg:pb-8">{children}</div>
         <BottomNav />
