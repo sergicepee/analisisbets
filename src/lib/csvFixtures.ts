@@ -67,7 +67,7 @@ export function csvTeamId(name: string): number {
 
 async function readFixtures(): Promise<Fixture[]> {
   const results = await Promise.allSettled(CSV_LEAGUES.map((league) =>
-    readScheduleFile(league.code === "SP1" ? "la-liga-es-2026-27.csv" : `${league.code}-2026-27.csv`, league),
+    readScheduleFile(league.code === "SP1" ? "la-liga-es-2026-27.csv" : `fixtures/${league.code}-2026-27.csv`, league),
   ));
   results.forEach((r, i) => { if (r.status === "rejected") console.error(`CSV ${CSV_LEAGUES[i].code} no cargado:`, r.reason); });
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).sort((a, b) => a.timestamp - b.timestamp);
