@@ -5,7 +5,7 @@ import { useSettingsModal, useT } from "./I18nProvider";
 import { SettingsModal } from "./SettingsModal";
 import { IconGo, IconHandshake, IconHelp, IconLogOut, IconSend, IconSettings, IconUser } from "./icons";
 
-export function UserMenu({ loggedIn, displayName, tz, telegramUrl }: { loggedIn: boolean; displayName?: string; tz: string; telegramUrl?: string }) {
+export function UserMenu({ loggedIn, displayName, avatarUrl, tz, telegramUrl }: { loggedIn: boolean; displayName?: string; avatarUrl?: string; tz: string; telegramUrl?: string }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useSettingsModal();
@@ -25,13 +25,13 @@ export function UserMenu({ loggedIn, displayName, tz, telegramUrl }: { loggedIn:
   return (
     <div ref={box} className="relative">
       <button onClick={() => setOpen((o) => !o)} aria-label={t("Mi cuenta")} aria-expanded={open} className="relative flex h-9 w-9 items-center justify-center rounded-full">
-        {loggedIn ? <span className="grid h-9 w-9 place-items-center rounded-full bg-win text-sm font-black text-black">{(displayName?.trim()[0] || "U").toUpperCase()}</span> : <IconUser className="h-5 w-5 text-slate-300" />}
+        {loggedIn ? <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-win text-sm font-black text-black">{avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : (displayName?.trim()[0] || "U").toUpperCase()}</span> : <IconUser className="h-5 w-5 text-slate-300" />}
       </button>
       {open && (
         <div className="absolute right-0 top-full z-[90] mt-2 w-[min(19rem,calc(100vw-1.5rem))] rounded-2xl border border-line bg-card p-2 shadow-2xl">
           {loggedIn ? (
             <>
-              <div className="flex min-w-0 items-center gap-3 px-2 py-2"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-win text-base font-black text-black">{(displayName?.trim()[0] || "U").toUpperCase()}</span><span className="truncate text-sm font-extrabold">{displayName || t("Mi cuenta")}</span></div>
+              <div className="flex min-w-0 items-center gap-3 px-2 py-2"><span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-win text-base font-black text-black">{avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : (displayName?.trim()[0] || "U").toUpperCase()}</span><span className="truncate text-sm font-extrabold">{displayName || t("Mi cuenta")}</span></div>
               <Link href="/cuenta" onClick={() => setOpen(false)} className={row}><IconUser className="h-5 w-5" />Perfil{Chevron}</Link>
             </>
           ) : (

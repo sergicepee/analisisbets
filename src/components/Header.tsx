@@ -9,9 +9,16 @@ import { t } from "@/lib/i18n";
 
 export async function Header({ back }: { back?: string }) {
   const user = await getUser();
-  const { data: profile } = user
-    ? await createAuthServer().from("profiles").select("display_name").eq("id", user.id).maybeSingle()
-    : { data: null };
+  let profile: { display_name: string | null; avatar_url: string | null } | null = null;
+  if (user) {
+    const auth = createAuthServer();
+    const result = await auth.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+    if (!result.error) profile = result.data;
+    else {
+      const fallback = await auth.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+      profile = fallback.data ? { ...fallback.data, avatar_url: null } : null;
+    }
+  }
   return (
     <header className="sticky top-0 z-[80] flex items-center justify-between border-b border-line bg-bg/90 px-4 py-3 backdrop-blur lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8">
       <div className="flex items-center gap-3">
@@ -27,7 +34,7 @@ export async function Header({ back }: { back?: string }) {
           <input name="q" placeholder={t("Buscar equipos, ligas...")} className="w-64 rounded-xl border border-line bg-card py-2 pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-brand" />
         </form>
         <Link href="/buscar" aria-label="Buscar" className="lg:hidden"><IconSearch className="h-5 w-5" /></Link>
-        <UserMenu loggedIn={!!user} displayName={profile?.display_name || user?.email || undefined} tz={getTz()} telegramUrl={process.env.NEXT_PUBLIC_TELEGRAM_URL || undefined} />
+        <UserMenu loggedIn={!!user} displayName={profile?.display_name || user?.email || undefined} avatarUrl={profile?.avatar_url || undefined} tz={getTz()} telegramUrl={process.env.NEXT_PUBLIC_TELEGRAM_URL || undefined} />
       </div>
     </header>
   );
