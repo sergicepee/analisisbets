@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLang, useT } from "./I18nProvider";
+import { useLang, useSetLang, useT } from "./I18nProvider";
 import { setPref } from "./prefs-client";
 import { IconCalendar, IconClose, IconGlobe, IconMoon, IconSettings, IconSun } from "./icons";
 
@@ -29,12 +29,36 @@ function Block({ Icon, title, sub, children }: { Icon: typeof IconGlobe; title: 
   );
 }
 
+function LanguageFlag({ lang }: { lang: "es" | "en" }) {
+  return lang === "es" ? (
+    <svg aria-hidden="true" viewBox="0 0 24 16" className="h-4 w-6 shrink-0 overflow-hidden rounded-[3px] shadow-sm">
+      <rect width="24" height="16" fill="#c60b1e" /><rect y="4" width="24" height="8" fill="#ffc400" />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" viewBox="0 0 24 16" className="h-4 w-6 shrink-0 overflow-hidden rounded-[3px] shadow-sm">
+      <rect width="24" height="16" fill="#21468b" />
+      <path d="M0 0 3.6 0 24 12.4 24 16 20.4 16 0 3.6ZM24 0 20.4 0 0 12.4 0 16 3.6 16 24 3.6Z" fill="#fff" />
+      <path d="M0 0 1.8 0 24 13.4 24 16 22.2 16 0 2.6ZM24 0 22.2 0 0 13.4 0 16 1.8 16 24 2.6Z" fill="#c8102e" />
+      <path d="M9 0h6v16H9zM0 5h24v6H0z" fill="#fff" /><path d="M10.2 0h3.6v16h-3.6zM0 6.2h24v3.6H0z" fill="#c8102e" />
+    </svg>
+  );
+}
+
 export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void }) {
   const t = useT();
   const lang = useLang();
+  const setLang = useSetLang();
   const router = useRouter();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [zone, setZone] = useState(tz);
+  const languageChanged = useRef(false);
+  const close = useCallback(() => {
+    onClose();
+    if (languageChanged.current) {
+      languageChanged.current = false;
+      router.refresh();
+    }
+  }, [onClose, router]);
 
   useEffect(() => {
     setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
@@ -42,14 +66,14 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
     const htmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", esc);
     return () => {
       document.body.style.overflow = bodyOverflow;
       document.documentElement.style.overflow = htmlOverflow;
       window.removeEventListener("keydown", esc);
     };
-  }, [onClose]);
+  }, [close]);
 
   const zones = useMemo(() => {
     let list = FALLBACK_ZONES;
@@ -57,21 +81,21 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
     return list.includes(tz) ? list : [tz, ...list];
   }, [tz]);
 
-  const chooseLang = (l: "es" | "en") => { setPref("gl_lang", l); router.refresh(); };
+  const chooseLang = (l: "es" | "en") => { languageChanged.current = true; setPref("gl_lang", l); setLang(l); document.documentElement.lang = l; };
   const chooseTheme = (v: "dark" | "light") => { setPref("gl_theme", v); document.documentElement.dataset.theme = v; setTheme(v); };
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
 
   return createPortal((
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden overscroll-none bg-black/75 p-4 max-sm:p-0" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-line bg-bg p-5 overscroll-contain max-sm:h-full max-sm:min-h-full max-sm:max-h-none max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:px-4 max-sm:pb-[calc(env(safe-area-inset-bottom)+1rem)] max-sm:pt-[calc(env(safe-area-inset-top)+1rem)]" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] flex h-[100dvh] items-center justify-center overflow-hidden overscroll-none bg-black/75 p-4 max-[720px]:p-0" onClick={close} role="dialog" aria-modal="true">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-line bg-bg p-5 overscroll-contain max-[720px]:h-[100dvh] max-[720px]:min-h-[100dvh] max-[720px]:max-h-none max-[720px]:max-w-none max-[720px]:rounded-none max-[720px]:border-0 max-[720px]:px-4 max-[720px]:pb-[calc(env(safe-area-inset-bottom)+1rem)] max-[720px]:pt-[calc(env(safe-area-inset-top)+1rem)]" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-black sm:text-3xl">{t("Ajustes")}</h2>
-          <button onClick={onClose} aria-label={t("Cerrar")} className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-card"><IconClose className="h-5 w-5" /></button>
+          <button onClick={close} aria-label={t("Cerrar")} className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-card"><IconClose className="h-5 w-5" /></button>
         </div>
         <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
           <Block Icon={IconGlobe} title={t("Idioma")} sub={t("Elige tu idioma preferido")}>
-            <Option on={lang === "es"} onClick={() => chooseLang("es")}><span>🇪🇸</span>Español</Option>
-            <Option on={lang === "en"} onClick={() => chooseLang("en")}><span>🇬🇧</span>English</Option>
+            <Option on={lang === "es"} onClick={() => chooseLang("es")}><LanguageFlag lang="es" />Español</Option>
+            <Option on={lang === "en"} onClick={() => chooseLang("en")}><LanguageFlag lang="en" />English</Option>
           </Block>
           <Block Icon={IconSettings} title={t("Tema")} sub={t("Elige cómo se ve la web")}>
             <Option on={theme === "dark"} onClick={() => chooseTheme("dark")}><IconMoon className="h-4 w-4" />{t("Oscuro")}</Option>
