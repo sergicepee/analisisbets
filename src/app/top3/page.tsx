@@ -6,7 +6,7 @@ import { Notice } from "@/components/ui";
 import { getFixtureStatsFor, getFixturesByDate, getPrediction, getTeamProfile } from "@/lib/apifootball";
 import { LEAGUE_IDS, MAX_ANALYSIS_FIXTURES, PRIORITY_LEAGUES, hasApiKey } from "@/lib/config";
 import { countryEs, dayMonthTime, errMsg, isDate, statusGroup, todayStr } from "@/lib/format";
-import { expectedFor, poissonModel, pooledBtts, pooledPct } from "@/lib/metrics";
+import { expectedFor, matchOverPct, poissonModel } from "@/lib/metrics";
 import type { Fixture, Metric, TeamProfile } from "@/lib/types";
 import { t } from "@/lib/i18n";
 
@@ -25,7 +25,7 @@ function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<Re
     away: (pred.last5.away.gf + pred.last5.home.ga) / 2,
   } : null);
   const model = eg ? poissonModel(eg.home, eg.away) : null;
-  const p1x2 = pred ?? (model ? { home: model.home, draw: model.draw, away: model.away } : null);
+  const p1x2 = model ?? pred;
   if (p1x2) {
     out.push({ f, market: "1x2", selection: `${f.home.name} gana`, p: p1x2.home });
     out.push({ f, market: "1x2", selection: "Empate", p: p1x2.draw });
@@ -43,7 +43,7 @@ function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<Re
   const labels: Partial<Record<Metric, string>> = { shotsOn: "tiros a puerta", corners: "córners", cards: "tarjetas" };
   for (const metric of ["shotsOn", "corners", "cards"] as const) {
     for (const line of lines[metric]) {
-      const over = pooledPct(a, b, metric, line);
+      const over = matchOverPct(a, b, metric, line);
       if (over === null) continue;
       out.push({ f, market: metric, selection: `Más de ${line} ${labels[metric]}`, p: over });
       out.push({ f, market: metric, selection: `Menos de ${line} ${labels[metric]}`, p: 100 - over });
@@ -101,11 +101,12 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
     fixtures.sort((a, b) => PRIORITY_LEAGUES.indexOf(a.leagueId) - PRIORITY_LEAGUES.indexOf(b.leagueId) || a.timestamp - b.timestamp);
     const eligible = fixtures.slice(0, MAX_ANALYSIS_FIXTURES);
     const candidates = await Promise.all(eligible.map(async (f) => {
-      const [a, b, pred] = await Promise.all([
-        getTeamProfile(f.home.id, true, f.season).catch(() => EMPTY(f.home.id)),
-        getTeamProfile(f.away.id, true, f.season).catch(() => EMPTY(f.away.id)),
-        hasApiKey ? getPrediction(f.id).catch(() => null) : Promise.resolve(null),
+      const [a, b] = await Promise.all([
+        getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId).catch(() => EMPTY(f.home.id)),
+        getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId).catch(() => EMPTY(f.away.id)),
       ]);
+      const ownGoalEstimate = expectedFor(a, b, "goals");
+      const pred = !ownGoalEstimate && hasApiKey ? await getPrediction(f.id).catch(() => null) : null;
       return buildPicks(f, a, b, pred);
     }));
     const ranked = candidates.flat().sort((a, b) => b.p - a.p);
@@ -124,7 +125,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-5xl">
         <div>
           <h1 className="text-3xl font-black">Top <span className="text-win">3</span></h1>
-          <p className="mt-1 text-sm text-muted">Los tres picks con los porcentajes más altos entre los mercados disponibles.</p>
+          <p className="mt-1 text-sm text-muted">{t("Los tres picks más fuertes según los partidos previos, con más peso para la forma reciente y el rendimiento en casa o fuera.")}</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         {error && <Notice tone="warn">{error}</Notice>}

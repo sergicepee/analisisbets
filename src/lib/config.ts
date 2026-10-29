@@ -3,7 +3,7 @@ const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 export const BRAND = { name: "PICKZONE", short: "PZ" };
 export const TZ = process.env.APP_TIMEZONE || "Europe/Madrid";
 export const hasApiKey = !!process.env.API_FOOTBALL_KEY;
-export const FORM_MATCHES = clamp(Number(process.env.FORM_MATCHES || 5), 3, 10);
+export const FORM_MATCHES = clamp(Number(process.env.FORM_MATCHES || 20), 3, 20);
 export const LEAGUE_IDS = (process.env.LEAGUE_IDS || "")
   .split(",")
   .map((s) => Number(s.trim()))

@@ -12,7 +12,7 @@ import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/
 import { FORM_MATCHES } from "@/lib/config";
 import { countryEs, errMsg, friendlyApiError, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import {
-  LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
+  LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, matchOverPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
 } from "@/lib/metrics";
 import type { Fixture, LeagueAvg, Metric, TeamProfile } from "@/lib/types";
 
@@ -47,8 +47,8 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   let profileErr: string | null = null;
   const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
   const [pa0, pb0] = await Promise.all([
-    grab(getTeamProfile(f.home.id, needStats, f.season)),
-    grab(getTeamProfile(f.away.id, needStats, f.season)),
+    grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId)),
+    grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId)),
   ]);
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
   const g = statusGroup(f);
@@ -128,13 +128,14 @@ function TeamCol({ name, logo, role, p }: { name: string; logo: string | null; r
 
 // ───────────── General ─────────────
 async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+  const ownGoalEstimate = expectedFor(pa, pb, "goals");
   const [pred, lavg] = await Promise.all([
-    getPrediction(f.id).catch(() => null),
+    ownGoalEstimate ? Promise.resolve(null) : getPrediction(f.id).catch(() => null),
     getLeagueAverages(f.leagueId, f.season).catch(() => null),
   ]);
-  const eg = goalsExpected(pa, pb, pred);
+  const eg = ownGoalEstimate ? { ...ownGoalEstimate, fromPrediction: false } : goalsExpected(pa, pb, pred);
   const model = eg ? poissonModel(eg.home, eg.away) : null;
-  const p1x2 = pred ?? (model ? { home: model.home, draw: model.draw, away: model.away } : null);
+  const p1x2 = model ?? pred;
   const ex = (m: Metric) => expectedFor(pa, pb, m)?.total ?? null;
   const L = lavg;
 
@@ -147,7 +148,7 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
   return (
     <div className="space-y-4">
-      <Notice>{t("Estimaciones previas al partido; no hay probabilidades en directo. Son estimaciones estadísticas, no garantías.")}</Notice>
+      <Notice>{t("Estimaciones previas al partido; no hay probabilidades en directo. Se ponderan más los partidos recientes y se separa el rendimiento en casa y fuera. Son estimaciones estadísticas, no garantías.")}</Notice>
       {eg?.fromPrediction && <Notice>Goles estimados con la media de los últimos {pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).</Notice>}
       {p1x2 ? (
         <div>
@@ -161,7 +162,7 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
             <div className="bg-drawbar" style={{ width: `${p1x2.draw}%` }} />
             <div className="bg-slate-400/70" style={{ width: `${p1x2.away}%` }} />
           </div>
-          {pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
+          {!model && pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
         </div>
       ) : <Notice tone="warn">Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada).</Notice>}
 
@@ -183,19 +184,22 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
 // ───────────── Goles ─────────────
 async function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
-  const pred = await getPrediction(f.id).catch(() => null);
-  const eg = goalsExpected(pa, pb, pred);
+  const ownGoalEstimate = expectedFor(pa, pb, "goals");
+  const pred = ownGoalEstimate ? null : await getPrediction(f.id).catch(() => null);
+  const eg = ownGoalEstimate ? { ...ownGoalEstimate, fromPrediction: false } : goalsExpected(pa, pb, pred);
   const h1 = halfExpected(pa, pb, 1), h2 = halfExpected(pa, pb, 2);
+  const goalExpected = expectedFor(pa, pb, "goals");
+  const model = goalExpected ? poissonModel(goalExpected.home, goalExpected.away) : null;
   const rows: TrendRow[] = [
     { label: t("Goles esperados"), kind: "num", a: eg?.home ?? null, b: eg?.away ?? null, m: eg?.total ?? null },
-    ...LINES.goals.map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: trendPct(pa, "goals", l), b: trendPct(pb, "goals", l), m: pooledPct(pa, pb, "goals", l) })),
-    { label: t("Ambos equipos marcan"), kind: "pct", a: bttsPct(pa), b: bttsPct(pb), m: pooledBtts(pa, pb) },
+    ...LINES.goals.map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: trendPct(pa, "goals", l), b: trendPct(pb, "goals", l), m: model ? (l === 1.5 ? model.over15 : model.over25) : pooledPct(pa, pb, "goals", l) })),
+    { label: t("Ambos equipos marcan"), kind: "pct", a: bttsPct(pa), b: bttsPct(pb), m: model?.btts ?? pooledBtts(pa, pb) },
   ];
   const tp = { homeName: f.home.name, awayName: f.away.name, homeLogo: f.home.logo, awayLogo: f.away.logo, d: 2 };
   return (
     <div className="space-y-4">
       <TeamPair title={t("Goles esperados")} totalLabel={t("Total esperado")} total={eg?.total ?? null} home={eg?.home ?? null} away={eg?.away ?? null} {...tp} />
-      <TrendTable title={t("Tendencias de goles")} rows={rows} aName={f.home.name} bName={f.away.name} note={`Cada equipo: % de sus últimos ${FORM_MATCHES} partidos en que el total del partido superó la línea. “Partido”: muestra conjunta de ambos equipos.`} />
+      <TrendTable title={t("Tendencias de goles")} rows={rows} aName={f.home.name} bName={f.away.name} note={t("Las tendencias recientes ponderan más los partidos nuevos. “Partido” usa el modelo de goles del encuentro.")} />
       <TeamPair title={t("Potencial de gol 1.er tiempo")} totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 1))}`} total={h1?.total ?? null} home={h1?.home ?? null} away={h1?.away ?? null} {...tp} />
       <TeamPair title={t("Potencial de gol 2.º tiempo")} totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 2))}`} total={h2?.total ?? null} home={h2?.home ?? null} away={h2?.away ?? null} {...tp} />
     </div>
@@ -216,7 +220,7 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
   const exp = expectedFor(pa, pb, tm);
   const rows: TrendRow[] = [
     { label: `Promedio de ${TITLE[tm][2].toLowerCase()}`, kind: "num", a: teamAvg(pa, tm, "for"), b: teamAvg(pb, tm, "for"), m: exp?.total ?? null },
-    ...LINES[tm].map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: ownPct(pa, tm, l), b: ownPct(pb, tm, l), m: pooledPct(pa, pb, tm, l) })),
+    ...LINES[tm].map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: ownPct(pa, tm, l), b: ownPct(pb, tm, l), m: matchOverPct(pa, pb, tm, l) })),
   ];
   const noData = metrics.every((m) => expectedFor(pa, pb, m) === null);
   return (
@@ -231,7 +235,7 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
         <TrendTable
           title={t(`Tendencias de ${TITLE[tm][0].toLowerCase()}`)} rows={rows} aName={f.home.name} bName={f.away.name}
           sub={`${TITLE[tm][2]} del equipo`} totalHead="Total del partido"
-          note={`Cada equipo: % de sus últimos ${FORM_MATCHES} partidos en que SU valor superó la línea. Total del partido: % de los partidos de ambos equipos en que la suma de los dos superó la línea.`}
+          note={t("Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival.")}
         />
       )}
       <Panel title={t("Cómo se calcula")}>
