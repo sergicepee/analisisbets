@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLang, useT } from "./I18nProvider";
 import { setPref } from "./prefs-client";
 import { IconCalendar, IconClose, IconGlobe, IconMoon, IconSettings, IconSun } from "./icons";
@@ -52,7 +53,7 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
   const chooseTheme = (v: "dark" | "light") => { setPref("gl_theme", v); document.documentElement.dataset.theme = v; setTheme(v); };
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
 
-  return (
+  return createPortal((
     <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-10" onClick={onClose} role="dialog" aria-modal="true">
       <div className="w-full max-w-2xl rounded-3xl border border-line bg-bg p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
@@ -79,5 +80,5 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }

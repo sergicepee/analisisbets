@@ -1,6 +1,6 @@
 // Punto único de iconos: cambia aquí cualquier icono sin tocar la lógica de datos.
 export {
-  Search as IconSearch, User as IconUser, CalendarDays as IconCalendar,
+  Search as IconSearch, User as IconUser, CalendarDays as IconCalendar, Mail as IconMail,
   ChevronLeft as IconPrev, ChevronRight as IconNext, ChevronRight as IconGo, ArrowLeft as IconBack,
   Goal as IconNet, Flag as IconCorner, Target as IconTarget, Footprints as IconShoe,
   ArrowLeftRight as IconSwap, LayoutGrid as IconMatches, Trophy as IconTrophy, LineChart as IconStats,

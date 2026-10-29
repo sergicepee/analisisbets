@@ -5,7 +5,7 @@ import { useT } from "./I18nProvider";
 import { SettingsModal } from "./SettingsModal";
 import { IconGo, IconHandshake, IconHelp, IconLogOut, IconSend, IconSettings, IconUser } from "./icons";
 
-export function UserMenu({ loggedIn, tz, telegramUrl }: { loggedIn: boolean; tz: string; telegramUrl?: string }) {
+export function UserMenu({ loggedIn, displayName, tz, telegramUrl }: { loggedIn: boolean; displayName?: string; tz: string; telegramUrl?: string }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -20,22 +20,24 @@ export function UserMenu({ loggedIn, tz, telegramUrl }: { loggedIn: boolean; tz:
     return () => { document.removeEventListener("mousedown", away); window.removeEventListener("keydown", esc); };
   }, [open]);
 
-  const row = "flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-sm font-bold hover:bg-card2";
+  const row = "flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold hover:bg-card2";
   const Chevron = <IconGo className="ml-auto h-4 w-4 text-muted" />;
   return (
     <div ref={box} className="relative">
-      <button onClick={() => setOpen((o) => !o)} aria-label={t("Mi cuenta")} aria-expanded={open} className="relative flex h-9 w-9 items-center justify-center">
-        <IconUser className={`h-5 w-5 ${loggedIn ? "text-brand" : "text-slate-300"}`} />
-        {loggedIn && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-win" />}
+      <button onClick={() => setOpen((o) => !o)} aria-label={t("Mi cuenta")} aria-expanded={open} className="relative flex h-9 w-9 items-center justify-center rounded-full">
+        {loggedIn ? <span className="grid h-9 w-9 place-items-center rounded-full bg-win text-sm font-black text-black">{(displayName?.trim()[0] || "U").toUpperCase()}</span> : <IconUser className="h-5 w-5 text-slate-300" />}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-line bg-card p-2 shadow-2xl">
+        <div className="absolute right-0 top-full z-[90] mt-2 w-[min(19rem,calc(100vw-1.5rem))] rounded-2xl border border-line bg-card p-2 shadow-2xl">
           {loggedIn ? (
-            <Link href="/cuenta" onClick={() => setOpen(false)} className={row}><IconUser className="h-5 w-5" />{t("Mi cuenta")}{Chevron}</Link>
+            <>
+              <div className="flex min-w-0 items-center gap-3 px-2 py-2"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-win text-base font-black text-black">{(displayName?.trim()[0] || "U").toUpperCase()}</span><span className="truncate text-sm font-extrabold">{displayName || t("Mi cuenta")}</span></div>
+              <Link href="/cuenta" onClick={() => setOpen(false)} className={row}><IconUser className="h-5 w-5" />Perfil{Chevron}</Link>
+            </>
           ) : (
             <Link href="/login" onClick={() => setOpen(false)} className={row}><IconUser className="h-5 w-5" />{t("Iniciar sesión")}{Chevron}</Link>
           )}
-          <button onClick={() => { setOpen(false); setSettings(true); }} className={row}><IconSettings className="h-5 w-5" />{t("Ajustes")}{Chevron}</button>
+          <button onClick={() => { setOpen(false); setSettings(true); }} className={row}><IconSettings className="h-5 w-5" />{loggedIn ? "Configuración" : t("Ajustes")}{Chevron}</button>
           {telegramUrl && (
             <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className={row}><IconSend className="h-5 w-5" />{t("Canal de Telegram")}{Chevron}</a>
           )}
