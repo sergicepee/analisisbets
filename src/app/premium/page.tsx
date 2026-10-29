@@ -8,7 +8,7 @@ export default function Page() {
     <>
       <Header back="/" />
       <main className="space-y-4 px-4 pt-6 lg:mx-auto lg:max-w-2xl">
-        <span className="rounded-full border border-win/50 bg-win/10 px-3 py-1 text-[11px] font-bold tracking-wider text-brand">PRÓXIMAMENTE</span>
+        <span className="rounded-full border border-brand/50 bg-brand/10 px-3 py-1 text-[11px] font-bold tracking-wider text-brand">PRÓXIMAMENTE</span>
         <h1 className="text-3xl font-black">{BRAND.name} Premium</h1>
         <p className="text-sm text-slate-300">Todos los datos del partido que necesitas, en un solo lugar.</p>
         <Panel title="Qué incluirá">

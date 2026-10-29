@@ -13,10 +13,10 @@ export function StatCard({
   label: string; Icon?: ComponentType<{ className?: string }>; value: string; fill?: number; tone?: Tone; refLabel?: string; refValue?: string | null;
 }) {
   return (
-    <div className="card p-3">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="mt-1 flex items-center gap-2 text-2xl font-extrabold">
-        {Icon && <Icon className="h-5 w-5 text-muted" />}{value}
+    <div className="card flex min-w-0 flex-col p-3 sm:p-4">
+      <div className="min-h-8 text-xs leading-4 text-muted sm:min-h-0">{label}</div>
+      <div className="mt-1 flex min-w-0 items-center gap-2 text-xl font-extrabold sm:text-2xl">
+        {Icon && <Icon className="h-4 w-4 shrink-0 text-muted sm:h-5 sm:w-5" />}<span className="truncate">{value}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded bg-line"><div className={`h-full rounded ${BAR[tone]}`} style={{ width: `${clamp(fill)}%` }} /></div>
       {refValue && <div className="mt-2 text-[11px] text-muted">{t(refLabel)}: <b className="text-brand">{refValue}</b></div>}
@@ -26,8 +26,8 @@ export function StatCard({
 
 export function Panel({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
   return (
-    <section className="card p-4">
-      <div className="mb-3 flex items-center justify-between"><h3 className="font-bold">{title}</h3>{right}</div>
+    <section className="card min-w-0 p-3 sm:p-4">
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-2"><h3 className="min-w-0 text-sm font-bold leading-5 sm:text-base">{title}</h3>{right}</div>
       {children}
     </section>
   );
@@ -44,7 +44,7 @@ export function TeamPair({
   const awayShare = 100 - homeShare;
   return (
     <Panel title={title}>
-      <div className="flex items-center justify-between border-b border-line pb-3 text-sm text-muted">
+      <div className="flex items-center justify-between gap-2 border-b border-line pb-3 text-xs text-muted sm:text-sm">
         <span>{totalLabel}</span><span className="rounded-lg bg-win/20 px-3 py-1 text-base font-extrabold text-win">{num(total, d)}</span>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-center">
@@ -60,11 +60,11 @@ export function TeamPair({
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-[10px] font-semibold">
             <span className="text-win">{pct(homeShare)}</span>
-            <span className="text-sky-400">{pct(awayShare)}</span>
+            <span className="text-muted">{pct(awayShare)}</span>
           </div>
           <div className="flex h-2 overflow-hidden rounded-full bg-line" aria-label={`${homeName} ${pct(homeShare)} · ${awayName} ${pct(awayShare)}`}>
             <div className="h-full bg-win transition-[width]" style={{ width: `${homeShare}%` }} />
-            <div className="h-full bg-sky-400 transition-[width]" style={{ width: `${awayShare}%` }} />
+            <div className="h-full bg-muted transition-[width]" style={{ width: `${awayShare}%` }} />
           </div>
         </div>
       )}
@@ -83,14 +83,14 @@ export function TrendTable({ title, rows, aName, bName, note, sub, totalHead = "
   return (
     <Panel title={title}>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[300px] text-center text-sm">
+        <table className="w-full table-fixed text-center text-xs sm:text-sm">
           <thead className="text-xs text-muted">
-            <tr><th className="pb-2 text-left font-medium">{t("Métrica")}</th><th className="pb-2 font-medium">{aName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{bName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{t(totalHead)}</th></tr>
+            <tr><th className="w-[32%] pb-2 text-left font-medium">{t("Métrica")}</th><th className="w-[22%] pb-2 font-medium"><span className="block truncate">{aName}</span>{sub && <div className="truncate text-[9px] font-normal opacity-70 sm:text-[10px]">{sub}</div>}</th><th className="w-[22%] pb-2 font-medium"><span className="block truncate">{bName}</span>{sub && <div className="truncate text-[9px] font-normal opacity-70 sm:text-[10px]">{sub}</div>}</th><th className="w-[24%] pb-2 font-medium">{t(totalHead)}</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.label} className="border-t border-line">
-                <td className="py-2.5 text-left text-slate-300">{r.label}</td>
+                <td className="py-2.5 pr-1 text-left leading-tight text-slate-300">{r.label}</td>
                 <td>{chip(r.a, r.kind)}</td><td>{chip(r.b, r.kind)}</td><td>{chip(r.m, r.kind)}</td>
               </tr>
             ))}

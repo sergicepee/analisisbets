@@ -14,9 +14,10 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
   const q = (searchParams.q ?? "").trim();
   let leagues: LeagueInfo[] = [], teams: TeamHit[] = [];
   const errors: string[] = [];
+  try { leagues = await getLeagues(); } catch (e) { errors.push(errMsg(e)); }
   if (q.length >= 2) {
     const n = norm(q);
-    try { leagues = (await getLeagues()).filter((l) => norm(l.name).includes(n) || norm(countryEs(l.country, l.flag)).includes(n)).slice(0, 20); } catch (e) { errors.push(errMsg(e)); }
+    leagues = leagues.filter((l) => norm(l.name).includes(n) || norm(countryEs(l.country, l.flag)).includes(n)).slice(0, 20);
     try { teams = await searchTeams(q); } catch (e) { errors.push(errMsg(e)); }
   }
   return (
@@ -34,7 +35,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           <section className="space-y-2">
             <h2 className="font-bold">Ligas</h2>
             {leagues.map((l) => (
-              <Link key={l.id} href={`/?league=${l.id}`} className="card flex items-center gap-3 px-3 py-2.5">
+              <Link key={l.id} href={`/liga/${l.id}`} className="card flex items-center gap-3 px-3 py-2.5">
                 <Shield src={l.logo} alt="" size={28} />
                 <div className="flex-1"><div className="text-sm font-bold">{l.name}</div><div className="flex items-center gap-1.5 text-xs text-muted"><Flag src={l.flag} />{countryEs(l.country, l.flag)}</div></div>
                 <IconGo className="h-4 w-4 text-muted" />
@@ -46,8 +47,8 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           <section className="space-y-2">
             <h2 className="font-bold">Equipos</h2>
             {teams.map((t) => (
-              <Link key={t.id} href={`/equipo/${t.id}`} className="card flex items-center gap-3 px-3 py-2.5">
-                <Shield src={t.logo} alt="" size={28} />
+              <Link key={t.id} href={`/equipo/${t.id}?name=${encodeURIComponent(t.name)}${t.leagueId ? `&league=${t.leagueId}` : ""}`} className="card flex items-center gap-3 px-3 py-2.5">
+                <Shield src={t.logo} fallbackSrc={t.logoFallback} alt={t.name} size={28} />
                 <div className="flex-1"><div className="text-sm font-bold">{t.name}</div><div className="text-xs text-muted">{t.country}</div></div>
                 <IconGo className="h-4 w-4 text-muted" />
               </Link>

@@ -8,6 +8,7 @@ import type { Fixture, LeagueAvg, MatchStat, StoredStats, TeamProfile, TeamRow }
 export type HistoricalMatch = {
   leagueId: number; season: number;
   timestamp: number; homeId: number; awayId: number;
+  homeName: string; awayName: string;
   goalsHome: number; goalsAway: number; htHome: number | null; htAway: number | null;
   home: MatchStat; away: MatchStat;
 };
@@ -77,6 +78,7 @@ async function readMatchesFrom(code: string, leagueId: number, season: number): 
       timestamp: localTimestamp(get("Date"), get("Time"), league.timeZone),
       homeId: csvTeamId(canonicalTeamName(get("HomeTeam"))),
       awayId: csvTeamId(canonicalTeamName(get("AwayTeam"))),
+      homeName: get("HomeTeam"), awayName: get("AwayTeam"),
       goalsHome, goalsAway, htHome: number(get("HTHG")), htAway: number(get("HTAG")),
       home: stat("HS", "HST", "HC", cardsHome, redsHome),
       away: stat("AS", "AST", "AC", cardsAway, redsAway),
@@ -100,9 +102,9 @@ export async function getCsvCalibrationMatches(leagueId: number, beforeTimestamp
   return (await readHistory()).filter((match) => match.leagueId === leagueId && match.timestamp < beforeTimestamp);
 }
 
-export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number): Promise<TeamProfile> {
-  const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (!leagueId || match.leagueId === leagueId) && (match.homeId === teamId || match.awayId === teamId));
-  const rows: TeamRow[] = matches.slice(-FORM_MATCHES).map((match) => {
+export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number, season?: number, limit = FORM_MATCHES): Promise<TeamProfile> {
+  const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (!leagueId || match.leagueId === leagueId) && (!season || match.season === season) && (match.homeId === teamId || match.awayId === teamId));
+  const rows: TeamRow[] = matches.slice(-limit).map((match) => {
     const isHome = match.homeId === teamId;
     const goalsFor = isHome ? match.goalsHome : match.goalsAway;
     const goalsAgainst = isHome ? match.goalsAway : match.goalsHome;
@@ -116,6 +118,34 @@ export async function getCsvTeamProfile(teamId: number, withStats: boolean, befo
     };
   });
   return { teamId, rows };
+}
+
+export async function getCsvLeagueSeasons(leagueId: number): Promise<number[]> {
+  return [...new Set((await readHistory()).filter((m) => m.leagueId === leagueId).map((m) => m.season))].sort((a, b) => b - a);
+}
+
+export async function getCsvLeagueTeams(leagueId: number, season?: number): Promise<Array<{ id: number; name: string }>> {
+  const matches = (await readHistory()).filter((m) => m.leagueId === leagueId && (!season || m.season === season));
+  const teams = new Map<number, string>();
+  for (const match of matches) {
+    teams.set(match.homeId, match.homeName);
+    teams.set(match.awayId, match.awayName);
+  }
+  return [...teams].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+
+export async function getCsvTeamMatchSeries(teamId: number, leagueId: number, season: number) {
+  return (await readHistory()).filter((match) => match.leagueId === leagueId && match.season === season && (match.homeId === teamId || match.awayId === teamId))
+    .map((match) => {
+      const isHome = match.homeId === teamId;
+      const own = isHome ? match.home : match.away;
+      const against = isHome ? match.away : match.home;
+      return {
+        timestamp: match.timestamp, isHome, opponent: isHome ? match.awayName : match.homeName,
+        own: { goals: isHome ? match.goalsHome : match.goalsAway, shots: own.shots, shotsOn: own.shotsOn, corners: own.corners, cards: own.cards },
+        against: { goals: isHome ? match.goalsAway : match.goalsHome, shots: against.shots, shotsOn: against.shotsOn, corners: against.corners, cards: against.cards },
+      };
+    }).sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export async function getCsvLeagueAverage(leagueId = 140, season = 2026): Promise<LeagueAvg | null> {

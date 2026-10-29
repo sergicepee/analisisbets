@@ -42,12 +42,12 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
       {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
       <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {FILTERS.map(([key, label]) => {
           const on = filter === key;
           const live = key === "live" && counts.live > 0;
           const cls = on ? (key === "live" ? "border-loss bg-loss text-[#fff]" : "chip-on") : live ? "border-loss/60 text-loss" : "";
-          return <Link key={key} href={href(key)} className={`chip ${cls}`}>{t(label)} ({counts[key]})</Link>;
+          return <Link key={key} href={href(key)} className={`chip !px-3 !py-1.5 !text-xs sm:!px-4 sm:!py-2 sm:!text-sm ${cls}`}>{t(label)} ({counts[key]})</Link>;
         })}
       </div>
       {leagueId && (

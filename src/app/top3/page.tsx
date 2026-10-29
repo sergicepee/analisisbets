@@ -49,7 +49,7 @@ function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<Re
     add("btts", "Ambos marcan · Sí", model.btts);
     add("btts", "Ambos marcan · No", 100 - model.btts);
   }
-  const labels: Partial<Record<Metric, string>> = { shotsOn: "tiros a puerta", corners: "córners", cards: "tarjetas" };
+  const labels: Partial<Record<Metric, string>> = { shotsOn: "TAP", corners: "córners", cards: "tarjetas" };
   for (const metric of ["shotsOn", "corners", "cards"] as const) {
     for (const line of LINES[metric]) {
       const over = matchOverPct(a, b, metric, line);
@@ -138,7 +138,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
     const cutoff = eligible.length ? Math.min(...eligible.map((fixture) => fixture.timestamp)) - 86400 : Date.now() / 1000;
     const calibrated = await calibrateCsvPicks(rawPicks, cutoff);
     // Omite selecciones triviales y conserva las que tienen una muestra sólida.
-    const ranked = calibrated.filter((pick) => pick.p > 60 && pick.p <= 85 && pick.sample >= 8)
+    const ranked = calibrated.filter((pick) => pick.p > 60 && pick.p < 80 && pick.sample >= 8)
       .sort((a, b) => b.p - a.p || b.sample - a.sample);
     const seen = new Set<number>();
     picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
@@ -154,7 +154,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <Header />
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-5xl">
         <div>
-          <h1 className="text-3xl font-black">{t("La mejor combinada")}</h1>
+          <h1 className="text-3xl font-black">{t("La combinada")}</h1>
           <p className="mt-1 text-sm text-muted">Tres picks de partidos distintos con probabilidad estimada superior al 60 %. Incluye mercados de equipo y del partido.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
@@ -179,7 +179,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
               </div>
               <div className="mt-2 text-center text-xs text-muted">{dayMonthTime(k.f.timestamp)}</div>
               <div className="mt-3 rounded-xl border border-line bg-bg/60 p-3">
-                <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "Tiros a puerta"}</span><b className="text-2xl font-black text-win">{Math.round(k.p)}%</b></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "TAP"}</span><b className="text-2xl font-black text-win">{Math.round(k.p)}%</b></div>
                 <div className="mt-1 text-base font-extrabold">{k.selection}</div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-win" style={{ width: `${k.p}%` }} /></div>
                 <div className="mt-2 text-[11px] text-muted">Muestra: {k.sample} partidos recientes por equipo{k.calibrationN ? ` · calibrado con ${k.calibrationN} partidos históricos` : " · sin calibración histórica suficiente"}.</div>
@@ -190,7 +190,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           );
         })}
         <Notice>
-          Se priorizan probabilidades estimadas superiores al 60 % y se descartan selecciones por encima del 85 % para evitar picks de cuota normalmente muy baja. La probabilidad es una estimación del modelo, no una garantía.
+          Se muestran selecciones con probabilidades estimadas superiores al 60 % e inferiores al 80 %. La probabilidad es una estimación del modelo, no una garantía.
         </Notice>
       </main>
     </>

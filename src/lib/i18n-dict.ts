@@ -4,7 +4,7 @@ export type LangCode = "es" | "en";
 /** Clave = texto en español. Si no hay traducción, se muestra el español. */
 const EN: Record<string, string> = {
   // navegación
-  "Partidos": "Matches", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "La mejor combinada": "Best accumulator", "Estadísticas": "Stats", "Ligas": "Leagues",
+  "Partidos": "Matches", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "La combinada": "Accumulator", "Estadísticas": "Stats", "Ligas": "Leagues",
   "Buscar equipos, ligas...": "Search teams, leagues...",
   // menú de usuario
   "Iniciar sesión": "Sign in", "Mi cuenta": "My account", "Cerrar sesión": "Sign out", "Ajustes": "Settings",
@@ -26,21 +26,21 @@ const EN: Record<string, string> = {
   "Probabilidades clave": "Key probabilities",
   "Más de 2,5 goles": "Over 2.5 goals", "Más de 1,5 goles": "Over 1.5 goals", "Ambos marcan": "Both teams to score",
   "Promedio de goles": "Average goals", "Promedio de tarjetas": "Average cards", "Promedio de córners": "Average corners",
-  "Promedio de tiros": "Average shots", "Promedio de tiros a puerta": "Average shots on target",
+  "Promedio de tiros": "Average shots", "Promedio de TAP": "Average shots on target",
   "Media liga": "League avg", "Media de liga": "League average",
   "Estimaciones previas al partido; no hay probabilidades en directo. Son estimaciones estadísticas, no garantías.": "Pre-match estimates; there are no live probabilities. These are statistical estimates, not guarantees.",
   "Estimaciones previas al partido; no hay probabilidades en directo. Se ponderan más los partidos recientes y se separa el rendimiento en casa y fuera. Son estimaciones estadísticas, no garantías.": "Pre-match estimates; there are no live probabilities. Recent matches carry more weight and home/away performance is split. These are statistical estimates, not guarantees.",
   "Las tendencias recientes ponderan más los partidos nuevos. “Partido” usa el modelo de goles del encuentro.": "Recent trends give more weight to newer matches. “Match” uses the goal model for this fixture.",
   "Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival.": "Team columns give more weight to recent matches. The match total is estimated from each team's output and what the opponent concedes.",
   "Los tres picks más fuertes según los partidos previos, con más peso para la forma reciente y el rendimiento en casa o fuera.": "The three strongest picks from previous matches, with more weight on recent form and home/away performance.",
-  "Verde: por encima de la media de la liga (±10%). Ámbar: similar. Rojo: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (verde), medio (ámbar) o bajo (rojo).": "Green: above the league average (±10%). Amber: similar. Red: below. With no league average available, the colour only shows whether the percentage is high (green), medium (amber) or low (red).",
+  "Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro).": "Bright red: above the league average (±10%). Amber: similar. Dark red: below. With no league average available, the colour only shows whether the percentage is high (bright red), medium (amber) or low (dark red).",
   "Goles esperados": "Expected goals", "Total esperado": "Expected total", "Tendencias de goles": "Goal trends",
   "Potencial de gol 1.er tiempo": "1st-half goal potential", "Potencial de gol 2.º tiempo": "2nd-half goal potential",
   "Ambos equipos marcan": "Both teams to score", "Total del partido": "Match total", "Métrica": "Metric", "Partido": "Match",
-  "Tiros totales": "Total shots", "Tiros a puerta": "Shots on target", "Córners": "Corners",
-  "Media combinada de tiros": "Combined average shots", "Media combinada de tiros a puerta": "Combined average shots on target",
+  "Tiros totales": "Total shots", "TAP": "Shots on target", "Córners": "Corners",
+  "Media combinada de tiros": "Combined average shots", "Media combinada de TAP": "Combined average shots on target",
   "Media combinada de córners": "Combined average corners", "Total esperado de tarjetas": "Expected total cards",
-  "Tendencias de tiros a puerta": "Shots on target trends", "Tendencias de córners": "Corner trends", "Tendencias de tarjetas": "Card trends",
+  "Tendencias de TAP": "Shots on target trends", "Tendencias de córners": "Corner trends", "Tendencias de tarjetas": "Card trends",
   "Cómo se calcula": "How it's calculated", "Más de": "Over",
   // top 3 / stats / ligas
   "Los 3": "The 3", "mejores": "best", "Máximo": "Highest", "Más bajo": "Lowest",

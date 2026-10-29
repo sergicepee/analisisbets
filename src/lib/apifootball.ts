@@ -7,8 +7,9 @@ import type {
   Fixture, LeagueAvg, LeagueInfo, MatchStat, Prediction, StoredStats, TeamProfile, TeamRow,
 } from "./types";
 import { statusGroup } from "./format";
-import { canonicalTeamName, csvTeamId, getCsvFixture, getCsvFixturesByDate } from "./csvFixtures";
-import { getCsvLeagueAverage, getCsvStatsForFixture, getCsvTeamProfile } from "./csvHistory";
+import { canonicalTeamName, csvTeamId, getCsvFixture, getCsvFixtures, getCsvFixturesByDate } from "./csvFixtures";
+import { getCsvLeagueAverage, getCsvLeagueSeasons, getCsvLeagueTeams, getCsvStatsForFixture, getCsvTeamMatchSeries, getCsvTeamProfile } from "./csvHistory";
+import { CSV_LEAGUES } from "./csvLeagues";
 
 const BASE = "https://v3.football.api-sports.io";
 const H = 3600, D = 86400;
@@ -74,6 +75,7 @@ const knownTeamIds: Record<string, number> = {
   "levante": 539, "osasuna": 727, "rayo vallecano": 728, "real betis": 543,
   "real madrid": 541, "real sociedad": 548, "sevilla": 536, "valencia": 532,
   "villarreal": 533, "malaga": 535, "racing santander": 4665, "deportivo la coruna": 544,
+  "hull": 64, "nottm forest": 65, "tottenham": 47, "stoke": 70, "derby": 68, "verona": 504,
 };
 
 function knownTeamLogo(name: string): string | null {
@@ -86,6 +88,19 @@ const logoCountrySlugs: Record<string, string> = {
 };
 
 const logoNameAliases: Record<string, string> = {
+  andorra: "FC_Andorra", "fc andorra": "FC_Andorra", castellon: "Castellón", "celta b": "Celta",
+  dortmund: "Borussia_Dortmund", "ein frankfurt": "Eintracht_Frankfurt", elversberg: "SV_Elversberg",
+  "fc koln": "Cologne", hamburg: "Hamburger_SV", leverkusen: "Bayer_Leverkusen", "m gladbach": "Borussia_Mönchengladbach",
+  mainz: "Mainz_05", paderborn: "SC_Paderborn", stuttgart: "VfB_Stuttgart",
+  bielefeld: "Arminia_Bielefeld", bochum: "VfL_Bochum", braunschweig: "Eintracht_Braunschweig",
+  cottbus: "Energie_Cottbus", darmstadt: "SV_Darmstadt_98", dresden: "Dynamo_Dresden",
+  "greuther furth": "Greuther_Fürth", hannover: "Hannover_96", heidenheim: "FC_Heidenheim",
+  hertha: "Hertha_BSC", kaiserslautern: "FC_Kaiserslautern", karlsruhe: "Karlsruher_SC",
+  magdeburg: "FC_Magdeburg", nurnberg: "FC_Nürnberg", osnabruck: "Osnabrück", wolfsburg: "Wolfsburg",
+  "sociedad b": "Real_Sociedad", "sp gijon": "Sporting_Gijón",
+  clermont: "Clermont_Foot", "red star": "Red_Star_FC", "st etienne": "AS_Saint-Étienne",
+  "paris sg": "Paris_Saint-Germain_(PSG)", "nott m forest": "Nottingham_Forest", hull: "Hull_City",
+  tottenham: "Tottenham_Hotspur", stoke: "Stoke_City", derby: "Derby_County", verona: "Hellas_Verona",
   coventry: "Coventry_City", leeds: "Leeds_United", liverpool: "Liverpool_FC",
   wolves: "Wolverhampton_Wanderers", blackburn: "Blackburn_Rovers", bolton: "Bolton_Wanderers",
   preston: "Preston_North_End", lincoln: "Lincoln_City", norwich: "Norwich_City",
@@ -127,13 +142,41 @@ function repositoryTeamLogo(name: string, country: string): string | null {
   const file = `${label}.svg`;
   return `https://raw.githubusercontent.com/JoseArroyave/football-logos/main/logos/${countrySlug}/${encodeURIComponent(file)}`;
 }
+export function getTeamLogoUrl(name: string, country: string): string | null {
+  return knownTeamLogo(name) ?? repositoryTeamLogo(name, country);
+}
+const badgeSlugAliases: Record<string, string> = {
+  "real madrid": "real-madrid", "real sociedad": "real-sociedad", "athletic club": "athletic-bilbao",
+  "atletico madrid": "atletico-madrid", "real betis": "real-betis", "man city": "manchester-city",
+  "man united": "manchester-united", "west brom": "west-bromwich-albion", "wolves": "wolverhampton-wanderers",
+  "paris saint germain": "paris-saint-germain", "ac milan": "ac-milan", "inter": "inter-milan",
+  andorra: "fc-andorra", castellon: "castellon", "celta b": "celta", dortmund: "borussia-dortmund",
+  "ein frankfurt": "eintracht-frankfurt", elversberg: "sv-elversberg", "fc koln": "fc-cologne",
+  hamburg: "hamburger-sv", leverkusen: "bayer-leverkusen", "m gladbach": "borussia-monchengladbach",
+  mainz: "mainz-05", paderborn: "sc-paderborn", stuttgart: "vfb-stuttgart", bielefeld: "arminia-bielefeld",
+  bochum: "vfl-bochum", braunschweig: "eintracht-braunschweig", cottbus: "energie-cottbus",
+  darmstadt: "sv-darmstadt-98", dresden: "dynamo-dresden", "greuther furth": "greuther-furth",
+  hannover: "hannover-96", heidenheim: "fc-heidenheim", hertha: "hertha-bsc", kaiserslautern: "fc-kaiserslautern",
+  karlsruhe: "karlsruher-sc", magdeburg: "1-fc-magdeburg", nurnberg: "fc-nurnberg", osnabruck: "vfl-osnabruck",
+  "sociedad b": "real-sociedad", "sp gijon": "sporting-gijon",
+  verona: "hellas-verona", clermont: "clermont-foot", "red star": "red-star-fc", "st etienne": "saint-etienne",
+  hull: "hull-city", "nott m forest": "nottingham-forest", tottenham: "tottenham-hotspur", stoke: "stoke-city", derby: "derby-county",
+};
+export function getTeamLogoFallbackUrl(name: string, country: string): string | null {
+  if (knownTeamLogo(name)) return repositoryTeamLogo(name, country);
+  const slugCountry = logoCountrySlugs[country.toLowerCase()];
+  if (!slugCountry) return repositoryTeamLogo(name, country);
+  const key = teamNameKey(name);
+  const slug = badgeSlugAliases[key] ?? key.replace(/\s+/g, "-");
+  return `https://cdn.jsdelivr.net/gh/leoratzlaff/football-badges@latest/logos/${slugCountry}/${slug}.png`;
+}
 
 async function addCsvTeamLogos(fixtures: Fixture[]): Promise<Fixture[]> {
   if (!fixtures.length) return fixtures;
   return fixtures.map((fixture) => ({
     ...fixture,
-    home: { ...fixture.home, logo: fixture.home.logo ?? knownTeamLogo(fixture.home.name) ?? repositoryTeamLogo(fixture.home.name, fixture.country) },
-    away: { ...fixture.away, logo: fixture.away.logo ?? knownTeamLogo(fixture.away.name) ?? repositoryTeamLogo(fixture.away.name, fixture.country) },
+    home: { ...fixture.home, logo: fixture.home.logo ?? knownTeamLogo(fixture.home.name) ?? repositoryTeamLogo(fixture.home.name, fixture.country), logoFallback: getTeamLogoFallbackUrl(fixture.home.name, fixture.country) },
+    away: { ...fixture.away, logo: fixture.away.logo ?? knownTeamLogo(fixture.away.name) ?? repositoryTeamLogo(fixture.away.name, fixture.country), logoFallback: getTeamLogoFallbackUrl(fixture.away.name, fixture.country) },
   }));
 }
 
@@ -282,8 +325,8 @@ async function fetchLast(teamId: number, season?: number, leagueId?: number): Pr
 // ── Perfil de un equipo: últimos N partidos (+ estadísticas reales opcionales) ──
 export async function getTeamProfile(teamId: number, withStats = true, season?: number, beforeTimestamp = Infinity, leagueId?: number, teamName?: string): Promise<TeamProfile> {
   if (teamId < 0) return getCsvTeamProfile(teamId, withStats, beforeTimestamp, leagueId);
-  const localProfile = teamName && leagueId
-    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId)
+  const localProfile = teamName
+    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId, season)
     : null;
   if (localProfile && localProfile.rows.length >= 3) return { ...localProfile, teamId };
   if (!apiEnabled) return localProfile ? { ...localProfile, teamId } : { teamId, rows: [] };
@@ -362,7 +405,7 @@ export async function getLeagueAverages(leagueId: number, season: number): Promi
 
 // ── Ligas ──
 export async function getLeagues(): Promise<LeagueInfo[]> {
-  if (!apiEnabled) return [];
+  if (!apiEnabled) return CSV_LEAGUES.map((l) => ({ id: l.id, name: l.name, type: "League", logo: `https://media.api-sports.io/football/leagues/${l.id}.png`, country: l.country, flag: l.flag }));
   return cached<LeagueInfo[]>("leagues:current", D, async () =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (await call("/leagues", { current: "true" }, true)).map((r: any) => ({
@@ -373,17 +416,57 @@ export async function getLeagues(): Promise<LeagueInfo[]> {
 }
 
 // ── Equipos: búsqueda y partidos ──
-export interface TeamHit { id: number; name: string; logo: string | null; country: string }
+export interface TeamHit { id: number; name: string; logo: string | null; logoFallback?: string | null; country: string; leagueId?: number }
 export async function searchTeams(q: string): Promise<TeamHit[]> {
   const term = q.trim();
   if (term.length < 3) return [];
-  if (!apiEnabled) return [];
+  if (!apiEnabled) {
+    const normalized = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const found = await Promise.all(CSV_LEAGUES.map(async (league) => (await getCsvLeagueTeams(league.id))
+      .filter((team) => team.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalized))
+      .map((team) => ({ id: team.id, name: team.name, logo: getTeamLogoUrl(team.name, league.country), logoFallback: getTeamLogoFallbackUrl(team.name, league.country), country: league.country, leagueId: league.id }))));
+    return [...new Map(found.flat().map((team) => [team.id, team])).values()].slice(0, 20);
+  }
   return cached<TeamHit[]>(`teams:q:${term.toLowerCase()}`, D, async () =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (await call("/teams", { search: term })).slice(0, 12).map((r: any) => ({
-      id: r.team.id, name: r.team.name, logo: r.team.logo ?? null, country: r.team.country ?? "",
+      id: r.team.id, name: r.team.name, logo: r.team.logo ?? null, logoFallback: getTeamLogoFallbackUrl(r.team.name, r.team.country ?? ""), country: r.team.country ?? "",
     })),
   );
+}
+
+export async function getLeagueTeams(leagueId: number, season?: number) {
+  const local = await getCsvLeagueTeams(leagueId, season);
+  const country = CSV_LEAGUES.find((l) => l.id === leagueId)?.country ?? "";
+  if (local.length || !apiEnabled || !season) return local.map((team) => ({ ...team, logo: getTeamLogoUrl(team.name, country) }));
+  return cached(`league-teams:${leagueId}:${season}`, D, async () =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (await call("/teams", { league: leagueId, season }, true)).map((r: any) => ({ id: r.team.id, name: r.team.name, logo: r.team.logo ?? null })),
+  );
+}
+export async function getLeagueSeasons(leagueId: number) {
+  const local = await getCsvLeagueSeasons(leagueId);
+  if (local.length || !apiEnabled) return local;
+  return cached<number[]>(`league-seasons:${leagueId}`, D, async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const item = (await call("/leagues", { id: leagueId }, true))[0] as any;
+    return (item?.seasons ?? []).filter((s: any) => s.coverage?.fixtures?.events || s.year).map((s: any) => Number(s.year)).filter(Number.isFinite).sort((a: number, b: number) => b - a);
+  });
+}
+export async function getTeamSeasonProfile(teamId: number, name: string, leagueId: number, season: number): Promise<TeamProfile> {
+  const local = await getCsvTeamProfile(csvTeamId(name), true, Infinity, leagueId, season, 60);
+  if (local.rows.length || !apiEnabled) return { ...local, teamId };
+  return getTeamProfile(teamId, true, season, Infinity, leagueId, name);
+}
+export async function getTeamSeasonMatchSeries(name: string, leagueId: number, season: number) {
+  return getCsvTeamMatchSeries(csvTeamId(name), leagueId, season);
+}
+export async function getTeamUpcomingFixtures(teamId: number, n = 8): Promise<Fixture[]> {
+  const fixtures = await getCsvFixtures();
+  const now = Date.now() / 1000;
+  const local = await addCsvTeamLogos(fixtures.filter((f) => f.timestamp >= now && (f.home.id === teamId || f.away.id === teamId)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n));
+  if (local.length || !apiEnabled) return local;
+  return getNextFixtures(teamId, n);
 }
 export async function getLastFixtures(teamId: number): Promise<Fixture[]> {
   if (!apiEnabled) return [];

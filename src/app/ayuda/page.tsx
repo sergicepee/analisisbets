@@ -11,7 +11,7 @@ export default function Page() {
       <h2 className="font-bold text-white">¿Por qué veo “—” en algunos datos?</h2>
       <p>Cuando faltan estadísticas (la liga no tiene cobertura, el plan de la API no las incluye o hay pocos partidos) {BRAND.name} prefiere no mostrar nada antes que inventar una cifra.</p>
       <h2 className="font-bold text-white">¿Qué significan los colores?</h2>
-      <p>Verde: por encima de la media de la liga (±10%). Ámbar: similar. Rojo: por debajo. Si no hay media de liga disponible, el color indica solo si el porcentaje es alto, medio o bajo.</p>
+      <p>Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Si no hay media de liga disponible, el color indica solo si el porcentaje es alto, medio o bajo.</p>
       <h2 className="font-bold text-white">Contacto</h2>
       <Contact subject={`${BRAND.name} · Soporte`} />
     </InfoPage>

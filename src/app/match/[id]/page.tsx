@@ -58,8 +58,8 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       <Header back={`/?date=${date}`} />
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
-      <main className="space-y-4 px-4 pb-8 pt-4 lg:px-0">
-        <MatchHeader f={f} pa={pa} pb={pb} />
+      <main className="space-y-4 px-6 pb-8 pt-4 sm:px-4 lg:px-0">
+        <MatchHeader f={f} pa={pa} pb={pb} returnTo={`/match/${f.id}?date=${date}`} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
             <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
@@ -80,7 +80,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 }
 
 // ───────────── Cabecera ─────────────
-function MatchHeader({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
+function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; returnTo: string }) {
   const g = statusGroup(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
@@ -89,17 +89,17 @@ function MatchHeader({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfi
   const forHome = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.away.id : e.teamId === f.home.id));
   const forAway = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.home.id : e.teamId === f.away.id));
   return (
-    <section className="card p-4">
-      <div className="flex items-center gap-2 text-sm font-bold text-brand"><Flag src={f.flag} />{countryEs(f.country, f.flag)} · {f.leagueName}{f.round ? ` · ${f.round}` : ""}</div>
+    <section className="card min-w-0 p-3 sm:p-4">
+      <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm font-bold text-brand"><Flag src={f.flag} /><span className="truncate">{countryEs(f.country, f.flag)} · {f.leagueName}{f.round ? ` · ${f.round}` : ""}</span></div>
       <div className="mt-1 text-xs text-muted">{fullDateTime(f.timestamp)}{f.venue ? ` · ${f.venue}` : ""}</div>
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <TeamCol name={f.home.name} logo={f.home.logo} role={t("Local")} p={pa} />
-        <div className="shrink-0 text-center">
+      <div className="mt-4 flex min-w-0 items-center justify-between gap-1 sm:gap-2">
+        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} role={t("Local")} p={pa} />
+        <div className="w-[36%] min-w-0 shrink text-center">
           {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
             : g === "finished" ? (<><div className="text-3xl font-black">{score}</div><div className="mt-1 rounded-full border border-line px-3 py-0.5 text-xs text-muted">{f.statusShort}</div></>)
-            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mt-2 rounded-full border border-line px-3 py-1 text-xs text-muted">{timeStr(f.timestamp)} · {g === "pending" ? t("Pendiente de actualizar") : f.statusShort}</div></>)}
+            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mx-auto mt-2 w-fit max-w-full rounded-full border border-line px-1.5 py-1 text-[10px] leading-tight text-muted sm:px-3 sm:text-xs">{timeStr(f.timestamp)} · {g === "pending" ? t("Pendiente de actualizar") : f.statusShort}</div></>)}
         </div>
-        <TeamCol name={f.away.name} logo={f.away.logo} role={t("Visitante")} p={pb} />
+        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} role={t("Visitante")} p={pb} />
       </div>
       {(forHome.length > 0 || forAway.length > 0) && (
         <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-muted">
@@ -110,16 +110,18 @@ function MatchHeader({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfi
     </section>
   );
 }
-function TeamCol({ name, logo, role, p }: { name: string; logo: string | null; role: string; p: TeamProfile }) {
+function TeamCol({ teamId, leagueId, season, returnTo, name, logo, role, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; role: string; p: TeamProfile }) {
   const form = p.rows.slice(-5);
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
-      <Shield src={logo} alt={name} size={52} />
-      <div className="max-w-full truncate text-lg font-extrabold">{name}</div>
+      <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="inline-flex rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <Shield src={logo} alt={name} size={44} />
+      </Link>
+      <div className="max-w-full truncate text-base font-extrabold sm:text-lg">{name}</div>
       <div className="text-[11px] text-muted">{role}</div>
-      <div className="mt-1 flex gap-1">
+      <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
         {form.map((r, i) => (
-          <span key={i} className={`flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-black ${r.result === "W" ? "bg-win" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
+          <span key={i} className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold text-black sm:h-5 sm:w-5 sm:text-[10px] ${r.result === "W" ? "bg-win" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
         ))}
       </div>
     </div>
@@ -147,15 +149,15 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   );
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <Notice>{t("Estimaciones previas al partido; no hay probabilidades en directo. Se ponderan más los partidos recientes y se separa el rendimiento en casa y fuera. Son estimaciones estadísticas, no garantías.")}</Notice>
       {eg?.fromPrediction && <Notice>Goles estimados con la media de los últimos {pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).</Notice>}
       {p1x2 ? (
         <div>
-          <div className="mb-1.5 flex justify-between text-sm font-bold">
-            <span>{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
-            <span className="text-sky-400">{t("Empate")} {Math.round(p1x2.draw)}%</span>
-            <span>{f.away.name} <span className="text-slate-300">{Math.round(p1x2.away)}%</span></span>
+          <div className="mb-1.5 grid min-w-0 grid-cols-3 gap-1 text-center text-[11px] font-bold leading-tight sm:text-sm">
+            <span className="min-w-0 truncate">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
+            <span className="min-w-0 truncate text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
+            <span className="min-w-0 truncate">{f.away.name} <span className="text-slate-300">{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
             <div className="bg-win" style={{ width: `${p1x2.home}%` }} />
@@ -175,9 +177,9 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
         {avgc(t("Promedio de tarjetas"), IconCard, ex("cards"), L?.cards)}
         {avgc(t("Promedio de córners"), IconCorner, ex("corners"), L?.corners)}
         {avgc(t("Promedio de tiros"), IconTarget, ex("shots"), L?.shots)}
-        {avgc(t("Promedio de tiros a puerta"), IconNet, ex("shotsOn"), L?.shotsOn)}
+        {avgc(t("Promedio de TAP"), IconNet, ex("shotsOn"), L?.shotsOn)}
       </div>
-      <p className="text-[11px] leading-snug text-muted">{t("Verde: por encima de la media de la liga (±10%). Ámbar: similar. Rojo: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (verde), medio (ámbar) o bajo (rojo).")} {FORM_MATCHES} {t("Partidos")}.</p>
+      <p className="text-[11px] leading-snug text-muted">{t("Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro). ")} {FORM_MATCHES} {t("Partidos")}.</p>
     </div>
   );
 }
@@ -209,7 +211,7 @@ async function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfi
 // ───────────── Tiros / Córners / Tarjetas ─────────────
 const TITLE: Record<string, [string, string, string]> = {
   shots: ["Tiros totales", "Media combinada de tiros", "Tiros"],
-  shotsOn: ["Tiros a puerta", "Media combinada de tiros a puerta", "Tiros a puerta"],
+  shotsOn: ["TAP", "Media combinada de TAP", "TAP"],
   corners: ["Córners", "Media combinada de córners", "Córners"],
   cards: ["Tarjetas", "Total esperado de tarjetas", "Tarjetas"],
 };
@@ -233,7 +235,7 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
       {lavg && lavg[tm] != null && <Notice>{t("Media de liga")}: <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
       {LINES[tm].length > 0 && (
         <TrendTable
-          title={t(`Tendencias de ${TITLE[tm][0].toLowerCase()}`)} rows={rows} aName={f.home.name} bName={f.away.name}
+          title={t(`Tendencias de ${tm === "shotsOn" ? "TAP" : TITLE[tm][0].toLowerCase()}`)} rows={rows} aName={f.home.name} bName={f.away.name}
           sub={`${TITLE[tm][2]} del equipo`} totalHead="Total del partido"
           note={t("Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival.")}
         />

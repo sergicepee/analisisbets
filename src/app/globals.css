@@ -11,7 +11,7 @@ body { color: rgb(var(--fg)); font-family: ui-sans-serif, system-ui, -apple-syst
 /* Ajustes del tema claro para utilidades con colores fijos */
 [data-theme="light"] .text-white { color: rgb(var(--fg)); }
 [data-theme="light"] .text-slate-200, [data-theme="light"] .text-slate-300 { color: rgb(var(--fg) / 0.85); }
-[data-theme="light"] .text-brand { color: #4d7c0f; }
+[data-theme="light"] .text-brand { color: #c8102e; }
 
 @layer components {
   .card { @apply rounded-2xl border border-line bg-card; }

@@ -17,7 +17,7 @@ export const maxDuration = 60;
 const METRICS: [Metric, string, typeof IconBall, string][] = [
   ["goals", "Goles", IconBall, "Promedio esperado de goles entre ambos equipos, según sus partidos recientes."],
   ["shots", "Disparos", IconTarget, "Promedio esperado de tiros totales entre ambos equipos."],
-  ["shotsOn", "Tiros a puerta", IconNet, "Promedio esperado de tiros a puerta entre ambos equipos."],
+  ["shotsOn", "TAP", IconNet, "Promedio esperado de TAP entre ambos equipos."],
   ["corners", "Córners", IconCorner, "Promedio esperado de córners entre ambos equipos."],
   ["cards", "Tarjetas", IconCard, "Promedio esperado de tarjetas (amarillas y rojas) entre ambos equipos."],
 ];
@@ -72,27 +72,27 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
             </Link>
           ))}
         </div>
-        <div className="flex gap-3 rounded-2xl border border-win/40 bg-win/10 p-4">
-          <IconInfo className="h-5 w-5 shrink-0 text-win" />
+        <div className="flex gap-3 rounded-2xl border border-brand/40 bg-brand/10 p-4">
+          <IconInfo className="h-5 w-5 shrink-0 text-brand" />
           <div><div className="font-bold">Promedio de {def[1].toLowerCase()}</div><p className="mt-1 text-sm text-slate-300">{def[3]}</p></div>
         </div>
         {error && <Notice tone="warn">{error}</Notice>}
         <p className="text-xs text-muted">{analysed} de {total} partidos con datos · {date} · actualizado {timeStr(Date.now() / 1000)}</p>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
           {[list.slice(0, 5), list.slice(5, 10)].map((chunk, ci) => chunk.length > 0 && (
-            <div key={ci} className="card divide-y divide-line">
+            <div key={ci} className="card min-w-0 divide-y divide-line overflow-hidden">
               {chunk.map(({ f, v }, i) => {
                 const rank = ci * 5 + i + 1;
                 return (
-                  <Link key={f.id} href={`/match/${f.id}?date=${date}&tab=${tabOf(metric)}`} className="flex items-center gap-3 p-3">
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card2 text-xs font-bold ${rank <= 3 ? "text-brand" : "text-muted"}`}>{rank}</span>
-                    <div className="flex gap-1"><Shield src={f.home.logo} alt="" size={30} /><Shield src={f.away.logo} alt="" size={30} /></div>
+                  <Link key={f.id} href={`/match/${f.id}?date=${date}&tab=${tabOf(metric)}`} className="flex min-w-0 items-center gap-2 p-2.5 sm:gap-3 sm:p-3">
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card2 text-[11px] font-bold sm:h-7 sm:w-7 sm:text-xs ${rank <= 3 ? "text-brand" : "text-muted"}`}>{rank}</span>
+                    <div className="flex shrink-0 gap-0.5 sm:gap-1"><Shield src={f.home.logo} fallbackSrc={f.home.logoFallback} alt="" size={24} /><Shield src={f.away.logo} fallbackSrc={f.away.logoFallback} alt="" size={24} /></div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-bold">{f.home.name} contra {f.away.name}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted"><Flag src={f.flag} />{f.leagueName}</div>
                     </div>
-                    <div className="shrink-0 text-right text-xs text-muted">{date === today ? "Hoy" : date}<br />{timeStr(f.timestamp)}</div>
-                    <div className="rounded-xl bg-brand px-3 py-2 text-lg font-black text-black">{num(v, 2)}</div>
+                    <div className="hidden shrink-0 text-right text-xs text-muted sm:block">{date === today ? "Hoy" : date}<br />{timeStr(f.timestamp)}</div>
+                    <div className="flex h-9 w-12 shrink-0 items-center justify-center rounded-lg bg-brand px-1.5 text-center text-base font-black leading-none text-black sm:h-10 sm:w-auto sm:rounded-xl sm:px-3 sm:text-lg">{num(v, 2)}</div>
                   </Link>
                 );
               })}
@@ -100,7 +100,6 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           ))}
         </div>
         {!list.length && !error && <Notice>Sin datos suficientes para esta fecha/métrica.</Notice>}
-        <Notice>Se analizan como máximo {MAX_ANALYSIS_FIXTURES} partidos por carga para cuidar la cuota de la API. Ajustable con MAX_ANALYSIS_FIXTURES y LEAGUE_IDS.</Notice>
       </main>
     </>
   );
