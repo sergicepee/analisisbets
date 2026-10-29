@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function SubscribeButton({ plan, disabled = false }: { plan: "monthly" | "annual"; disabled?: boolean }) {
+export function SubscribeButton({ plan, disabled = false }: { plan: "weekly" | "monthly" | "annual"; disabled?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

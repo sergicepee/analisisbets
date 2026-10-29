@@ -41,7 +41,7 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 
 ## Suscripciones Premium (Stripe)
 - General del partido permanece gratis. Goles, Tiros, Esquinas y Tarjetas requieren una suscripción activa; los usuarios sin suscripción ven una vista previa difuminada sin recibir los datos reales.
-- Crea dos precios recurrentes en Stripe (uno mensual y otro anual) y configura en Vercel `STRIPE_PRICE_MONTHLY_ID`, `STRIPE_PRICE_ANNUAL_ID`, `STRIPE_SECRET_KEY` y `SITE_URL`.
+- Crea tres precios recurrentes en Stripe (semanal, mensual y anual) y configura en Vercel `STRIPE_PRICE_WEEKLY_ID`, `STRIPE_PRICE_MONTHLY_ID`, `STRIPE_PRICE_ANNUAL_ID`, `STRIPE_SECRET_KEY` y `SITE_URL`.
 - Añade un webhook de Stripe a `https://TU-PROYECTO.vercel.app/api/billing/webhook` con los eventos `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` y `customer.subscription.deleted`; guarda su secreto como `STRIPE_WEBHOOK_SECRET`.
 - Activa el Customer Portal en Stripe para que cada usuario pueda gestionar o cancelar su suscripción desde `/premium`.
 - Ejecuta de nuevo `supabase/schema.sql` para crear la tabla protegida `subscriptions`. Solo el servidor puede cambiar el estado; los cambios llegan desde el webhook firmado de Stripe.

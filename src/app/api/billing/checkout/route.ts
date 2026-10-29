@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   let plan: BillingPlan;
   try {
     const body = await request.json() as { plan?: string };
-    if (body.plan !== "monthly" && body.plan !== "annual") return NextResponse.json({ error: "Elige un plan válido." }, { status: 400 });
+    if (body.plan !== "weekly" && body.plan !== "monthly" && body.plan !== "annual") return NextResponse.json({ error: "Elige un plan válido." }, { status: 400 });
     plan = body.plan;
   } catch {
     return NextResponse.json({ error: "No se pudo leer el plan seleccionado." }, { status: 400 });
