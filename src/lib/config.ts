@@ -2,7 +2,10 @@ const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 
 export const BRAND = { name: "PICKZONE", short: "PZ" };
 export const TZ = process.env.APP_TIMEZONE || "Europe/Madrid";
+// Mantener la integración lista, pero usar CSV hasta activarla explícitamente.
+export const API_FOOTBALL_ENABLED = process.env.USE_API_FOOTBALL === "true";
 export const hasApiKey = !!process.env.API_FOOTBALL_KEY;
+export const apiEnabled = API_FOOTBALL_ENABLED && hasApiKey;
 export const FORM_MATCHES = clamp(Number(process.env.FORM_MATCHES || 20), 3, 20);
 export const LEAGUE_IDS = (process.env.LEAGUE_IDS || "")
   .split(",")

@@ -39,6 +39,9 @@ export function TeamPair({
   title: string; totalLabel: string; total: number | null; home: number | null; away: number | null;
   homeName: string; awayName: string; homeLogo: string | null; awayLogo: string | null; d?: number;
 }) {
+  const comparable = home !== null && away !== null && home >= 0 && away >= 0 && home + away > 0;
+  const homeShare = comparable ? (home / (home + away)) * 100 : 0;
+  const awayShare = 100 - homeShare;
   return (
     <Panel title={title}>
       <div className="flex items-center justify-between border-b border-line pb-3 text-sm text-muted">
@@ -53,6 +56,18 @@ export function TeamPair({
           </div>
         ))}
       </div>
+      {comparable && (
+        <div className="mt-3">
+          <div className="mb-1 flex justify-between text-[10px] font-semibold">
+            <span className="text-win">{pct(homeShare)}</span>
+            <span className="text-sky-400">{pct(awayShare)}</span>
+          </div>
+          <div className="flex h-2 overflow-hidden rounded-full bg-line" aria-label={`${homeName} ${pct(homeShare)} · ${awayName} ${pct(awayShare)}`}>
+            <div className="h-full bg-win transition-[width]" style={{ width: `${homeShare}%` }} />
+            <div className="h-full bg-sky-400 transition-[width]" style={{ width: `${awayShare}%` }} />
+          </div>
+        </div>
+      )}
     </Panel>
   );
 }

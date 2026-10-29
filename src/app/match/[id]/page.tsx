@@ -9,7 +9,7 @@ import { Flag, Shield } from "@/components/Shield";
 import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconShoe, IconSwap, IconTarget } from "@/components/icons";
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
 import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
-import { FORM_MATCHES } from "@/lib/config";
+import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { countryEs, errMsg, friendlyApiError, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import {
   LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, matchOverPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
@@ -47,8 +47,8 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   let profileErr: string | null = null;
   const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
   const [pa0, pb0] = await Promise.all([
-    grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId)),
-    grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId)),
+    grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId, f.home.name)),
+    grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId, f.away.name)),
   ]);
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
   const g = statusGroup(f);
@@ -56,7 +56,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   return (
     <>
       <Header back={`/?date=${date}`} />
-      {g === "live" && <AutoRefresh seconds={45} />}
+      {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-4 pb-8 pt-4 lg:px-0">
         <MatchHeader f={f} pa={pa} pb={pb} />
@@ -97,7 +97,7 @@ function MatchHeader({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfi
         <div className="shrink-0 text-center">
           {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
             : g === "finished" ? (<><div className="text-3xl font-black">{score}</div><div className="mt-1 rounded-full border border-line px-3 py-0.5 text-xs text-muted">{f.statusShort}</div></>)
-            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mt-2 rounded-full border border-line px-3 py-1 text-xs text-muted">{timeStr(f.timestamp)} · {f.statusShort}</div></>)}
+            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mt-2 rounded-full border border-line px-3 py-1 text-xs text-muted">{timeStr(f.timestamp)} · {g === "pending" ? t("Pendiente de actualizar") : f.statusShort}</div></>)}
         </div>
         <TeamCol name={f.away.name} logo={f.away.logo} role={t("Visitante")} p={pb} />
       </div>
@@ -230,7 +230,7 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
         const e = expectedFor(pa, pb, m);
         return <TeamPair key={m} title={t(TITLE[m][0])} totalLabel={t(TITLE[m][1])} total={e?.total ?? null} home={e?.home ?? null} away={e?.away ?? null} {...tp} />;
       })}
-      {lavg && lavg[tm] != null && <Notice>Media de liga (por partido, {lavg.n} partidos guardados): <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
+      {lavg && lavg[tm] != null && <Notice>{t("Media de liga")}: <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
       {LINES[tm].length > 0 && (
         <TrendTable
           title={t(`Tendencias de ${TITLE[tm][0].toLowerCase()}`)} rows={rows} aName={f.home.name} bName={f.away.name}
@@ -238,9 +238,6 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
           note={t("Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival.")}
         />
       )}
-      <Panel title={t("Cómo se calcula")}>
-        <p className="text-xs leading-relaxed text-muted">Valor esperado de cada equipo = media entre lo que produce habitualmente y lo que el rival suele conceder. El total es la suma. Son estimaciones sobre una muestra pequeña: úsalas como contexto, no como certeza.</p>
-      </Panel>
     </div>
   );
 }

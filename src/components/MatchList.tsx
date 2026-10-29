@@ -6,13 +6,13 @@ import { PremiumBanner } from "./PremiumBanner";
 import { Flag } from "./Shield";
 import { Notice } from "./ui";
 import { getFixturesByDate } from "@/lib/apifootball";
-import { LEAGUE_IDS, PRIORITY_LEAGUES, SHOW_PREMIUM } from "@/lib/config";
+import { apiEnabled, LEAGUE_IDS, PRIORITY_LEAGUES, SHOW_PREMIUM } from "@/lib/config";
 import { countryEs, errMsg, statusGroup, todayStr } from "@/lib/format";
 import type { Fixture, StatusGroup } from "@/lib/types";
 import { t } from "@/lib/i18n";
 
 const FILTERS: [string, string][] = [
-  ["all", "Todos"], ["live", "En vivo"], ["finished", "Finalizados"],
+  ["all", "Todos"], ...(apiEnabled ? [["live", "En vivo"] as [string, string]] : []), ["finished", "Finalizados"],
   ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
 
@@ -40,7 +40,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
 
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
-      {counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
+      {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
       <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
       <div className="flex flex-wrap gap-2">
         {FILTERS.map(([key, label]) => {

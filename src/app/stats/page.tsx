@@ -41,7 +41,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       .slice(0, MAX_ANALYSIS_FIXTURES);
     total = cand.length;
     const res = await Promise.all(cand.map(async (f) => {
-      const [a, b] = await Promise.all([getTeamProfile(f.home.id, metric !== "goals", f.season, f.timestamp, f.leagueId).catch(() => null), getTeamProfile(f.away.id, metric !== "goals", f.season, f.timestamp, f.leagueId).catch(() => null)]);
+      const [a, b] = await Promise.all([getTeamProfile(f.home.id, metric !== "goals", f.season, f.timestamp, f.leagueId, f.home.name).catch(() => null), getTeamProfile(f.away.id, metric !== "goals", f.season, f.timestamp, f.leagueId, f.away.name).catch(() => null)]);
       const e = a && b ? expectedFor(a, b, metric) : null;
       return e ? { f, v: e.total } : null;
     }));

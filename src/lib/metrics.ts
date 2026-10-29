@@ -8,8 +8,8 @@ export const METRIC_LABEL: Record<Metric, string> = {
 export const LINES: Record<Metric, number[]> = {
   goals: [1.5, 2.5],
   shots: [],
-  shotsOn: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5],
-  corners: [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5],
+  shotsOn: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5],
+  corners: [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5],
   cards: [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5],
 };
 

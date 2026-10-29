@@ -1,0 +1,381 @@
+date,time,matchday,home_team,away_team,city,stadium,status,result
+2026-08-21,20:30,1,Vicenza Virtus,Catanzaro,Vicenza,Stadio Romeo Menti,Jugado,3-2
+2026-08-22,19:00,1,Sudtirol,Virtus Entella,Bozen,Stadio Druso,Jugado,1-0
+2026-08-22,19:00,1,Carrarese,Mantova,Carrara,Stadio dei Marmi,Jugado,1-2
+2026-08-22,21:00,1,Benevento,Modena,Benevento,Stadio Ciro Vigorito,Jugado,1-2
+2026-08-22,21:00,1,Empoli,Cremonese,Empoli,Carlo Castellani,Jugado,1-0
+2026-08-22,21:00,1,Avellino,Arezzo,Avellino,Stadio Partenio-Adriano Lombardi,Jugado,1-2
+2026-08-23,19:00,1,Hellas Verona,Ascoli,Verona,Stadio Marcantonio Bentegodi,Jugado,1-2
+2026-08-23,19:00,1,Pisa,Padova,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Jugado,0-1
+2026-08-23,21:00,1,Cesena,Sampdoria,Cesena,Stadio Dino Manuzzi,Jugado,1-1
+2026-08-23,21:00,1,Palermo,Juve Stabia,Palermo,Stadio Renzo Barbera,Jugado,1-0
+2026-08-28,20:30,2,Cremonese,Modena,Cremona,Stadio Giovanni Zini,Jugado,0-3
+2026-08-29,19:00,2,Sampdoria,Juve Stabia,Genova,Luigi Ferraris,Jugado,1-2
+2026-08-29,19:00,2,Virtus Entella,Cesena,Chiavari,Stadio Comunale di Chiavari,Jugado,1-2
+2026-08-29,21:00,2,Ascoli,Carrarese,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Jugado,1-1
+2026-08-29,21:00,2,Avellino,Vicenza Virtus,Avellino,Stadio Partenio-Adriano Lombardi,Jugado,3-0
+2026-08-29,21:00,2,Padova,Hellas Verona,Padova,Stadio Euganeo,Jugado,1-1
+2026-08-30,19:00,2,Arezzo,Palermo,Arezzo,Citta di Arezzo,Jugado,2-3
+2026-08-30,19:00,2,Mantova,Empoli,Mantova,Stadio Danilo Martelli,Jugado,3-1
+2026-08-30,21:00,2,Benevento,Sudtirol,Benevento,Stadio Ciro Vigorito,Jugado,1-1
+2026-08-30,21:00,2,Pisa,Catanzaro,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Jugado,2-1
+2026-09-05,15:00,3,Sudtirol,Catanzaro,Bozen,Stadio Druso,Jugado,2-0
+2026-09-05,17:15,3,Ascoli,Benevento,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Jugado,1-0
+2026-09-05,19:30,3,Carrarese,Empoli,Carrara,Stadio dei Marmi,Jugado,0-1
+2026-09-06,15:00,3,Cesena,Mantova,Cesena,Orogel Stadium-Dino Manuzzi,Jugado,1-1
+2026-09-06,15:00,3,Virtus Entella,Vicenza Virtus,Chiavari,Stadio Comunale di Chiavari,Jugado,2-2
+2026-09-06,15:00,3,Juve Stabia,Pisa,Castellammare di Stabia,Stadio Romeo Menti,Jugado,0-3
+2026-09-06,15:00,3,Modena,Avellino,Modena,Stadio Alberto Braglia,Jugado,0-1
+2026-09-06,17:15,3,Hellas Verona,Arezzo,Verona,Stadio Marcantonio Bentegodi,Jugado,5-0
+2026-09-06,19:30,3,Cremonese,Padova,Cremona,Stadio Giovanni Zini,Jugado,3-1
+2026-09-07,20:30,3,Palermo,Sampdoria,Palermo,Stadio Renzo Barbera,Jugado,3-1
+2026-09-11,19:00,4,Empoli,Arezzo,Empoli,Stadio Carlo Castellani,Jugado,0-1
+2026-09-11,21:00,4,Benevento,Hellas Verona,Benevento,Stadio Ciro Vigorito,Jugado,3-1
+2026-09-11,21:00,4,Pisa,Virtus Entella,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Jugado,1-4
+2026-09-12,15:00,4,Padova,Ascoli,Padova,Stadio Comunale Euganeo,Jugado,1-0
+2026-09-12,15:00,4,Sudtirol,Modena,Bozen,Stadio Druso,Jugado,1-1
+2026-09-12,15:00,4,Vicenza Virtus,Juve Stabia,Vicenza,Stadio Romeo Menti,Jugado,1-1
+2026-09-12,17:15,4,Catanzaro,Carrarese,Catanzaro,Stadio Nicola Ceravolo,Jugado,1-0
+2026-09-12,19:30,4,Cesena,Cremonese,Cesena,Orogel Stadium-Dino Manuzzi,Jugado,2-2
+2026-09-13,17:15,4,Avellino,Palermo,Avellino,Stadio Partenio-Adriano Lombardi,Jugado,1-1
+2026-09-13,17:15,4,Mantova,Sampdoria,Mantova,Stadio Danilo Martelli,Jugado,2-0
+2026-09-18,20:30,5,Juve Stabia,Cesena,Castellammare di Stabia,Stadio Romeo Menti,Jugado,1-1
+2026-09-19,15:00,5,Cremonese,Virtus Entella,Cremona,Stadio Giovanni Zini,Jugado,0-0
+2026-09-19,15:00,5,Palermo,Padova,Palermo,Renzo Barbera,Jugado,2-1
+2026-09-19,15:00,5,Carrarese,Benevento,Carrara,Stadio dei Marmi,Jugado,0-1
+2026-09-19,17:15,5,Sampdoria,Catanzaro,Genoa,Luigi Ferraris,Jugado,2-1
+2026-09-19,19:30,5,Ascoli,Avellino,Ascoli Piceno,Cino e Lillo Del Duca,Jugado,3-1
+2026-09-20,15:00,5,Hellas Verona,Vicenza Virtus,Verona,Marc'Antonio Bentegodi,Jugado,2-1
+2026-09-20,15:00,5,Arezzo,Sudtirol,Arezzo,Stadio Città di Arezzo,Jugado,1-4
+2026-09-20,17:15,5,Mantova,Pisa,Mantova,Stadio Danilo Martelli,Jugado,2-2
+2026-09-20,19:30,5,Modena,Empoli,Modena,Alberto Braglia,Jugado,2-1
+2026-10-09,20:30,6,Avellino,Sampdoria,Avellino,Partenio-Adriano Lombardi,Jugado,4-1
+2026-10-10,15:00,6,Benevento,Cesena,Benevento,Stadio Ciro Vigorito,Jugado,2-0
+2026-10-10,15:00,6,Empoli,Palermo,Empoli,Carlo Castellani,Jugado,2-4
+2026-10-10,15:00,6,Virtus Entella,Juve Stabia,Chiavari,Stadio Comunale di Chiavari,Jugado,1-1
+2026-10-10,15:00,6,Sudtirol,Ascoli,Bozen,Stadio Druso,Jugado,0-0
+2026-10-10,17:15,6,Vicenza Virtus,Pisa,Vicenza,Stadio Romeo Menti,Jugado,0-3
+2026-10-10,19:30,6,Arezzo,Cremonese,Arezzo,Stadio Città di Arezzo,Jugado,0-0
+2026-10-11,15:00,6,Catanzaro,Mantova,Catanzaro,Stadio Nicola Ceravolo,Jugado,1-3
+2026-10-11,17:15,6,Padova,Carrarese,Padua,Stadio Comunale Euganeo,Jugado,0-2
+2026-10-11,19:30,6,Modena,Hellas Verona,Modena,Alberto Braglia,Jugado,3-2
+2026-10-16,20:30,7,Hellas Verona,Catanzaro,Verona,Marc'Antonio Bentegodi,Jugado,2-2
+2026-10-17,15:00,7,Benevento,Vicenza Virtus,Benevento,Stadio Ciro Vigorito,Jugado,2-2
+2026-10-17,15:00,7,Ascoli,Empoli,Ascoli Piceno,Cino e Lillo Del Duca,Jugado,1-1
+2026-10-17,15:00,7,Padova,Virtus Entella,Padua,Stadio Comunale Euganeo,Jugado,1-2
+2026-10-17,15:00,7,Carrarese,Modena,Carrara,Stadio dei Marmi,Jugado,2-1
+2026-10-17,17:15,7,Mantova,Palermo,Mantova,Stadio Danilo Martelli,Jugado,0-2
+2026-10-17,19:30,7,Pisa,Cremonese,Pizza,Arena Garibaldi,Jugado,3-1
+2026-10-18,15:00,7,Juve Stabia,Sudtirol,Castellammare di Stabia,Stadio Romeo Menti,Jugado,3-0
+2026-10-18,17:15,7,Cesena,Avellino,Cesena,Dino Manuzzi,Jugado,1-1
+2026-10-18,19:30,7,Sampdoria,Arezzo,Genoa,Luigi Ferraris,Jugado,1-2
+2026-10-23,20:30,8,Empoli,Vicenza Virtus,Empoli,Carlo Castellani,Jugado,0-2
+2026-10-24,15:00,8,Cremonese,Juve Stabia,Cremona,Stadio Giovanni Zini,Jugado,0-1
+2026-10-24,15:00,8,Virtus Entella,Mantova,Chiavari,Stadio Comunale,Jugado,0-1
+2026-10-24,15:00,8,Avellino,Padova,Avellino,Partenio-Adriano Lombardi,Jugado,0-1
+2026-10-24,15:00,8,Modena,Cesena,Modena,Alberto Braglia,Jugado,3-0
+2026-10-24,15:00,8,Sudtirol,Sampdoria,Bozen,Stadio Druso,Jugado,1-1
+2026-10-24,17:15,8,Catanzaro,Ascoli,Catanzaro,Stadio Nicola Ceravolo,Jugado,1-6
+2026-10-24,19:30,8,Arezzo,Benevento,Arezzo,Stadio Città di Arezzo,Jugado,0-3
+2026-10-25,15:00,8,Palermo,Carrarese,Palermo,Renzo Barbera,Jugado,2-1
+2026-10-25,17:15,8,Hellas Verona,Pisa,Verona,Marc'Antonio Bentegodi,Jugado,1-1
+2026-10-27,19:00,9,Benevento,Catanzaro,Benevento,Stadio Ciro Vigorito,Jugado,1-1
+2026-10-27,20:00,9,Ascoli,Sampdoria,Ascoli Piceno,Cino e Lillo Del Duca,Jugado,2-0
+2026-10-27,20:00,9,Cesena,Empoli,Cesena,Dino Manuzzi,Jugado,2-1
+2026-10-27,20:00,9,Virtus Entella,Avellino,Chiavari,Stadio Comunale,Jugado,1-1
+2026-10-27,20:00,9,Padova,Sudtirol,Padua,Stadio Comunale Euganeo,Jugado,2-0
+2026-10-27,20:00,9,Vicenza Virtus,Modena,Vicenza,Stadio Romeo Menti,Jugado,1-2
+2026-10-27,20:00,9,Mantova,Cremonese,Mantova,Stadio Danilo Martelli,Jugado,0-2
+2026-10-28,19:00,9,Pisa,Palermo,Pizza,Arena Garibaldi,Jugado,3-3
+2026-10-28,20:00,9,Juve Stabia,Hellas Verona,Castellammare di Stabia,Stadio Romeo Menti,Jugado,0-1
+2026-10-28,20:00,9,Carrarese,Arezzo,Carrara,Stadio dei Marmi,Jugado,2-1
+2026-10-31,15:00,10,Cremonese,Benevento,Cremona,Stadio Giovanni Zini,Por jugar,
+2026-10-31,15:00,10,Modena,Mantova,Modena,Alberto Braglia,Por jugar,
+2026-10-31,15:00,10,Sudtirol,Cesena,Bozen,Stadio Druso,Por jugar,
+2026-10-31,17:15,10,Catanzaro,Padova,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-10-31,19:30,10,Sampdoria,Virtus Entella,Genoa,Luigi Ferraris,Por jugar,
+2026-11-01,15:00,10,Empoli,Juve Stabia,Empoli,Stadio Carlo Castellani,Por jugar,
+2026-11-01,15:00,10,Avellino,Pisa,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2026-11-01,15:00,10,Arezzo,Ascoli,Arezzo,Citta di Arezzo,Por jugar,
+2026-11-01,17:15,10,Hellas Verona,Carrarese,Verona,,Por jugar,
+2026-11-01,19:30,10,Palermo,Vicenza Virtus,Palermo,Stadio Renzo Barbera,Por jugar,
+2026-11-06,20:30,11,Ascoli,Palermo,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2026-11-07,15:00,11,Cesena,Catanzaro,Cesena,Stadio Dino Manuzzi,Por jugar,
+2026-11-07,15:00,11,Pisa,Sudtirol,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2026-11-07,15:00,11,Juve Stabia,Arezzo,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2026-11-07,15:00,11,Padova,Empoli,Padova,Stadio Euganeo,Por jugar,
+2026-11-07,17:15,11,Mantova,Hellas Verona,Mantova,Stadio Danilo Martelli,Por jugar,
+2026-11-07,19:30,11,Benevento,Avellino,Benevento,Stadio Ciro Vigorito,Por jugar,
+2026-11-08,15:00,11,Virtus Entella,Modena,Chiavari,Stadio Comunale,Por jugar,
+2026-11-08,17:15,11,Carrarese,Sampdoria,Carrara,Stadio dei Marmi,Por jugar,
+2026-11-08,19:30,11,Vicenza Virtus,Cremonese,Vicenza,Stadio Romeo Menti,Por jugar,
+2026-11-21,15:00,12,Sampdoria,Benevento,Genoa,Stadio Luigi Ferraris,Por jugar,
+2026-11-21,15:00,12,Hellas Verona,Cesena,Verona,,Por jugar,
+2026-11-21,15:00,12,Ascoli,Vicenza Virtus,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2026-11-21,15:00,12,Empoli,Pisa,Empoli,Stadio Carlo Castellani,Por jugar,
+2026-11-21,15:00,12,Avellino,Mantova,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2026-11-21,15:00,12,Arezzo,Padova,Arezzo,Citta di Arezzo,Por jugar,
+2026-11-21,15:00,12,Modena,Juve Stabia,Modena,Stadio Alberto Braglia,Por jugar,
+2026-11-21,15:00,12,Sudtirol,Cremonese,Bolzano,Stadio Marco Druso,Por jugar,
+2026-11-21,15:00,12,Carrarese,Virtus Entella,Carrara,Stadio dei Marmi,Por jugar,
+2026-11-21,15:00,12,Catanzaro,Palermo,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-11-24,15:00,13,Benevento,Empoli,Benevento,Stadio Ciro Vigorito,Por jugar,
+2026-11-24,15:00,13,Cesena,Ascoli,Cesena,Stadio Dino Manuzzi,Por jugar,
+2026-11-24,15:00,13,Cremonese,Avellino,Cremona,Stadio Giovanni Zini,Por jugar,
+2026-11-24,15:00,13,Palermo,Sudtirol,Palermo,Stadio Renzo Barbera,Por jugar,
+2026-11-24,15:00,13,Virtus Entella,Hellas Verona,Chiavari,Stadio Comunale,Por jugar,
+2026-11-24,15:00,13,Pisa,Modena,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2026-11-24,15:00,13,Juve Stabia,Catanzaro,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2026-11-24,15:00,13,Padova,Sampdoria,Padova,Stadio Euganeo,Por jugar,
+2026-11-24,15:00,13,Vicenza Virtus,Carrarese,Vicenza,Stadio Romeo Menti,Por jugar,
+2026-11-24,15:00,13,Mantova,Arezzo,Mantova,Stadio Danilo Martelli,Por jugar,
+2026-11-28,15:00,14,Sampdoria,Cremonese,Genoa,Stadio Luigi Ferraris,Por jugar,
+2026-11-28,15:00,14,Ascoli,Virtus Entella,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2026-11-28,15:00,14,Empoli,Hellas Verona,Empoli,Stadio Carlo Castellani,Por jugar,
+2026-11-28,15:00,14,Palermo,Benevento,Palermo,Stadio Renzo Barbera,Por jugar,
+2026-11-28,15:00,14,Arezzo,Pisa,Arezzo,Citta di Arezzo,Por jugar,
+2026-11-28,15:00,14,Modena,Padova,Modena,Stadio Alberto Braglia,Por jugar,
+2026-11-28,15:00,14,Sudtirol,Mantova,Bolzano,Stadio Marco Druso,Por jugar,
+2026-11-28,15:00,14,Carrarese,Juve Stabia,Carrara,Stadio dei Marmi,Por jugar,
+2026-11-28,15:00,14,Vicenza Virtus,Cesena,Vicenza,Stadio Romeo Menti,Por jugar,
+2026-11-28,15:00,14,Catanzaro,Avellino,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-12-05,15:00,15,Hellas Verona,Palermo,Verona,,Por jugar,
+2026-12-05,15:00,15,Cesena,Carrarese,Cesena,Stadio Dino Manuzzi,Por jugar,
+2026-12-05,15:00,15,Cremonese,Catanzaro,Cremona,Stadio Giovanni Zini,Por jugar,
+2026-12-05,15:00,15,Virtus Entella,Empoli,Chiavari,Stadio Comunale,Por jugar,
+2026-12-05,15:00,15,Avellino,Sudtirol,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2026-12-05,15:00,15,Pisa,Sampdoria,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2026-12-05,15:00,15,Juve Stabia,Benevento,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2026-12-05,15:00,15,Padova,Vicenza Virtus,Padova,Stadio Euganeo,Por jugar,
+2026-12-05,15:00,15,Modena,Arezzo,Modena,Stadio Alberto Braglia,Por jugar,
+2026-12-05,15:00,15,Mantova,Ascoli,Mantova,Stadio Danilo Martelli,Por jugar,
+2026-12-08,15:00,16,Sampdoria,Modena,Genoa,Stadio Luigi Ferraris,Por jugar,
+2026-12-08,15:00,16,Hellas Verona,Avellino,Verona,,Por jugar,
+2026-12-08,15:00,16,Benevento,Padova,Benevento,Stadio Ciro Vigorito,Por jugar,
+2026-12-08,15:00,16,Ascoli,Juve Stabia,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2026-12-08,15:00,16,Empoli,Sudtirol,Empoli,Stadio Carlo Castellani,Por jugar,
+2026-12-08,15:00,16,Palermo,Cremonese,Palermo,Stadio Renzo Barbera,Por jugar,
+2026-12-08,15:00,16,Arezzo,Cesena,Arezzo,Citta di Arezzo,Por jugar,
+2026-12-08,15:00,16,Carrarese,Pisa,Carrara,Stadio dei Marmi,Por jugar,
+2026-12-08,15:00,16,Vicenza Virtus,Mantova,Vicenza,Stadio Romeo Menti,Por jugar,
+2026-12-08,15:00,16,Catanzaro,Virtus Entella,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-12-12,15:00,17,Sampdoria,Vicenza Virtus,Genoa,Stadio Luigi Ferraris,Por jugar,
+2026-12-12,15:00,17,Cesena,Palermo,Cesena,Stadio Dino Manuzzi,Por jugar,
+2026-12-12,15:00,17,Cremonese,Carrarese,Cremona,Stadio Giovanni Zini,Por jugar,
+2026-12-12,15:00,17,Virtus Entella,Arezzo,Chiavari,Stadio Comunale,Por jugar,
+2026-12-12,15:00,17,Avellino,Empoli,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2026-12-12,15:00,17,Pisa,Ascoli,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2026-12-12,15:00,17,Juve Stabia,Padova,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2026-12-12,15:00,17,Modena,Catanzaro,Modena,Stadio Alberto Braglia,Por jugar,
+2026-12-12,15:00,17,Sudtirol,Hellas Verona,Bolzano,Stadio Marco Druso,Por jugar,
+2026-12-12,15:00,17,Mantova,Benevento,Mantova,Stadio Danilo Martelli,Por jugar,
+2026-12-19,15:00,18,Hellas Verona,Cremonese,Verona,,Por jugar,
+2026-12-19,15:00,18,Benevento,Pisa,Benevento,Stadio Ciro Vigorito,Por jugar,
+2026-12-19,15:00,18,Ascoli,Modena,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2026-12-19,15:00,18,Empoli,Sampdoria,Empoli,Stadio Carlo Castellani,Por jugar,
+2026-12-19,15:00,18,Palermo,Virtus Entella,Palermo,Stadio Renzo Barbera,Por jugar,
+2026-12-19,15:00,18,Juve Stabia,Mantova,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2026-12-19,15:00,18,Padova,Cesena,Padova,Stadio Euganeo,Por jugar,
+2026-12-19,15:00,18,Carrarese,Avellino,Carrara,Stadio dei Marmi,Por jugar,
+2026-12-19,15:00,18,Vicenza Virtus,Sudtirol,Vicenza,Stadio Romeo Menti,Por jugar,
+2026-12-19,15:00,18,Catanzaro,Arezzo,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-12-27,15:00,19,Sampdoria,Hellas Verona,Genoa,Stadio Luigi Ferraris,Por jugar,
+2026-12-27,15:00,19,Cesena,Pisa,Cesena,Stadio Dino Manuzzi,Por jugar,
+2026-12-27,15:00,19,Cremonese,Ascoli,Cremona,Stadio Giovanni Zini,Por jugar,
+2026-12-27,15:00,19,Virtus Entella,Benevento,Chiavari,Stadio Comunale,Por jugar,
+2026-12-27,15:00,19,Avellino,Juve Stabia,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2026-12-27,15:00,19,Arezzo,Vicenza Virtus,Arezzo,Citta di Arezzo,Por jugar,
+2026-12-27,15:00,19,Modena,Palermo,Modena,Stadio Alberto Braglia,Por jugar,
+2026-12-27,15:00,19,Sudtirol,Carrarese,Bolzano,Stadio Marco Druso,Por jugar,
+2026-12-27,15:00,19,Catanzaro,Empoli,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2026-12-27,15:00,19,Mantova,Padova,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-01-09,15:00,20,Ascoli,Catanzaro,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-01-09,15:00,20,Cesena,Modena,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-01-09,15:00,20,Palermo,Empoli,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-01-09,15:00,20,Pisa,Avellino,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-01-09,15:00,20,Juve Stabia,Sampdoria,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-01-09,15:00,20,Padova,Cremonese,Padova,Stadio Euganeo,Por jugar,
+2027-01-09,15:00,20,Arezzo,Hellas Verona,Arezzo,Citta di Arezzo,Por jugar,
+2027-01-09,15:00,20,Sudtirol,Benevento,Bolzano,Stadio Marco Druso,Por jugar,
+2027-01-09,15:00,20,Vicenza Virtus,Virtus Entella,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-01-09,15:00,20,Mantova,Carrarese,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-01-16,15:00,21,Sampdoria,Mantova,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-01-16,15:00,21,Hellas Verona,Juve Stabia,Verona,,Por jugar,
+2027-01-16,15:00,21,Benevento,Arezzo,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-01-16,15:00,21,Ascoli,Sudtirol,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-01-16,15:00,21,Empoli,Modena,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-01-16,15:00,21,Cremonese,Vicenza Virtus,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-01-16,15:00,21,Palermo,Pisa,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-01-16,15:00,21,Avellino,Virtus Entella,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-01-16,15:00,21,Carrarese,Padova,Carrara,Stadio dei Marmi,Por jugar,
+2027-01-16,15:00,21,Catanzaro,Cesena,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-01-23,15:00,22,Cesena,Benevento,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-01-23,15:00,22,Virtus Entella,Sampdoria,Chiavari,Stadio Comunale,Por jugar,
+2027-01-23,15:00,22,Pisa,Hellas Verona,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-01-23,15:00,22,Juve Stabia,Cremonese,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-01-23,15:00,22,Padova,Catanzaro,Padova,Stadio Euganeo,Por jugar,
+2027-01-23,15:00,22,Arezzo,Empoli,Arezzo,Citta di Arezzo,Por jugar,
+2027-01-23,15:00,22,Modena,Carrarese,Modena,Stadio Alberto Braglia,Por jugar,
+2027-01-23,15:00,22,Sudtirol,Palermo,Bolzano,Stadio Marco Druso,Por jugar,
+2027-01-23,15:00,22,Vicenza Virtus,Ascoli,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-01-23,15:00,22,Mantova,Avellino,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-01-30,15:00,23,Hellas Verona,Modena,Verona,,Por jugar,
+2027-01-30,15:00,23,Benevento,Sampdoria,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-01-30,15:00,23,Ascoli,Padova,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-01-30,15:00,23,Empoli,Mantova,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-01-30,15:00,23,Cremonese,Pisa,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-01-30,15:00,23,Palermo,Arezzo,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-01-30,15:00,23,Virtus Entella,Sudtirol,Chiavari,Stadio Comunale,Por jugar,
+2027-01-30,15:00,23,Avellino,Cesena,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-01-30,15:00,23,Carrarese,Vicenza Virtus,Carrara,Stadio dei Marmi,Por jugar,
+2027-01-30,15:00,23,Catanzaro,Juve Stabia,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-02-06,15:00,24,Sampdoria,Ascoli,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-02-06,15:00,24,Benevento,Cremonese,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-02-06,15:00,24,Cesena,Hellas Verona,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-02-06,15:00,24,Pisa,Empoli,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-02-06,15:00,24,Juve Stabia,Carrarese,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-02-06,15:00,24,Padova,Arezzo,Padova,Stadio Euganeo,Por jugar,
+2027-02-06,15:00,24,Modena,Virtus Entella,Modena,Stadio Alberto Braglia,Por jugar,
+2027-02-06,15:00,24,Sudtirol,Avellino,Bolzano,Stadio Marco Druso,Por jugar,
+2027-02-06,15:00,24,Vicenza Virtus,Palermo,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-02-06,15:00,24,Mantova,Catanzaro,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-02-13,15:00,25,Empoli,Benevento,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-02-13,15:00,25,Cremonese,Cesena,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-02-13,15:00,25,Palermo,Mantova,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-02-13,15:00,25,Virtus Entella,Carrarese,Chiavari,Stadio Comunale,Por jugar,
+2027-02-13,15:00,25,Avellino,Ascoli,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-02-13,15:00,25,Pisa,Juve Stabia,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-02-13,15:00,25,Arezzo,Sampdoria,Arezzo,Citta di Arezzo,Por jugar,
+2027-02-13,15:00,25,Modena,Sudtirol,Modena,Stadio Alberto Braglia,Por jugar,
+2027-02-13,15:00,25,Vicenza Virtus,Padova,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-02-13,15:00,25,Catanzaro,Hellas Verona,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-02-20,15:00,26,Sampdoria,Avellino,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-02-20,15:00,26,Hellas Verona,Virtus Entella,Verona,,Por jugar,
+2027-02-20,15:00,26,Benevento,Mantova,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-02-20,15:00,26,Ascoli,Pisa,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-02-20,15:00,26,Cesena,Vicenza Virtus,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-02-20,15:00,26,Cremonese,Palermo,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-02-20,15:00,26,Juve Stabia,Empoli,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-02-20,15:00,26,Padova,Modena,Padova,Stadio Euganeo,Por jugar,
+2027-02-20,15:00,26,Sudtirol,Arezzo,Bolzano,Stadio Marco Druso,Por jugar,
+2027-02-20,15:00,26,Carrarese,Catanzaro,Carrara,Stadio dei Marmi,Por jugar,
+2027-02-27,15:00,27,Sampdoria,Padova,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-02-27,15:00,27,Empoli,Ascoli,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-02-27,15:00,27,Palermo,Hellas Verona,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-02-27,15:00,27,Virtus Entella,Cremonese,Chiavari,Stadio Comunale,Por jugar,
+2027-02-27,15:00,27,Pisa,Benevento,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-02-27,15:00,27,Juve Stabia,Modena,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-02-27,15:00,27,Arezzo,Carrarese,Arezzo,Citta di Arezzo,Por jugar,
+2027-02-27,15:00,27,Vicenza Virtus,Avellino,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-02-27,15:00,27,Catanzaro,Sudtirol,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-02-27,15:00,27,Mantova,Cesena,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-03-02,15:00,28,Hellas Verona,Empoli,Verona,,Por jugar,
+2027-03-02,15:00,28,Benevento,Juve Stabia,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-03-02,15:00,28,Ascoli,Arezzo,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-03-02,15:00,28,Cesena,Virtus Entella,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-03-02,15:00,28,Cremonese,Sampdoria,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-03-02,15:00,28,Avellino,Catanzaro,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-03-02,15:00,28,Padova,Mantova,Padova,Stadio Euganeo,Por jugar,
+2027-03-02,15:00,28,Modena,Pisa,Modena,Stadio Alberto Braglia,Por jugar,
+2027-03-02,15:00,28,Sudtirol,Vicenza Virtus,Bolzano,Stadio Marco Druso,Por jugar,
+2027-03-02,15:00,28,Carrarese,Palermo,Carrara,Stadio dei Marmi,Por jugar,
+2027-03-06,15:00,29,Sampdoria,Cesena,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-03-06,15:00,29,Empoli,Carrarese,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-03-06,15:00,29,Palermo,Modena,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-03-06,15:00,29,Virtus Entella,Ascoli,Chiavari,Stadio Comunale,Por jugar,
+2027-03-06,15:00,29,Avellino,Hellas Verona,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-03-06,15:00,29,Pisa,Vicenza Virtus,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-03-06,15:00,29,Padova,Benevento,Padova,Stadio Euganeo,Por jugar,
+2027-03-06,15:00,29,Arezzo,Juve Stabia,Arezzo,Citta di Arezzo,Por jugar,
+2027-03-06,15:00,29,Catanzaro,Cremonese,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-03-06,15:00,29,Mantova,Sudtirol,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-03-13,15:00,30,Hellas Verona,Sampdoria,Verona,,Por jugar,
+2027-03-13,15:00,30,Benevento,Virtus Entella,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-03-13,15:00,30,Cesena,Padova,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-03-13,15:00,30,Empoli,Avellino,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-03-13,15:00,30,Cremonese,Mantova,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-03-13,15:00,30,Juve Stabia,Palermo,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-03-13,15:00,30,Modena,Ascoli,Modena,Stadio Alberto Braglia,Por jugar,
+2027-03-13,15:00,30,Carrarese,Sudtirol,Carrara,Stadio dei Marmi,Por jugar,
+2027-03-13,15:00,30,Vicenza Virtus,Arezzo,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-03-13,15:00,30,Catanzaro,Pisa,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-03-20,15:00,31,Sampdoria,Empoli,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-03-20,15:00,31,Ascoli,Cremonese,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-03-20,15:00,31,Virtus Entella,Catanzaro,Chiavari,Stadio Comunale,Por jugar,
+2027-03-20,15:00,31,Avellino,Benevento,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-03-20,15:00,31,Padova,Palermo,Padova,Stadio Euganeo,Por jugar,
+2027-03-20,15:00,31,Arezzo,Modena,Arezzo,Citta di Arezzo,Por jugar,
+2027-03-20,15:00,31,Sudtirol,Pisa,Bolzano,Stadio Marco Druso,Por jugar,
+2027-03-20,15:00,31,Carrarese,Cesena,Carrara,Stadio dei Marmi,Por jugar,
+2027-03-20,15:00,31,Vicenza Virtus,Hellas Verona,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-03-20,15:00,31,Mantova,Juve Stabia,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-04-03,15:00,32,Hellas Verona,Mantova,Verona,,Por jugar,
+2027-04-03,15:00,32,Benevento,Ascoli,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-04-03,15:00,32,Cesena,Sudtirol,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-04-03,15:00,32,Empoli,Padova,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-04-03,15:00,32,Cremonese,Arezzo,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-04-03,15:00,32,Palermo,Avellino,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-04-03,15:00,32,Pisa,Carrarese,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-04-03,15:00,32,Juve Stabia,Virtus Entella,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-04-03,15:00,32,Modena,Sampdoria,Modena,Stadio Alberto Braglia,Por jugar,
+2027-04-03,15:00,32,Catanzaro,Vicenza Virtus,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-04-10,15:00,33,Sampdoria,Palermo,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-04-10,15:00,33,Ascoli,Cesena,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-04-10,15:00,33,Virtus Entella,Pisa,Chiavari,Stadio Comunale,Por jugar,
+2027-04-10,15:00,33,Avellino,Cremonese,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-04-10,15:00,33,Padova,Juve Stabia,Padova,Stadio Euganeo,Por jugar,
+2027-04-10,15:00,33,Arezzo,Catanzaro,Arezzo,Citta di Arezzo,Por jugar,
+2027-04-10,15:00,33,Sudtirol,Empoli,Bolzano,Stadio Marco Druso,Por jugar,
+2027-04-10,15:00,33,Carrarese,Hellas Verona,Carrara,Stadio dei Marmi,Por jugar,
+2027-04-10,15:00,33,Vicenza Virtus,Benevento,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-04-10,15:00,33,Mantova,Modena,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-04-17,15:00,34,Sampdoria,Carrarese,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-04-17,15:00,34,Hellas Verona,Padova,Verona,,Por jugar,
+2027-04-17,15:00,34,Empoli,Virtus Entella,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-04-17,15:00,34,Cremonese,Sudtirol,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-04-17,15:00,34,Palermo,Ascoli,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-04-17,15:00,34,Pisa,Cesena,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-04-17,15:00,34,Juve Stabia,Avellino,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-04-17,15:00,34,Arezzo,Mantova,Arezzo,Citta di Arezzo,Por jugar,
+2027-04-17,15:00,34,Modena,Vicenza Virtus,Modena,Stadio Alberto Braglia,Por jugar,
+2027-04-17,15:00,34,Catanzaro,Benevento,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-04-24,15:00,35,Benevento,Carrarese,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-04-24,15:00,35,Ascoli,Mantova,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-04-24,15:00,35,Cesena,Juve Stabia,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-04-24,15:00,35,Cremonese,Hellas Verona,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-04-24,15:00,35,Virtus Entella,Palermo,Chiavari,Stadio Comunale,Por jugar,
+2027-04-24,15:00,35,Avellino,Modena,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-04-24,15:00,35,Pisa,Arezzo,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-04-24,15:00,35,Sudtirol,Padova,Bolzano,Stadio Marco Druso,Por jugar,
+2027-04-24,15:00,35,Vicenza Virtus,Empoli,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-04-24,15:00,35,Catanzaro,Sampdoria,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-05-01,15:00,36,Sampdoria,Sudtirol,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-05-01,15:00,36,Hellas Verona,Benevento,Verona,,Por jugar,
+2027-05-01,15:00,36,Empoli,Cesena,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-05-01,15:00,36,Palermo,Catanzaro,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-05-01,15:00,36,Juve Stabia,Vicenza Virtus,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-05-01,15:00,36,Padova,Pisa,Padova,Stadio Euganeo,Por jugar,
+2027-05-01,15:00,36,Arezzo,Avellino,Arezzo,Citta di Arezzo,Por jugar,
+2027-05-01,15:00,36,Modena,Cremonese,Modena,Stadio Alberto Braglia,Por jugar,
+2027-05-01,15:00,36,Carrarese,Ascoli,Carrara,Stadio dei Marmi,Por jugar,
+2027-05-01,15:00,36,Mantova,Virtus Entella,Mantova,Stadio Danilo Martelli,Por jugar,
+2027-05-08,15:00,37,Benevento,Palermo,Benevento,Stadio Ciro Vigorito,Por jugar,
+2027-05-08,15:00,37,Ascoli,Hellas Verona,Ascoli Piceno,Stadio Cino e Lillo Del Duca,Por jugar,
+2027-05-08,15:00,37,Cesena,Arezzo,Cesena,Stadio Dino Manuzzi,Por jugar,
+2027-05-08,15:00,37,Cremonese,Empoli,Cremona,Stadio Giovanni Zini,Por jugar,
+2027-05-08,15:00,37,Virtus Entella,Padova,Chiavari,Stadio Comunale,Por jugar,
+2027-05-08,15:00,37,Avellino,Carrarese,Avellino,Stadio Partenio-Adriano Lombardi,Por jugar,
+2027-05-08,15:00,37,Pisa,Mantova,Pisa,Arena Garibaldi - Stadio Romeo Anconetani,Por jugar,
+2027-05-08,15:00,37,Sudtirol,Juve Stabia,Bolzano,Stadio Marco Druso,Por jugar,
+2027-05-08,15:00,37,Vicenza Virtus,Sampdoria,Vicenza,Stadio Romeo Menti,Por jugar,
+2027-05-08,15:00,37,Catanzaro,Modena,Catanzaro,Stadio Nicola Ceravolo,Por jugar,
+2027-05-14,15:00,38,Sampdoria,Pisa,Genoa,Stadio Luigi Ferraris,Por jugar,
+2027-05-14,15:00,38,Hellas Verona,Sudtirol,Verona,,Por jugar,
+2027-05-14,15:00,38,Empoli,Catanzaro,Empoli,Stadio Carlo Castellani,Por jugar,
+2027-05-14,15:00,38,Palermo,Cesena,Palermo,Stadio Renzo Barbera,Por jugar,
+2027-05-14,15:00,38,Juve Stabia,Ascoli,Castellammare di Stabia,Stadio Romeo Menti,Por jugar,
+2027-05-14,15:00,38,Padova,Avellino,Padova,Stadio Euganeo,Por jugar,
+2027-05-14,15:00,38,Arezzo,Virtus Entella,Arezzo,Citta di Arezzo,Por jugar,
+2027-05-14,15:00,38,Modena,Benevento,Modena,Stadio Alberto Braglia,Por jugar,
+2027-05-14,15:00,38,Carrarese,Cremonese,Carrara,Stadio dei Marmi,Por jugar,
+2027-05-14,15:00,38,Mantova,Vicenza Virtus,Mantova,Stadio Danilo Martelli,Por jugar,

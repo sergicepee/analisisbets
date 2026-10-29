@@ -4,7 +4,7 @@ export type LangCode = "es" | "en";
 /** Clave = texto en español. Si no hay traducción, se muestra el español. */
 const EN: Record<string, string> = {
   // navegación
-  "Partidos": "Matches", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "Estadísticas": "Stats", "Ligas": "Leagues",
+  "Partidos": "Matches", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "La mejor combinada": "Best accumulator", "Estadísticas": "Stats", "Ligas": "Leagues",
   "Buscar equipos, ligas...": "Search teams, leagues...",
   // menú de usuario
   "Iniciar sesión": "Sign in", "Mi cuenta": "My account", "Cerrar sesión": "Sign out", "Ajustes": "Settings",
@@ -17,7 +17,7 @@ const EN: Record<string, string> = {
   // fechas y filtros
   "Ayer": "Yesterday", "Hoy": "Today", "Mañana": "Tomorrow",
   "Todos": "All", "En vivo": "Live", "Finalizados": "Finished", "Próximos": "Upcoming",
-  "Pendientes de actualizar": "Awaiting update", "Otros": "Other",
+  "Pendientes de actualizar": "Awaiting update", "Pendiente de actualizar": "Awaiting update", "Otros": "Other",
   "Liga:": "League:", "No hay partidos para este filtro y fecha.": "No matches for this filter and date.",
   "No se pudo cargar el listado:": "Could not load the list:",
   "Local": "Home", "Visitante": "Away", "Empate": "Draw",
@@ -27,7 +27,7 @@ const EN: Record<string, string> = {
   "Más de 2,5 goles": "Over 2.5 goals", "Más de 1,5 goles": "Over 1.5 goals", "Ambos marcan": "Both teams to score",
   "Promedio de goles": "Average goals", "Promedio de tarjetas": "Average cards", "Promedio de córners": "Average corners",
   "Promedio de tiros": "Average shots", "Promedio de tiros a puerta": "Average shots on target",
-  "Media liga": "League avg",
+  "Media liga": "League avg", "Media de liga": "League average",
   "Estimaciones previas al partido; no hay probabilidades en directo. Son estimaciones estadísticas, no garantías.": "Pre-match estimates; there are no live probabilities. These are statistical estimates, not guarantees.",
   "Estimaciones previas al partido; no hay probabilidades en directo. Se ponderan más los partidos recientes y se separa el rendimiento en casa y fuera. Son estimaciones estadísticas, no garantías.": "Pre-match estimates; there are no live probabilities. Recent matches carry more weight and home/away performance is split. These are statistical estimates, not guarantees.",
   "Las tendencias recientes ponderan más los partidos nuevos. “Partido” usa el modelo de goles del encuentro.": "Recent trends give more weight to newer matches. “Match” uses the goal model for this fixture.",

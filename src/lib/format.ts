@@ -1,4 +1,5 @@
 import { getLang, getLocale, getTz } from "./prefs";
+import { apiEnabled } from "./config";
 import type { Fixture, StatusGroup } from "./types";
 
 export const isDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -20,10 +21,10 @@ export const fullDateTime = (ts: number) =>
 const LIVE = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"];
 const FIN = ["FT", "AET", "PEN"];
 export function statusGroup(f: Fixture): StatusGroup {
-  if (LIVE.includes(f.statusShort)) return "live";
+  if (LIVE.includes(f.statusShort)) return apiEnabled ? "live" : "pending";
   if (FIN.includes(f.statusShort)) return "finished";
   if (["NS", "TBD"].includes(f.statusShort)) {
-    return Date.now() / 1000 > f.timestamp + 20 * 60 ? "pending" : "upcoming";
+    return Date.now() / 1000 >= f.timestamp ? "pending" : "upcoming";
   }
   return "other";
 }

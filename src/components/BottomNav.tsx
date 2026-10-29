@@ -6,7 +6,7 @@ import { useT } from "./I18nProvider";
 
 const ITEMS = [
   { href: "/", label: "Partidos", Icon: IconMatches, match: (p: string) => p === "/" || p.startsWith("/match") },
-  { href: "/top3", label: "Los 3 mejores", Icon: IconTrophy, match: (p: string) => p.startsWith("/top3") },
+  { href: "/top3", label: "La mejor combinada", Icon: IconTrophy, match: (p: string) => p.startsWith("/top3") },
   { href: "/stats", label: "Estadísticas", Icon: IconStats, match: (p: string) => p.startsWith("/stats") },
   { href: "/leagues", label: "Ligas", Icon: IconTrophy, match: (p: string) => p.startsWith("/leagues") },
 ];

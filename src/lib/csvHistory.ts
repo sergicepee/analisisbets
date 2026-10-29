@@ -2,11 +2,12 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { FORM_MATCHES } from "./config";
+import { CSV_LEAGUES, csvLeagueById } from "./csvLeagues";
 import { canonicalTeamName, csvTeamId } from "./csvFixtures";
 import type { Fixture, LeagueAvg, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
 
-type HistoricalMatch = {
-  season: number;
+export type HistoricalMatch = {
+  leagueId: number; season: number;
   timestamp: number; homeId: number; awayId: number;
   goalsHome: number; goalsAway: number; htHome: number | null; htAway: number | null;
   home: MatchStat; away: MatchStat;
@@ -34,12 +35,16 @@ function number(value: string | undefined): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function madridTimestamp(date: string, time: string): number {
-  const [day, month, year] = date.split("/");
-  const wanted = Date.UTC(Number(year), Number(month) - 1, Number(day), ...time.split(":").map(Number));
+function localTimestamp(date: string, time: string, timeZone: string): number {
+  const [a, b, c] = date.split(/[./-]/).map(Number);
+  const year = String(a).length === 4 ? a : c < 100 ? 2000 + c : c;
+  const month = String(a).length === 4 ? b : b;
+  const day = String(a).length === 4 ? c : a;
+  const [hour, minute] = (time || "12:00").split(":").map(Number);
+  const wanted = Date.UTC(year, month - 1, day, hour || 0, minute || 0);
   let guess = wanted;
   const formatter = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   });
   for (let i = 0; i < 3; i++) {
@@ -49,12 +54,15 @@ function madridTimestamp(date: string, time: string): number {
   return Math.floor(guess / 1000);
 }
 
-async function readMatchesFrom(fileName: string, season: number): Promise<HistoricalMatch[]> {
-  const file = path.join(process.cwd(), "public", "data", fileName);
+async function readMatchesFrom(code: string, leagueId: number, season: number): Promise<HistoricalMatch[]> {
+  const fileName = `${code}-${season}-${String(season + 1).slice(-2)}.csv`;
+  const league = csvLeagueById(leagueId);
+  if (!league) return [];
+  const file = path.join(process.cwd(), "public", "data", "football-data", fileName);
   const text = await readFile(file, "utf8");
   const lines = text.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
   const headers = csvLine(lines.shift() ?? "");
-  const index = (name: string) => headers.indexOf(name);
+  const index = (name: string) => headers.findIndex((header) => header.trim().toLowerCase() === name.toLowerCase());
   return lines.flatMap((line) => {
     const values = csvLine(line);
     const get = (name: string) => values[index(name)] ?? "";
@@ -67,8 +75,8 @@ async function readMatchesFrom(fileName: string, season: number): Promise<Histor
       cards: yellow === null && red === null ? null : (yellow ?? 0) + (red ?? 0),
     });
     return [{
-      season,
-      timestamp: madridTimestamp(get("Date"), get("Time")),
+      leagueId, season,
+      timestamp: localTimestamp(get("Date"), get("Time"), league.timeZone),
       homeId: csvTeamId(canonicalTeamName(get("HomeTeam"))),
       awayId: csvTeamId(canonicalTeamName(get("AwayTeam"))),
       goalsHome, goalsAway, htHome: number(get("HTHG")), htAway: number(get("HTAG")),
@@ -79,10 +87,9 @@ async function readMatchesFrom(fileName: string, season: number): Promise<Histor
 }
 
 async function readMatches(): Promise<HistoricalMatch[]> {
-  const seasons = await Promise.all([
-    readMatchesFrom("spain-la-liga-2025-26.csv", 2025),
-    readMatchesFrom("spain-la-liga-2026-27.csv", 2026),
-  ]);
+  const sources = CSV_LEAGUES.flatMap((league) => [2025, 2026].map((season) =>
+    readMatchesFrom(league.code, league.id, season)));
+  const seasons = await Promise.all(sources);
   return seasons.flat().sort((a, b) => a.timestamp - b.timestamp);
 }
 
@@ -91,8 +98,12 @@ function readHistory(): Promise<HistoricalMatch[]> {
   return matchesPromise;
 }
 
-export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity): Promise<TeamProfile> {
-  const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (match.homeId === teamId || match.awayId === teamId));
+export async function getCsvCalibrationMatches(leagueId: number, beforeTimestamp: number): Promise<HistoricalMatch[]> {
+  return (await readHistory()).filter((match) => match.leagueId === leagueId && match.timestamp < beforeTimestamp);
+}
+
+export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number): Promise<TeamProfile> {
+  const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (!leagueId || match.leagueId === leagueId) && (match.homeId === teamId || match.awayId === teamId));
   const rows: TeamRow[] = matches.slice(-FORM_MATCHES).map((match) => {
     const isHome = match.homeId === teamId;
     const goalsFor = isHome ? match.goalsHome : match.goalsAway;
@@ -109,8 +120,8 @@ export async function getCsvTeamProfile(teamId: number, withStats: boolean, befo
   return { teamId, rows };
 }
 
-export async function getCsvLeagueAverage(): Promise<LeagueAvg | null> {
-  const matches = (await readHistory()).filter((match) => match.season === 2026);
+export async function getCsvLeagueAverage(leagueId = 140, season = 2026): Promise<LeagueAvg | null> {
+  const matches = (await readHistory()).filter((match) => match.leagueId === leagueId && match.season === season);
   if (!matches.length) return null;
   const avg = (values: Array<number | null>) => {
     const present = values.filter((value): value is number => value !== null);
@@ -132,10 +143,13 @@ export async function getCsvLeagueAverage(): Promise<LeagueAvg | null> {
 }
 
 export async function getCsvStatsForFixture(fixture: Fixture): Promise<StoredStats | null> {
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(fixture.timestamp * 1000);
+  const timeZone = csvLeagueById(fixture.leagueId)?.timeZone ?? "Europe/Madrid";
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone }).format(fixture.timestamp * 1000);
+  const homeId = csvTeamId(canonicalTeamName(fixture.home.name));
+  const awayId = csvTeamId(canonicalTeamName(fixture.away.name));
   const match = (await readHistory()).find((item) => {
-    const matchDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(item.timestamp * 1000);
-    return matchDate === date && item.homeId === fixture.home.id && item.awayId === fixture.away.id;
+    const matchDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(item.timestamp * 1000);
+    return item.leagueId === fixture.leagueId && matchDate === date && item.homeId === homeId && item.awayId === awayId;
   });
   if (!match) return null;
   return {

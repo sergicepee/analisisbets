@@ -25,7 +25,7 @@ export function MatchRow({ f, date, selected = false }: { f: Fixture; date: stri
         ) : (
           <>
             <div className="text-base font-bold">{timeStr(f.timestamp)}</div>
-            <div className="text-xs text-muted">{f.statusShort}</div>
+            <div className={`text-xs text-muted ${g === "pending" ? "text-[10px] leading-tight" : ""}`}>{g === "pending" ? t("Pendiente de actualizar") : f.statusShort}</div>
           </>
         )}
       </div>

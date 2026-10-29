@@ -4,22 +4,32 @@ import { DateNav } from "@/components/DateNav";
 import { Flag, Shield } from "@/components/Shield";
 import { Notice } from "@/components/ui";
 import { getFixtureStatsFor, getFixturesByDate, getPrediction, getTeamProfile } from "@/lib/apifootball";
-import { LEAGUE_IDS, MAX_ANALYSIS_FIXTURES, PRIORITY_LEAGUES, hasApiKey } from "@/lib/config";
+import { apiEnabled } from "@/lib/config";
 import { countryEs, dayMonthTime, errMsg, isDate, statusGroup, todayStr } from "@/lib/format";
-import { expectedFor, matchOverPct, poissonModel } from "@/lib/metrics";
+import { expectedFor, LINES, matchOverPct, poissonModel } from "@/lib/metrics";
+import { csvLeagueById } from "@/lib/csvLeagues";
+import { calibrateCsvPicks } from "@/lib/csvCalibration";
 import type { Fixture, Metric, TeamProfile } from "@/lib/types";
 import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-type Pick = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number };
+type Pick = { f: Fixture; market: "1x2" | "goals" | "btts" | Metric; selection: string; p: number; sample: number; rawP?: number; calibrationN?: number };
 type Result = "hit" | "miss" | "void" | "pending";
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
 const doneStatus = (f: Fixture) => statusGroup(f) === "finished";
 
 function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<ReturnType<typeof getPrediction>>): Pick[] {
   const out: Pick[] = [];
+  const sampleCount = (profile: TeamProfile, market: Pick["market"]) => {
+    if (["1x2", "goals", "btts"].includes(market)) return profile.rows.length;
+    const key = market === "corners" ? "corners" : market === "cards" ? "cards" : market === "shotsOn" ? "shotsOn" : "shots";
+    return profile.rows.filter((row) => row.sFor?.[key] != null && row.sAgainst?.[key] != null).length;
+  };
+  const add = (market: Pick["market"], selection: string, p: number) => {
+    out.push({ f, market, selection, p, sample: Math.min(sampleCount(a, market), sampleCount(b, market)) });
+  };
   const eg = expectedFor(a, b, "goals") ?? (pred?.last5 ? {
     home: (pred.last5.home.gf + pred.last5.away.ga) / 2,
     away: (pred.last5.away.gf + pred.last5.home.ga) / 2,
@@ -27,29 +37,28 @@ function buildPicks(f: Fixture, a: TeamProfile, b: TeamProfile, pred: Awaited<Re
   const model = eg ? poissonModel(eg.home, eg.away) : null;
   const p1x2 = model ?? pred;
   if (p1x2) {
-    out.push({ f, market: "1x2", selection: `${f.home.name} gana`, p: p1x2.home });
-    out.push({ f, market: "1x2", selection: "Empate", p: p1x2.draw });
-    out.push({ f, market: "1x2", selection: `${f.away.name} gana`, p: p1x2.away });
+    add("1x2", `${f.home.name} gana`, p1x2.home);
+    add("1x2", "Empate", p1x2.draw);
+    add("1x2", `${f.away.name} gana`, p1x2.away);
   }
   if (model) {
     for (const [line, over] of [[1.5, model.over15], [2.5, model.over25]] as [number, number][]) {
-      out.push({ f, market: "goals", selection: `Más de ${line} goles`, p: over });
-      out.push({ f, market: "goals", selection: `Menos de ${line} goles`, p: 100 - over });
+      add("goals", `Más de ${line} goles`, over);
+      add("goals", `Menos de ${line} goles`, 100 - over);
     }
-    out.push({ f, market: "btts", selection: "Ambos marcan · Sí", p: model.btts });
-    out.push({ f, market: "btts", selection: "Ambos marcan · No", p: 100 - model.btts });
+    add("btts", "Ambos marcan · Sí", model.btts);
+    add("btts", "Ambos marcan · No", 100 - model.btts);
   }
-  const lines: Record<Metric, number[]> = { goals: [], shots: [], shotsOn: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5], corners: [4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5], cards: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5] };
   const labels: Partial<Record<Metric, string>> = { shotsOn: "tiros a puerta", corners: "córners", cards: "tarjetas" };
   for (const metric of ["shotsOn", "corners", "cards"] as const) {
-    for (const line of lines[metric]) {
+    for (const line of LINES[metric]) {
       const over = matchOverPct(a, b, metric, line);
       if (over === null) continue;
-      out.push({ f, market: metric, selection: `Más de ${line} ${labels[metric]}`, p: over });
-      out.push({ f, market: metric, selection: `Menos de ${line} ${labels[metric]}`, p: 100 - over });
+      add(metric, `Más de ${line} ${labels[metric]}`, over);
+      add(metric, `Menos de ${line} ${labels[metric]}`, 100 - over);
     }
   }
-  return out.filter((p) => Number.isFinite(p.p) && p.p >= 0 && p.p <= 100);
+  return out.filter((p) => Number.isFinite(p.p) && p.p >= 0 && p.p <= 100 && p.sample >= 8);
 }
 
 function grade(p: Pick, stats: Awaited<ReturnType<typeof getFixtureStatsFor>> | null): Result {
@@ -97,19 +106,24 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
   let fixtures: Fixture[] = [];
   try {
     fixtures = await getFixturesByDate(date, date === today);
-    fixtures = fixtures.filter((f) => ["upcoming", "finished"].includes(statusGroup(f)) && (LEAGUE_IDS.length ? LEAGUE_IDS.includes(f.leagueId) : PRIORITY_LEAGUES.includes(f.leagueId)));
-    fixtures.sort((a, b) => PRIORITY_LEAGUES.indexOf(a.leagueId) - PRIORITY_LEAGUES.indexOf(b.leagueId) || a.timestamp - b.timestamp);
-    const eligible = fixtures.slice(0, MAX_ANALYSIS_FIXTURES);
+    fixtures = fixtures.filter((f) => ["upcoming", "finished"].includes(statusGroup(f)) && csvLeagueById(f.leagueId));
+    fixtures.sort((a, b) => a.timestamp - b.timestamp);
+    const eligible = fixtures;
     const candidates = await Promise.all(eligible.map(async (f) => {
       const [a, b] = await Promise.all([
-        getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId).catch(() => EMPTY(f.home.id)),
-        getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId).catch(() => EMPTY(f.away.id)),
+        getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId, f.home.name).catch(() => EMPTY(f.home.id)),
+        getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId, f.away.name).catch(() => EMPTY(f.away.id)),
       ]);
       const ownGoalEstimate = expectedFor(a, b, "goals");
-      const pred = !ownGoalEstimate && hasApiKey ? await getPrediction(f.id).catch(() => null) : null;
+      const pred = !ownGoalEstimate && apiEnabled ? await getPrediction(f.id).catch(() => null) : null;
       return buildPicks(f, a, b, pred);
     }));
-    const ranked = candidates.flat().sort((a, b) => b.p - a.p);
+    const rawPicks = candidates.flat();
+    const cutoff = eligible.length ? Math.min(...eligible.map((fixture) => fixture.timestamp)) - 86400 : Date.now() / 1000;
+    const calibrated = await calibrateCsvPicks(rawPicks, cutoff);
+    // Omite selecciones triviales y conserva las que tienen una muestra sólida.
+    const ranked = calibrated.filter((pick) => pick.p >= 55 && pick.p <= 85 && pick.sample >= 8)
+      .sort((a, b) => b.p - a.p || b.sample - a.sample);
     const seen = new Set<number>();
     picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
   } catch (e) { error = errMsg(e); }
@@ -124,12 +138,12 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <Header />
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-5xl">
         <div>
-          <h1 className="text-3xl font-black">Top <span className="text-win">3</span></h1>
-          <p className="mt-1 text-sm text-muted">{t("Los tres picks más fuertes según los partidos previos, con más peso para la forma reciente y el rendimiento en casa o fuera.")}</p>
+          <h1 className="text-3xl font-black">{t("La mejor combinada")}</h1>
+          <p className="mt-1 text-sm text-muted">Tres selecciones de partidos distintos, filtradas por probabilidad estimada y una muestra mínima de datos.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         {error && <Notice tone="warn">{error}</Notice>}
-        {!error && picks.length === 0 && <Notice>No hay señales calculables para esta fecha en las ligas analizadas.</Notice>}
+        {!error && picks.length === 0 && <Notice>No hay tres selecciones con suficientes datos para esta fecha.</Notice>}
         {picks.map((k, i) => {
           const result = grades[i];
           const score = k.f.goalsHome !== null && k.f.goalsAway !== null ? `${k.f.goalsHome} - ${k.f.goalsAway}` : null;
@@ -152,6 +166,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
                 <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "Tiros a puerta"}</span><b className="text-2xl font-black text-win">{Math.round(k.p)}%</b></div>
                 <div className="mt-1 text-base font-extrabold">{k.selection}</div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-win" style={{ width: `${k.p}%` }} /></div>
+                <div className="mt-2 text-[11px] text-muted">Muestra: {k.sample} partidos recientes por equipo{k.calibrationN ? ` · calibrado con ${k.calibrationN} partidos históricos` : " · sin calibración histórica suficiente"}.</div>
                 {result !== "pending" && score && <div className="mt-2 text-sm font-bold text-muted">Resultado final: <span className="text-white">{score}</span></div>}
                 {result === "pending" && doneStatus(k.f) && <div className="mt-2 text-xs text-muted">Resultado estadístico pendiente de actualizar.</div>}
               </div>
@@ -159,7 +174,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           );
         })}
         <Notice>
-          Los picks se eligen comparando las probabilidades de 1X2, goles, ambos marcan y estadísticas disponibles de tiros a puerta, córners y tarjetas. Los picks históricos se recalculan con los datos recientes disponibles; PICKZONE todavía no guarda un registro diario congelado de las recomendaciones originales.
+          Se analizan todos los partidos disponibles de las ligas con datos locales. Se descartan porcentajes extremos y muestras menores de ocho partidos por equipo; se muestra la probabilidad estimada, que no equivale a una cuota ofrecida por una casa de apuestas. Los picks históricos se recalculan con los datos disponibles y todavía no se guarda un registro diario congelado de las recomendaciones originales.
         </Notice>
       </main>
     </>
