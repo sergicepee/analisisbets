@@ -1,6 +1,6 @@
 // Datos de DEMO (se usan solo si no hay API_FOOTBALL_KEY). Son ficticios y se marcan como tal en la UI.
 import type { Fixture, LeagueInfo, StoredStats, TeamProfile, TeamRow, MatchStat } from "./types";
-import { TZ } from "./config";
+import { getTz } from "./prefs";
 
 const TEAMS: Record<number, string> = {
   1: "AC Milan", 2: "Bologna", 3: "Parma", 4: "Udinese", 5: "Venezia", 6: "Inter", 7: "Genoa", 8: "Juventus",
@@ -26,9 +26,9 @@ const idOf = (d: string, i: number) => dateNum(d) * 100 + i;
 export const dateOfId = (id: number) => { const s = String(Math.floor(id / 100)); return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`; };
 
 function tsFor(date: string, hour: number) {
-  // hora local de TZ -> timestamp (aprox. válida para demo)
+  // hora local de la zona -> timestamp (aprox. válida para demo)
   const guess = new Date(`${date}T${String(hour).padStart(2, "0")}:00:00Z`).getTime();
-  const local = new Date(guess).toLocaleString("en-US", { timeZone: TZ });
+  const local = new Date(guess).toLocaleString("en-US", { timeZone: getTz() });
   const off = new Date(local).getTime() - guess;
   return Math.floor((guess - off) / 1000);
 }

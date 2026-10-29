@@ -1,6 +1,7 @@
 import "server-only";
 import { cached, cacheGet, cacheSet } from "./cache";
-import { API_MIN_INTERVAL_MS, FORM_MATCHES, QUOTA_RESERVE, TZ, hasApiKey } from "./config";
+import { API_MIN_INTERVAL_MS, FORM_MATCHES, QUOTA_RESERVE, hasApiKey } from "./config";
+import { getTz } from "./prefs";
 import { getStored, leagueAvgFromStore, saveStored } from "./statsStore";
 import { mockFixture, mockFixtures, mockLeagues, mockProfile, mockTeamSearch } from "./mock";
 import type {
@@ -83,22 +84,22 @@ function normFixture(r: any): Fixture {
 // ── Partidos ──
 export async function getFixturesByDate(date: string, isToday: boolean): Promise<Fixture[]> {
   if (!hasApiKey) return mockFixtures(date);
-  return cached(`fixtures:${date}:${TZ}`, isToday ? 90 : 15 * 60, async () =>
-    (await call("/fixtures", { date, timezone: TZ }, true)).map(normFixture),
+  return cached(`fixtures:${date}:${getTz()}`, isToday ? 90 : 15 * 60, async () =>
+    (await call("/fixtures", { date, timezone: getTz() }, true)).map(normFixture),
   );
 }
 
 export async function getFixture(id: number): Promise<Fixture | null> {
   if (!hasApiKey) return mockFixture(id);
   return cached<Fixture | null>(
-    `fixture:${id}:${TZ}`,
+    `fixture:${id}:${getTz()}`,
     (f) => {
       if (!f) return 60;
       const g = statusGroup(f);
       return g === "finished" ? 30 * D : g === "live" ? 45 : 10 * 60;
     },
     async () => {
-      const r = await call("/fixtures", { id, timezone: TZ }, true);
+      const r = await call("/fixtures", { id, timezone: getTz() }, true);
       return r[0] ? normFixture(r[0]) : null;
     },
   );
@@ -142,11 +143,11 @@ const planBlocked = async () => !!(await cacheGet("meta:planblock"));
 async function fetchLast(teamId: number, season?: number): Promise<Fixture[]> {
   if (await planBlocked()) throw new ApiError("Free plans do not have access to this season", "api");
   try {
-    return (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: TZ }, true)).map(normFixture);
+    return (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: getTz() }, true)).map(normFixture);
   } catch (e) {
     if (!season || !(e instanceof ApiError) || e.kind !== "api") throw e;
     try {
-      const all = (await call("/fixtures", { team: teamId, season, status: "FT-AET-PEN", timezone: TZ }, true)).map(normFixture);
+      const all = (await call("/fixtures", { team: teamId, season, status: "FT-AET-PEN", timezone: getTz() }, true)).map(normFixture);
       return all.sort((a, b) => a.timestamp - b.timestamp).slice(-FORM_MATCHES);
     } catch (e2) {
       // El plan no permite esta temporada: lo recordamos 6 h para no gastar cuota repitiendo la llamada.
@@ -164,7 +165,7 @@ export async function getTeamProfile(teamId: number, withStats = true, season?: 
     key,
     (p) => (p.rows.some((r) => withStats && !r.sFor) ? 10 * 60 : 6 * H),
     async () => {
-      const last = await cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${TZ}`, 6 * H, () => fetchLast(teamId, season));
+      const last = await cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${getTz()}`, 6 * H, () => fetchLast(teamId, season));
       const done = last.filter((f) => ["FT", "AET", "PEN"].includes(f.statusShort) && f.goalsHome !== null && f.goalsAway !== null);
       const rows: TeamRow[] = await Promise.all(
         done.map(async (f) => {
@@ -255,13 +256,13 @@ export async function searchTeams(q: string): Promise<TeamHit[]> {
 }
 export async function getLastFixtures(teamId: number): Promise<Fixture[]> {
   if (!hasApiKey) return [];
-  return cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${TZ}`, 6 * H, async () =>
-    (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: TZ }, true)).map(normFixture),
+  return cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${getTz()}`, 6 * H, async () =>
+    (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: getTz() }, true)).map(normFixture),
   );
 }
 export async function getNextFixtures(teamId: number, n = 5): Promise<Fixture[]> {
   if (!hasApiKey) return [];
-  return cached<Fixture[]>(`next:${teamId}:${n}:${TZ}`, 3 * H, async () =>
-    (await call("/fixtures", { team: teamId, next: n, timezone: TZ }, true)).map(normFixture),
+  return cached<Fixture[]>(`next:${teamId}:${n}:${getTz()}`, 3 * H, async () =>
+    (await call("/fixtures", { team: teamId, next: n, timezone: getTz() }, true)).map(normFixture),
   );
 }

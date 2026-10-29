@@ -9,6 +9,7 @@ import { getFixturesByDate } from "@/lib/apifootball";
 import { LEAGUE_IDS, PRIORITY_LEAGUES, SHOW_PREMIUM } from "@/lib/config";
 import { countryEs, errMsg, statusGroup, todayStr } from "@/lib/format";
 import type { Fixture, StatusGroup } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ["live", "En vivo"], ["finished", "Finalizados"],
@@ -45,15 +46,15 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
         {FILTERS.map(([key, label]) => {
           const on = filter === key;
           const live = key === "live" && counts.live > 0;
-          const cls = on ? (key === "live" ? "border-loss bg-loss text-white" : "chip-on") : live ? "border-loss/60 text-loss" : "";
-          return <Link key={key} href={href(key)} className={`chip ${cls}`}>{label} ({counts[key]})</Link>;
+          const cls = on ? (key === "live" ? "border-loss bg-loss text-[#fff]" : "chip-on") : live ? "border-loss/60 text-loss" : "";
+          return <Link key={key} href={href(key)} className={`chip ${cls}`}>{t(label)} ({counts[key]})</Link>;
         })}
       </div>
       {leagueId && (
-        <Link href={`/?date=${date}`} className="chip border-brand/50 text-brand">Liga: {fixtures[0]?.leagueName ?? leagueId} ✕</Link>
+        <Link href={`/?date=${date}`} className="chip border-brand/50 text-brand">{t("Liga:")} {fixtures[0]?.leagueName ?? leagueId} ✕</Link>
       )}
-      {error && <Notice tone="warn">No se pudo cargar el listado: {error}</Notice>}
-      {!error && ordered.length === 0 && <Notice>No hay partidos para este filtro y fecha.</Notice>}
+      {error && <Notice tone="warn">{t("No se pudo cargar el listado:")} {error}</Notice>}
+      {!error && ordered.length === 0 && <Notice>{t("No hay partidos para este filtro y fecha.")}</Notice>}
       {ordered.map((g, i) => (
         <div key={g[0].leagueId} className="space-y-4">
           <section className="space-y-2">

@@ -3,13 +3,14 @@ import type { Fixture } from "@/lib/types";
 import { statusGroup, timeStr } from "@/lib/format";
 import { Shield } from "./Shield";
 import { IconGo } from "./icons";
+import { t } from "@/lib/i18n";
 
 export function MatchRow({ f, date, selected = false }: { f: Fixture; date: string; selected?: boolean }) {
   const g = statusGroup(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   return (
     <Link href={`/match/${f.id}?date=${date}`} className={`card flex items-center gap-2 px-3 py-3 active:border-brand/60 ${selected ? "border-brand/70 bg-card2" : ""}`}>
-      <Team name={f.home.name} logo={f.home.logo} role="Local" />
+      <Team name={f.home.name} logo={f.home.logo} role={t("Local")} />
       <div className="w-20 shrink-0 text-center">
         {g === "live" ? (
           <>
@@ -28,7 +29,7 @@ export function MatchRow({ f, date, selected = false }: { f: Fixture; date: stri
           </>
         )}
       </div>
-      <Team name={f.away.name} logo={f.away.logo} role="Visitante" />
+      <Team name={f.away.name} logo={f.away.logo} role={t("Visitante")} />
       <IconGo className="h-4 w-4 shrink-0 text-muted" />
     </Link>
   );

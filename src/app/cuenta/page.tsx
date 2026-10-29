@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { Header } from "@/components/Header";
 import { Notice, Panel } from "@/components/ui";
 import { authConfigured, createAuthServer, getUser } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function Page() {
     <>
       <Header back="/" />
       <main className="space-y-4 px-4 pt-6 lg:mx-auto lg:max-w-xl">
-        <h1 className="text-3xl font-black">Mi cuenta</h1>
+        <h1 className="text-3xl font-black">{t("Mi cuenta")}</h1>
         <Panel title="Datos">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted">Email</span><span className="font-semibold">{user.email}</span></div>
@@ -49,7 +50,7 @@ export default async function Page() {
           <Link href="/estado" className="chip justify-center">Estado del sistema</Link>
         </div>
         <form action="/auth/signout" method="post">
-          <button className="w-full rounded-xl border border-loss/50 py-3 text-sm font-bold text-loss">Cerrar sesión</button>
+          <button className="w-full rounded-xl border border-loss/50 py-3 text-sm font-bold text-loss">{t("Cerrar sesión")}</button>
         </form>
       </main>
     </>

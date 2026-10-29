@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Flag, Shield } from "./Shield";
 import { IconGo } from "./icons";
+import { useT } from "./I18nProvider";
 
 type Item = { id: number; name: string; type: string; logo: string | null };
 type Group = { country: string; flag: string | null; items: Item[] };
@@ -20,6 +21,7 @@ function LeagueLink({ i }: { i: Item }) {
 }
 
 export function LeagueCatalog({ groups, intl, autoFocus }: { groups: Group[]; intl: Item[]; autoFocus?: boolean }) {
+  const t = useT();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const n = norm(q.trim());
@@ -33,11 +35,11 @@ export function LeagueCatalog({ groups, intl, autoFocus }: { groups: Group[]; in
 
   return (
     <div className="space-y-4">
-      <input autoFocus={autoFocus} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar liga o país"
+      <input autoFocus={autoFocus} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Buscar liga o país")}
         className="w-full rounded-xl border border-line bg-card px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-brand lg:w-72" />
       <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-8">
         <div className="space-y-4">
-          <h2 className="font-bold">Todas las ligas</h2>
+          <h2 className="font-bold">{t("Todas las ligas")}</h2>
           {filtered.map((g) => {
             const expanded = open[g.country] || !!n;
             const items = expanded ? g.items : g.items.slice(0, 3);
@@ -46,22 +48,22 @@ export function LeagueCatalog({ groups, intl, autoFocus }: { groups: Group[]; in
                 <div className="flex items-center gap-2 px-1">
                   <Flag src={g.flag} />
                   <h3 className="text-xl font-extrabold">{g.country}</h3>
-                  <span className="rounded-full bg-brand/15 px-2 py-0.5 text-xs font-bold text-brand">{g.items.length} ligas</span>
+                  <span className="rounded-full bg-brand/15 px-2 py-0.5 text-xs font-bold text-brand">{g.items.length} {t("ligas")}</span>
                 </div>
                 <div className="grid gap-2 lg:grid-cols-3">{items.map((i) => <LeagueLink key={i.id} i={i} />)}</div>
                 {g.items.length > 3 && !n && (
                   <button onClick={() => setOpen((o) => ({ ...o, [g.country]: !o[g.country] }))} className="rounded-xl border border-line bg-card2 px-4 py-2 text-sm font-semibold">
-                    {expanded ? "Ver menos" : "Ver todas"}
+                    {expanded ? t("Ver menos") : t("Ver todas")}
                   </button>
                 )}
               </section>
             );
           })}
-          {!filtered.length && !intlShown.length && <p className="text-sm text-muted">Sin resultados.</p>}
+          {!filtered.length && !intlShown.length && <p className="text-sm text-muted">{t("Sin resultados.")}</p>}
         </div>
         {intlShown.length > 0 && (
           <aside className="mt-4 space-y-2 lg:mt-0">
-            <h2 className="font-bold">Competiciones internacionales</h2>
+            <h2 className="font-bold">{t("Competiciones internacionales")}</h2>
             <div className="space-y-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
               {intlShown.slice(0, n ? 50 : 14).map((i) => <LeagueLink key={i.id} i={i} />)}
             </div>

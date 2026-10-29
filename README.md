@@ -39,6 +39,14 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
    2. En *Authorized redirect URIs* pega la URL de callback que te muestra Supabase en Authentication → Providers → Google (`https://xxxx.supabase.co/auth/v1/callback`).
    3. Copia el *Client ID* y *Client Secret* en Supabase → Authentication → Providers → **Google** → activar → Guardar.
 
+## Perfil, ajustes e idioma
+- El icono de usuario abre un menú: Iniciar sesión / Mi cuenta, **Ajustes**, Canal de Telegram (solo si defines `NEXT_PUBLIC_TELEGRAM_URL`), Ayuda y soporte y Colaboración.
+- **Ajustes**: idioma (Español / English), tema (Oscuro / Claro) y zona horaria de los partidos (o la del dispositivo). Se guardan en cookies del navegador, sin necesidad de cuenta.
+- Login centrado con ojo para ver la contraseña, “¿Olvidaste tu contraseña?”, Google y “Crear cuenta”.
+- Defines tu email de contacto con `NEXT_PUBLIC_SUPPORT_EMAIL`. Las páginas de Privacidad y Términos son **texto provisional**: hazlas revisar antes de abrir la web al público.
+- Traducción al inglés: navegación, menús, ajustes, acceso, filtros, pestañas y los títulos y etiquetas principales. Algunos textos largos y mensajes de la API siguen en español.
+- **No incluido**: “Continuar con Telegram”. Supabase no lo trae de serie; requeriría crear un bot en @BotFather y un servicio propio de verificación.
+
 ## Cuota de API (importante)
 - Plan gratis: 100 solicitudes/día y 10/min. Usa `API_MIN_INTERVAL_MS=6500`, `FORM_MATCHES=3`, `LEAGUE_IDS=<una liga>` (p. ej. `140` La Liga) y `MAX_ANALYSIS_FIXTURES=4`.
 - Caché: listado de hoy 90 s · otros días 15 min · partido en vivo 45 s · terminado 30 días · estadísticas de partidos terminados **para siempre** (tabla `fixture_stats`) · ligas 24 h · predicciones 12 h.

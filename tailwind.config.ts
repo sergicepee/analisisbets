@@ -5,11 +5,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#080b0d",
-        card: "#10151a",
-        card2: "#151c22",
-        line: "#212b34",
-        muted: "#8896a3",
+        bg: "rgb(var(--bg) / <alpha-value>)",
+        card: "rgb(var(--card) / <alpha-value>)",
+        card2: "rgb(var(--card2) / <alpha-value>)",
+        line: "rgb(var(--line) / <alpha-value>)",
+        muted: "rgb(var(--muted) / <alpha-value>)",
         brand: { DEFAULT: "#b4f03c", dark: "#86c418" },
         win: "#22c55e",
         loss: "#ef4444",

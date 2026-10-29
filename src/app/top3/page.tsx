@@ -8,6 +8,7 @@ import { LEAGUE_IDS, MAX_ANALYSIS_FIXTURES, PRIORITY_LEAGUES, hasApiKey } from "
 import { countryEs, dayMonthTime, errMsg, isDate, statusGroup, todayStr } from "@/lib/format";
 import { expectedFor, poissonModel } from "@/lib/metrics";
 import type { Fixture } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -49,7 +50,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <Header />
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-3xl">
         <div>
-          <h1 className="text-3xl font-black"><span className="text-win">Los 3</span> mejores</h1>
+          <h1 className="text-3xl font-black"><span className="text-win">{t("Los 3")}</span> {t("mejores")}</h1>
           <p className="mt-1 text-sm text-muted">Los tres partidos del día con la señal 1X2 más fuerte según nuestro criterio, que se explica abajo.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />

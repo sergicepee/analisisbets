@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { Tone } from "@/lib/metrics";
 import { Shield } from "./Shield";
 import { num, pct } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 const BAR: Record<Tone, string> = { up: "bg-win", flat: "bg-warn", down: "bg-loss", none: "bg-muted/40" };
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -18,7 +19,7 @@ export function StatCard({
         {Icon && <Icon className="h-5 w-5 text-muted" />}{value}
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded bg-line"><div className={`h-full rounded ${BAR[tone]}`} style={{ width: `${clamp(fill)}%` }} /></div>
-      {refValue && <div className="mt-2 text-[11px] text-muted">{refLabel}: <b className="text-brand">{refValue}</b></div>}
+      {refValue && <div className="mt-2 text-[11px] text-muted">{t(refLabel)}: <b className="text-brand">{refValue}</b></div>}
     </div>
   );
 }
@@ -69,7 +70,7 @@ export function TrendTable({ title, rows, aName, bName, note, sub, totalHead = "
       <div className="overflow-x-auto">
         <table className="w-full min-w-[300px] text-center text-sm">
           <thead className="text-xs text-muted">
-            <tr><th className="pb-2 text-left font-medium">Métrica</th><th className="pb-2 font-medium">{aName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{bName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{totalHead}</th></tr>
+            <tr><th className="pb-2 text-left font-medium">{t("Métrica")}</th><th className="pb-2 font-medium">{aName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{bName}{sub && <div className="text-[10px] font-normal opacity-70">{sub}</div>}</th><th className="pb-2 font-medium">{t(totalHead)}</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (

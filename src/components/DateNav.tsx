@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { addDays, dmy, todayStr } from "@/lib/format";
 import { IconCalendar, IconNext, IconPrev } from "./icons";
+import { t } from "@/lib/i18n";
 
 export function DateNav({ date, base, extra = "", quick = true }: { date: string; base: string; extra?: string; quick?: boolean }) {
   const href = (d: string) => `${base}?date=${d}${extra}`;
@@ -17,7 +18,7 @@ export function DateNav({ date, base, extra = "", quick = true }: { date: string
       {quick && (
         <div className="grid grid-cols-3 gap-2">
           {[["Ayer", addDays(today, -1)], ["Hoy", today], ["Mañana", addDays(today, 1)]].map(([l, d]) => (
-            <Link key={l} href={href(d)} className={`rounded-full border py-2 text-center text-sm font-medium ${date === d ? "border-brand bg-brand text-black" : "border-line bg-card2 text-slate-300"}`}>{l}</Link>
+            <Link key={l} href={href(d)} className={`rounded-full border py-2 text-center text-sm font-medium ${date === d ? "border-brand bg-brand text-black" : "border-line bg-card2 text-slate-300"}`}>{t(l)}</Link>
           ))}
         </div>
       )}

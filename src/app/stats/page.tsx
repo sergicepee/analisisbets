@@ -9,6 +9,7 @@ import { LEAGUE_IDS, MAX_ANALYSIS_FIXTURES, PRIORITY_LEAGUES } from "@/lib/confi
 import { errMsg, isDate, num, timeStr, todayStr } from "@/lib/format";
 import { expectedFor } from "@/lib/metrics";
 import type { Fixture, Metric } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -55,19 +56,19 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <Header />
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-6xl lg:px-8">
         <div>
-          <h1 className="text-2xl font-black leading-tight">Mejores coincidencias por valores promedio</h1>
-          <p className="mt-1 text-sm text-muted">Encuentra coincidencias con los valores promedio más altos o más bajos en cada métrica.</p>
+          <h1 className="text-2xl font-black leading-tight">{t("Mejores coincidencias por valores promedio")}</h1>
+          <p className="mt-1 text-sm text-muted">{t("Encuentra coincidencias con los valores promedio más altos o más bajos en cada métrica.")}</p>
         </div>
         <DateNav date={date} base="/stats" extra={`&m=${metric}&o=${dir}`} quick={false} />
         <div className="flex rounded-full border border-line bg-card p-1.5">
           {([["max", "Máximo", IconMax], ["min", "Más bajo", IconMin]] as const).map(([o, l, I]) => (
-            <Link key={o} href={q(metric, o)} className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold ${dir === o ? "bg-brand text-black" : "text-muted"}`}><I className="h-4 w-4" />{l}</Link>
+            <Link key={o} href={q(metric, o)} className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold ${dir === o ? "bg-brand text-black" : "text-muted"}`}><I className="h-4 w-4" />{t(l)}</Link>
           ))}
         </div>
         <div className="grid grid-cols-5 gap-2">
           {METRICS.map(([k, l, I]) => (
             <Link key={k} href={q(k, dir)} className={`flex flex-col items-center gap-1.5 rounded-xl border px-1 py-3 text-center text-[11px] font-semibold ${metric === k ? "border-brand text-brand" : "border-line bg-card text-slate-300"}`}>
-              <I className="h-5 w-5" />{l}
+              <I className="h-5 w-5" />{t(l)}
             </Link>
           ))}
         </div>
