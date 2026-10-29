@@ -76,7 +76,7 @@ function TrendPreview({ title, rows, teams }: { title: string; rows: string[]; t
       <span className="flex justify-center"><BlurredValue size={index % 2 ? "medium" : "short"} tone={index + 2} /></span>
     </div>)}
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="pointer-events-auto absolute left-[66%] top-[60%] w-[min(220px,72%)] -translate-x-1/2 -translate-y-1/2 md:left-1/2 md:top-1/2">
+      <div className="pointer-events-auto absolute left-1/2 top-1/2 w-[min(220px,72%)] -translate-x-1/2 -translate-y-1/2">
         <LockCard />
       </div>
     </div>
