@@ -176,14 +176,17 @@ function normFixture(r: any): Fixture {
 // ── Partidos ──
 export async function getFixturesByDate(date: string, isToday: boolean): Promise<Fixture[]> {
   const localFixtures = await getCsvFixturesByDate(date);
-  // La lista diaria también usa el CSV; enriquecerlo con logos aunque no haya
-  // clave evita que los escudos solo aparezcan en la vista de detalle.
-  if (!apiEnabled) return updateCsvFixtureStates(await addCsvTeamLogos(localFixtures));
+  // Si los CSV ya tienen el calendario de esa fecha, son la fuente para todas
+  // las ligas incluidas, incluso si Vercel conserva USE_API_FOOTBALL=true.
+  // Así no se pierde el resto del calendario ni se mezclan fuentes distintas.
+  if (!apiEnabled || localFixtures.length > 0) {
+    return updateCsvFixtureStates(await addCsvTeamLogos(localFixtures));
+  }
   try {
     const apiFixtures = await cached(`fixtures:${date}:${getTz()}`, isToday ? 90 : 15 * 60, async () =>
       (await call("/fixtures", { date, timezone: getTz() }, true)).map(normFixture),
     );
-    return [...apiFixtures.filter((fixture) => fixture.leagueId !== 140), ...(await addCsvTeamLogos(localFixtures.filter((fixture) => fixture.leagueId === 140)))];
+    return apiFixtures;
   } catch (error) {
     if (localFixtures.length) return localFixtures;
     throw error;
