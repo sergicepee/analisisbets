@@ -66,21 +66,17 @@ function PairPreview({ title, summary, teams }: { title: string; summary: string
 function TrendPreview({ title, rows, teams }: { title: string; rows: string[]; teams: Teams }) {
   return <section className="card relative isolate overflow-hidden p-3 sm:p-4">
     <h3 className="font-bold">{t(title)}</h3>
-    <div className="mt-3 hidden grid-cols-[minmax(0,1.45fr)_repeat(3,minmax(0,1fr))] items-end gap-1 border-b border-line pb-2 text-[10px] text-muted md:grid md:gap-2 md:text-xs">
+    <div className="mt-3 grid grid-cols-[minmax(0,1.45fr)_repeat(3,minmax(0,1fr))] items-end gap-1 border-b border-line pb-2 text-[10px] text-muted md:gap-2 md:text-xs">
       <span>{t("Métrica")}</span><span className="truncate text-center">{teams.home.name}</span><span className="truncate text-center">{teams.away.name}</span><span className="truncate text-center">{t("Total del partido")}</span>
     </div>
-    <div className="mt-3 grid grid-cols-3 gap-1 border-b border-line pb-2 text-[10px] text-muted md:hidden">
-      <span className="truncate text-center">{teams.home.name}</span><span className="truncate text-center">{teams.away.name}</span><span className="truncate text-center">{t("Total del partido")}</span>
-    </div>
-    <div className="mt-3 md:hidden"><LockCard /></div>
-    {rows.map((row, index) => <div key={`${row}-${index}`} className="grid grid-cols-3 items-center gap-x-2 gap-y-1 border-b border-line/70 py-2 text-xs md:grid-cols-[minmax(0,1.45fr)_repeat(3,minmax(0,1fr))] md:gap-1 md:py-2.5">
-      <span className="col-span-3 min-w-0 leading-tight md:col-span-1">{t(row)}</span>
-      <span className="flex justify-center md:col-start-2"><BlurredValue size={index % 2 ? "short" : "medium"} tone={index} /></span>
-      <span className="flex justify-center md:col-start-3"><BlurredValue size={index % 3 ? "medium" : "short"} tone={index + 1} /></span>
-      <span className="flex justify-center md:col-start-4"><BlurredValue size={index % 2 ? "medium" : "short"} tone={index + 2} /></span>
+    {rows.map((row, index) => <div key={`${row}-${index}`} className="grid grid-cols-[minmax(0,1.45fr)_repeat(3,minmax(0,1fr))] items-center gap-1 border-b border-line/70 py-2 text-[11px] md:gap-2 md:py-2.5 md:text-xs">
+      <span className="min-w-0 leading-tight">{t(row)}</span>
+      <span className="flex justify-center"><BlurredValue size={index % 2 ? "short" : "medium"} tone={index} /></span>
+      <span className="flex justify-center"><BlurredValue size={index % 3 ? "medium" : "short"} tone={index + 1} /></span>
+      <span className="flex justify-center"><BlurredValue size={index % 2 ? "medium" : "short"} tone={index + 2} /></span>
     </div>)}
-    <div className="pointer-events-none absolute inset-0 z-10 hidden md:block">
-      <div className="pointer-events-auto absolute left-1/2 top-[55%] w-[min(220px,72%)] -translate-x-1/2 -translate-y-1/2">
+    <div className="pointer-events-none absolute inset-0 z-10">
+      <div className="pointer-events-auto absolute left-[66%] top-[60%] w-[min(220px,72%)] -translate-x-1/2 -translate-y-1/2 md:left-1/2 md:top-1/2">
         <LockCard />
       </div>
     </div>
