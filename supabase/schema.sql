@@ -48,6 +48,23 @@ create policy "profiles_select_own" on public.profiles for select using (auth.ui
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
+-- Estado de suscripción. Solo el servidor (service role/proveedor de pagos) puede modificarlo.
+create table if not exists public.subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  provider text not null check (provider in ('manual', 'stripe', 'paypal')),
+  provider_customer_id text unique,
+  provider_subscription_id text unique,
+  status text not null default 'inactive' check (status in ('inactive', 'active', 'trialing', 'past_due', 'canceled', 'expired')),
+  current_period_end timestamptz,
+  cancel_at_period_end boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.subscriptions enable row level security;
+drop policy if exists "subscriptions_select_own" on public.subscriptions;
+create policy "subscriptions_select_own" on public.subscriptions for select to authenticated using (auth.uid() = user_id);
+revoke insert, update, delete on public.subscriptions from anon, authenticated;
+
 -- Fotos de perfil públicas; cada usuario solo puede escribir en su propia carpeta.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('avatars', 'avatars', true, 5242880, array['image/jpeg', 'image/png'])

@@ -42,7 +42,7 @@ function PasswordInput({ value, onChange, placeholder, autoComplete }: { value: 
   );
 }
 
-export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: string }) {
+export function AuthForm({ mode, initialError, initialNext = "/cuenta" }: { mode: Mode; initialError?: string; initialNext?: string }) {
   const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,12 +63,12 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
       if (mode === "login") {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        window.location.href = "/cuenta"; return;
+        window.location.href = initialNext; return;
       }
       if (mode === "register") {
-        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${origin()}/auth/callback?next=/cuenta` } });
+        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(initialNext)}` } });
         if (error) throw error;
-        if (data.session) { window.location.href = "/cuenta"; return; }
+        if (data.session) { window.location.href = initialNext; return; }
         setInfo(t("Cuenta creada. Te enviamos un email para confirmarla: ábrelo y pulsa el enlace."));
       }
       if (mode === "recover") {
@@ -88,7 +88,7 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
 
   async function google() {
     setError(null);
-    const { error } = await createAuthBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${origin()}/auth/callback?next=/cuenta` } });
+    const { error } = await createAuthBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(initialNext)}` } });
     if (error) setError(t(known(error.message)));
   }
 
@@ -135,8 +135,8 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
       )}
 
       <div className="mt-5 space-y-1.5 text-center text-sm text-muted">
-        {mode === "login" && <div>{t("¿No tienes cuenta?")} <Link href="/registro" className="font-bold text-brand">{t("Crear cuenta")}</Link></div>}
-        {mode === "register" && <div>{t("¿Ya tienes cuenta?")} <Link href="/login" className="font-bold text-brand">{t("Iniciar sesión")}</Link></div>}
+        {mode === "login" && <div>{t("¿No tienes cuenta?")} <Link href={`/registro?next=${encodeURIComponent(initialNext)}`} className="font-bold text-brand">{t("Crear cuenta")}</Link></div>}
+        {mode === "register" && <div>{t("¿Ya tienes cuenta?")} <Link href={`/login?next=${encodeURIComponent(initialNext)}`} className="font-bold text-brand">{t("Iniciar sesión")}</Link></div>}
         {mode === "recover" && <div><Link href="/login" className="font-bold text-brand">{t("Volver a iniciar sesión")}</Link></div>}
       </div>
     </div>

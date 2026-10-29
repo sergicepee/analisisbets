@@ -9,6 +9,9 @@ import { Flag, Shield } from "@/components/Shield";
 import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconShoe, IconSwap, IconTarget } from "@/components/icons";
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
 import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
+import { getUser } from "@/lib/auth";
+import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { countryEs, errMsg, friendlyApiError, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import {
@@ -36,6 +39,9 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   if (!Number.isFinite(id)) notFound();
   const tab = TABS.some((t) => t[0] === searchParams.tab) ? (searchParams.tab as string) : "general";
   const date = isDate(searchParams.date) ? (searchParams.date as string) : todayStr();
+  const user = await getUser();
+  const isSubscriber = user ? await hasSubscriberAccess(user.id) : false;
+  const premiumLocked = tab !== "general" && !isSubscriber;
 
   let f: Fixture | null = null;
   try { f = await getFixture(id); } catch (e) {
@@ -46,10 +52,14 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   const needStats = tab !== "goles";
   let profileErr: string | null = null;
   const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
-  const [pa0, pb0] = await Promise.all([
-    grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId, f.home.name)),
-    grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId, f.away.name)),
-  ]);
+  let pa0: TeamProfile | null = null;
+  let pb0: TeamProfile | null = null;
+  if (!premiumLocked) {
+    [pa0, pb0] = await Promise.all([
+      grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId, f.home.name)),
+      grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId, f.away.name)),
+    ]);
+  }
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
   const g = statusGroup(f);
 
@@ -67,12 +77,13 @@ export default async function MatchPage({ params, searchParams }: { params: { id
             </Link>
           ))}
         </nav>
-        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. {profileErr ? friendlyApiError(profileErr) : "Sin datos suficientes."}</Notice> : null}
+        {!premiumLocked && (!pa0 || !pb0) ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. {profileErr ? friendlyApiError(profileErr) : "Sin datos suficientes."}</Notice> : null}
         {tab === "general" && <General f={f} pa={pa} pb={pb} />}
-        {tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
-        {tab === "tiros" && <Block f={f} pa={pa} pb={pb} metrics={["shots", "shotsOn"]} />}
-        {tab === "corners" && <Block f={f} pa={pa} pb={pb} metrics={["corners"]} />}
-        {tab === "tarjetas" && <Block f={f} pa={pa} pb={pb} metrics={["cards"]} />}
+        {premiumLocked && <PremiumLockedPreview tab={tab as "goles" | "tiros" | "corners" | "tarjetas"} home={{ name: f.home.name, logo: f.home.logo }} away={{ name: f.away.name, logo: f.away.logo }} />}
+        {!premiumLocked && tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
+        {!premiumLocked && tab === "tiros" && <Block f={f} pa={pa} pb={pb} metrics={["shots", "shotsOn"]} />}
+        {!premiumLocked && tab === "corners" && <Block f={f} pa={pa} pb={pb} metrics={["corners"]} />}
+        {!premiumLocked && tab === "tarjetas" && <Block f={f} pa={pa} pb={pb} metrics={["cards"]} />}
       </main>
       </Workspace>
     </>

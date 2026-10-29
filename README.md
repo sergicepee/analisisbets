@@ -6,7 +6,7 @@ Datos de **API‑Football** (solo servidor) y caché en **Supabase**. Marca, tex
 ## Pantallas
 Móvil: una columna con barra inferior. Escritorio (≥1024 px): menú superior, buscador de equipos y ligas, y dos columnas (lista de partidos + ficha) con scroll independiente.
 
-Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (General / Goles / Tiros / Córners / Tarjetas) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Banner y página Premium (maqueta, `/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
+Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (General gratis / Goles / Tiros / Córners / Tarjetas Premium) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
 
 ## Probar en local (sin claves = modo DEMO)
 ```bash
@@ -38,6 +38,13 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
    1. Google Cloud Console → *APIs & Services → Credentials → Create credentials → OAuth client ID* (tipo *Web application*). Si te lo pide, configura antes la pantalla de consentimiento.
    2. En *Authorized redirect URIs* pega la URL de callback que te muestra Supabase en Authentication → Providers → Google (`https://xxxx.supabase.co/auth/v1/callback`).
    3. Copia el *Client ID* y *Client Secret* en Supabase → Authentication → Providers → **Google** → activar → Guardar.
+
+## Suscripciones Premium (Stripe)
+- General del partido permanece gratis. Goles, Tiros, Esquinas y Tarjetas requieren una suscripción activa; los usuarios sin suscripción ven una vista previa difuminada sin recibir los datos reales.
+- Crea dos precios recurrentes en Stripe (uno mensual y otro anual) y configura en Vercel `STRIPE_PRICE_MONTHLY_ID`, `STRIPE_PRICE_ANNUAL_ID`, `STRIPE_SECRET_KEY` y `SITE_URL`.
+- Añade un webhook de Stripe a `https://TU-PROYECTO.vercel.app/api/billing/webhook` con los eventos `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` y `customer.subscription.deleted`; guarda su secreto como `STRIPE_WEBHOOK_SECRET`.
+- Activa el Customer Portal en Stripe para que cada usuario pueda gestionar o cancelar su suscripción desde `/premium`.
+- Ejecuta de nuevo `supabase/schema.sql` para crear la tabla protegida `subscriptions`. Solo el servidor puede cambiar el estado; los cambios llegan desde el webhook firmado de Stripe.
 
 ## Perfil, ajustes e idioma
 - El icono de usuario abre un menú: Iniciar sesión / Mi cuenta, **Ajustes**, Canal de Telegram (solo si defines `NEXT_PUBLIC_TELEGRAM_URL`), Ayuda y soporte y Colaboración.
