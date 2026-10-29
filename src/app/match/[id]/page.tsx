@@ -34,9 +34,11 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   if (!f) notFound();
 
   const needStats = tab !== "goles";
+  let profileErr: string | null = null;
+  const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
   const [pa0, pb0] = await Promise.all([
-    getTeamProfile(f.home.id, needStats).catch(() => null),
-    getTeamProfile(f.away.id, needStats).catch(() => null),
+    grab(getTeamProfile(f.home.id, needStats, f.season)),
+    grab(getTeamProfile(f.away.id, needStats, f.season)),
   ]);
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
   const g = statusGroup(f);
@@ -55,7 +57,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
             </Link>
           ))}
         </nav>
-        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar (límite de la API o cobertura). Se muestran los datos disponibles.</Notice> : null}
+        {!pa0 || !pb0 ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. Motivo de la API: {profileErr ?? "sin datos"}</Notice> : null}
         {tab === "general" && <General f={f} pa={pa} pb={pb} />}
         {tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
         {tab === "tiros" && <Block f={f} pa={pa} pb={pb} metrics={["shots", "shotsOn"]} />}

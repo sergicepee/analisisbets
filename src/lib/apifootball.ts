@@ -136,17 +136,26 @@ async function getFixtureStats(f: Fixture): Promise<StoredStats> {
   return s;
 }
 
+/** Últimos N partidos terminados. Si el plan no permite `last`, usa la temporada completa y recorta. */
+async function fetchLast(teamId: number, season?: number): Promise<Fixture[]> {
+  try {
+    return (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: TZ }, true)).map(normFixture);
+  } catch (e) {
+    if (!season || !(e instanceof ApiError) || e.kind !== "api") throw e;
+    const all = (await call("/fixtures", { team: teamId, season, status: "FT-AET-PEN", timezone: TZ }, true)).map(normFixture);
+    return all.sort((a, b) => a.timestamp - b.timestamp).slice(-FORM_MATCHES);
+  }
+}
+
 // ── Perfil de un equipo: últimos N partidos (+ estadísticas reales opcionales) ──
-export async function getTeamProfile(teamId: number, withStats = true): Promise<TeamProfile> {
+export async function getTeamProfile(teamId: number, withStats = true, season?: number): Promise<TeamProfile> {
   if (!hasApiKey) return mockProfile(teamId, FORM_MATCHES, withStats);
   const key = `profile:${teamId}:${FORM_MATCHES}:${withStats ? "s" : "g"}`;
   return cached<TeamProfile>(
     key,
     (p) => (p.rows.some((r) => withStats && !r.sFor) ? 10 * 60 : 6 * H),
     async () => {
-      const last = await cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${TZ}`, 6 * H, async () =>
-        (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: TZ }, true)).map(normFixture),
-      );
+      const last = await cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${TZ}`, 6 * H, () => fetchLast(teamId, season));
       const done = last.filter((f) => ["FT", "AET", "PEN"].includes(f.statusShort) && f.goalsHome !== null && f.goalsAway !== null);
       const rows: TeamRow[] = await Promise.all(
         done.map(async (f) => {
