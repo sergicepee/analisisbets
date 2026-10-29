@@ -10,10 +10,14 @@ body { color: rgb(var(--fg)); font-family: ui-sans-serif, system-ui, -apple-syst
 
 .app-launch-splash { display: none; }
 @media (display-mode: standalone) {
-  .app-launch-splash { display: grid; position: fixed; inset: 0; z-index: 9999; place-items: center; background: #080b0d; opacity: 1; transition: opacity 300ms ease; }
+  .app-launch-splash { display: grid; position: fixed; inset: 0; z-index: 9999; place-items: center; background: #080b0d; opacity: 1; transform: scale(1); transition: opacity 400ms ease, transform 400ms ease; }
 }
-html[data-app-standalone="true"] .app-launch-splash { display: grid; position: fixed; inset: 0; z-index: 9999; place-items: center; background: #080b0d; opacity: 1; transition: opacity 300ms ease; }
-.app-launch-splash.is-leaving { opacity: 0; pointer-events: none; }
+html[data-app-standalone="true"] .app-launch-splash { display: grid; position: fixed; inset: 0; z-index: 9999; place-items: center; background: #080b0d; opacity: 1; transform: scale(1); transition: opacity 400ms ease, transform 400ms ease; }
+.app-launch-mark { overflow: visible; }
+.app-launch-orbit { transform-box: view-box; transform-origin: center; animation: app-launch-spin 900ms linear infinite; }
+.app-launch-splash.is-leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
+@keyframes app-launch-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .app-launch-orbit { animation-duration: 2.4s; } }
 
 /* Ajustes del tema claro para utilidades con colores fijos */
 [data-theme="light"] .text-white { color: rgb(var(--fg)); }

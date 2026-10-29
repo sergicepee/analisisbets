@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BRAND } from "@/lib/config";
-import { LogoMark } from "./Logo";
 
 export function AppSplash() {
   const [visible, setVisible] = useState(true);
@@ -18,8 +16,8 @@ export function AppSplash() {
     }
 
     document.documentElement.dataset.appStandalone = "true";
-    const fadeTimer = window.setTimeout(() => setLeaving(true), 950);
-    const hideTimer = window.setTimeout(() => setVisible(false), 1_250);
+    const fadeTimer = window.setTimeout(() => setLeaving(true), 1_400);
+    const hideTimer = window.setTimeout(() => setVisible(false), 1_800);
     return () => {
       window.clearTimeout(fadeTimer);
       window.clearTimeout(hideTimer);
@@ -30,10 +28,11 @@ export function AppSplash() {
 
   return (
     <div className={`app-launch-splash${leaving ? " is-leaving" : ""}`} aria-hidden="true">
-      <div className="flex flex-col items-center gap-3">
-        <LogoMark size={76} />
-        <span className="text-xl font-extrabold tracking-[0.18em] text-white">{BRAND.name}</span>
-      </div>
+      <svg className="app-launch-mark" width="180" height="180" viewBox="0 0 32 32" fill="none">
+        <circle className="app-launch-orbit" cx="16" cy="16" r="11.44" stroke="#ff3347" strokeWidth="2.64" strokeDasharray="54.56 17.6" strokeLinecap="round" />
+        <circle cx="16" cy="16" r="5.28" stroke="#ff3347" strokeWidth="2.2" />
+        <circle cx="16" cy="16" r="1.58" fill="#ff3347" />
+      </svg>
     </div>
   );
 }

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: `${BRAND.name} · Análisis de fútbol`,
   description: "Estimaciones y estadísticas de fútbol para analizar partidos. No son garantías.",
   manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "PICKZONE", statusBarStyle: "black-translucent" },
   icons: {
     icon: "/icon.svg",
     apple: "/apple-touch-icon.png",
@@ -21,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const lang = getLang();
   return (
     <html lang={lang} data-theme={getTheme()}>
+      <head>
+        <link rel="apple-touch-startup-image" href="/apple-launch.png" />
+      </head>
       <body>
         <AppSplash />
         <I18nProvider lang={lang}>
