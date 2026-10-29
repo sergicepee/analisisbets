@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useT } from "./I18nProvider";
+import { useSettingsModal, useT } from "./I18nProvider";
 import { SettingsModal } from "./SettingsModal";
 import { IconGo, IconHandshake, IconHelp, IconLogOut, IconSend, IconSettings, IconUser } from "./icons";
 
 export function UserMenu({ loggedIn, displayName, tz, telegramUrl }: { loggedIn: boolean; displayName?: string; tz: string; telegramUrl?: string }) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState(false);
+  const [settings, setSettings] = useSettingsModal();
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

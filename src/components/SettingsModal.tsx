@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLang, useSetLang, useT } from "./I18nProvider";
 import { setPref } from "./prefs-client";
@@ -51,14 +51,7 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
   const router = useRouter();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [zone, setZone] = useState(tz);
-  const languageChanged = useRef(false);
-  const close = useCallback(() => {
-    onClose();
-    if (languageChanged.current) {
-      languageChanged.current = false;
-      router.refresh();
-    }
-  }, [onClose, router]);
+  const close = useCallback(() => onClose(), [onClose]);
 
   useEffect(() => {
     setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
@@ -81,7 +74,12 @@ export function SettingsModal({ tz, onClose }: { tz: string; onClose: () => void
     return list.includes(tz) ? list : [tz, ...list];
   }, [tz]);
 
-  const chooseLang = (l: "es" | "en") => { languageChanged.current = true; setPref("gl_lang", l); setLang(l); document.documentElement.lang = l; };
+  const chooseLang = (l: "es" | "en") => {
+    setPref("gl_lang", l);
+    setLang(l);
+    document.documentElement.lang = l;
+    router.refresh();
+  };
   const chooseTheme = (v: "dark" | "light") => { setPref("gl_theme", v); document.documentElement.dataset.theme = v; setTheme(v); };
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
 
