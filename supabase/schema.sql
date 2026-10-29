@@ -1,4 +1,4 @@
--- GolLab · esquema de Supabase. Ejecuta esto en SQL Editor > New query.
+-- PICKZONE · esquema de Supabase. Ejecuta esto en SQL Editor > New query.
 
 -- Caché genérica de respuestas de la API (con caducidad)
 create table if not exists public.api_cache (

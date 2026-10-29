@@ -1,6 +1,6 @@
 const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 
-export const BRAND = { name: "GolLab", short: "GL" };
+export const BRAND = { name: "PICKZONE", short: "PZ" };
 export const TZ = process.env.APP_TIMEZONE || "Europe/Madrid";
 export const hasApiKey = !!process.env.API_FOOTBALL_KEY;
 export const FORM_MATCHES = clamp(Number(process.env.FORM_MATCHES || 5), 3, 10);

@@ -1,4 +1,4 @@
-# GolLab · Análisis de fútbol
+# PICKZONE · Análisis de fútbol
 
 Web móvil‑first (Next.js 14 + Tailwind) para estudiar partidos: probabilidades estimadas, tendencias de goles, tiros, córners y tarjetas, Top 3 del día, ranking por métricas y catálogo de ligas.
 Datos de **API‑Football** (solo servidor) y caché en **Supabase**. Marca, textos y código propios (inspirada en la organización de Oddster, sin reutilizar sus recursos).
