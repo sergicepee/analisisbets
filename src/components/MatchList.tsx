@@ -13,7 +13,7 @@ import { t } from "@/lib/i18n";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ["live", "En vivo"], ["finished", "Finalizados"],
-  ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"], ["other", "Otros"],
+  ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
 
 export async function MatchList({ date, filter = "all", leagueId = null, selectedId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number }) {

@@ -137,6 +137,11 @@ async function getFixtureStats(f: Fixture): Promise<StoredStats> {
   return s;
 }
 
+/** Estadísticas finales de un partido para liquidar mercados históricos. */
+export async function getFixtureStatsFor(f: Fixture): Promise<StoredStats> {
+  return getFixtureStats(f);
+}
+
 const planBlocked = async () => !!(await cacheGet("meta:planblock"));
 
 /** Últimos N partidos terminados. Si el plan no permite `last`, usa la temporada completa y recorta. */
