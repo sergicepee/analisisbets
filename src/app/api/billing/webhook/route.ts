@@ -20,7 +20,8 @@ function validSignature(header: string | null, payload: string, secret: string) 
   const parts = header.split(",");
   const timestamp = parts.find((part) => part.startsWith("t="))?.slice(2);
   const signatures = parts.filter((part) => part.startsWith("v1=")).map((part) => part.slice(3));
-  if (!timestamp || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300 || !signatures.length) return false;
+  const timestampValue = Number(timestamp);
+  if (!timestamp || !Number.isFinite(timestampValue) || Math.abs(Date.now() / 1000 - timestampValue) > 300 || !signatures.length) return false;
   const expected = createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest();
   return signatures.some((signature) => {
     try {

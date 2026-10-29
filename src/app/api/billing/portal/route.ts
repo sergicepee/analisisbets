@@ -14,13 +14,17 @@ export async function POST(request: NextRequest) {
   if (!secret || !customer) return NextResponse.json({ error: "No se pudo encontrar tu suscripción de Stripe." }, { status: 404 });
 
   const origin = process.env.SITE_URL || new URL(request.url).origin;
-  const response = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ customer, return_url: `${origin}/premium` }),
-    cache: "no-store",
-  });
-  const result = await response.json() as { url?: string };
-  if (!response.ok || !result.url) return NextResponse.json({ error: "Stripe no pudo abrir la gestión de la suscripción." }, { status: 502 });
-  return NextResponse.json({ url: result.url });
+  try {
+    const response = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ customer, return_url: `${origin}/premium` }),
+      cache: "no-store",
+    });
+    const result = await response.json() as { url?: string };
+    if (!response.ok || !result.url) return NextResponse.json({ error: "Stripe no pudo abrir la gestión de la suscripción. Comprueba que el Customer Portal está activado." }, { status: 502 });
+    return NextResponse.json({ url: result.url });
+  } catch {
+    return NextResponse.json({ error: "No se pudo conectar con Stripe." }, { status: 502 });
+  }
 }
