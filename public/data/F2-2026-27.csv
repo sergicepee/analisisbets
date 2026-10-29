@@ -1,0 +1,307 @@
+date,time,matchday,home_team,away_team,city,stadium,status,result
+2026-08-08,20:45,1,Montpellier,Dijon,Montpellier,Stade de la Mosson,Jugado,1-1
+2026-08-08,20:45,1,Nantes,RED Star FC 93,Nantes,Stade de la Beaujoire,Jugado,0-1
+2026-08-08,20:45,1,Clermont Foot,Reims,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,0-0
+2026-08-08,20:45,1,Metz,Guingamp,Metz,Stade Saint Symphorien,Jugado,2-1
+2026-08-08,20:45,1,Sochaux,Saint Etienne,Montbeliard,Stade Auguste Bonal,Jugado,0-3
+2026-08-08,20:45,1,PAU,Annecy,Bizanos,Nouste Camp,Jugado,0-1
+2026-08-08,20:45,1,Boulogne,Nancy,Boulogne-sur-Mer,Stade de la Libération,Jugado,0-0
+2026-08-08,20:45,1,Rodez,Laval,Rodez,Stade Paul-Lignon,Jugado,3-1
+2026-08-08,20:45,1,Dunkerque,Grenoble,Dunkerque,Stade Marcel Tribut,Jugado,4-2
+2026-08-14,20:45,2,Dijon,PAU,Dijon,Stade Gaston Gerard,Jugado,0-1
+2026-08-14,20:45,2,Guingamp,Boulogne,Guingamp,Stade de Roudourou,Jugado,1-0
+2026-08-14,20:45,2,Reims,Dunkerque,Reims,Stade Auguste-Delaune,Jugado,3-3
+2026-08-14,20:45,2,Grenoble,Metz,Grenoble,Stade des Alpes,Jugado,0-0
+2026-08-14,20:45,2,Nancy,Montpellier,Nancy,Stade Marcel Picot,Jugado,0-1
+2026-08-14,20:45,2,RED Star FC 93,Sochaux,Saint-Ouen,Stade de Paris,Jugado,0-0
+2026-08-14,20:45,2,Laval,Nantes,Laval,Stade Francis Le Basser,Jugado,2-1
+2026-08-14,20:45,2,Saint Etienne,Clermont Foot,Saint Etienne,Stade Geoffroy-Guichard,Jugado,3-1
+2026-08-14,20:45,2,Annecy,Rodez,Annecy,Parc des Sports,Jugado,2-0
+2026-08-21,20:00,3,Clermont Foot,Dijon,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,1-1
+2026-08-21,20:00,3,Sochaux,Guingamp,Montbeliard,Stade Auguste Bonal,Jugado,1-0
+2026-08-21,20:00,3,PAU,Nancy,Bizanos,Nouste Camp,Jugado,0-1
+2026-08-21,20:00,3,Boulogne,RED Star FC 93,Boulogne-sur-Mer,Stade de la Libération,Jugado,1-1
+2026-08-21,20:00,3,Dunkerque,Montpellier,Dunkerque,Stade Marcel Tribut,Jugado,0-1
+2026-08-22,14:00,3,Nantes,Rodez,Nantes,Stade de la Beaujoire,Jugado,2-5
+2026-08-22,14:00,3,Metz,Laval,Metz,Stade Saint Symphorien,Jugado,1-1
+2026-08-22,20:00,3,Saint Etienne,Grenoble,Saint Etienne,Stade Geoffroy-Guichard,Jugado,4-0
+2026-08-24,20:45,3,Reims,Annecy,Reims,Stade Auguste-Delaune,Jugado,3-1
+2026-08-28,20:00,4,Montpellier,Boulogne,Montpellier,Stade de la Mosson,Jugado,0-0
+2026-08-28,20:00,4,Clermont Foot,Sochaux,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,0-0
+2026-08-28,20:00,4,Nancy,Dunkerque,Nancy,Stade Marcel Picot,Jugado,2-0
+2026-08-28,20:00,4,Laval,Grenoble,Laval,Stade Francis Le Basser,Jugado,0-3
+2026-08-28,20:00,4,Rodez,PAU,Rodez,Stade Paul-Lignon,Jugado,2-2
+2026-08-29,14:00,4,RED Star FC 93,Reims,Saint-Ouen,Stade de Paris,Jugado,1-4
+2026-08-29,14:00,4,Annecy,Metz,Annecy,Parc des Sports,Jugado,1-1
+2026-08-29,20:00,4,Guingamp,Nantes,Guingamp,Stade de Roudourou,Jugado,3-3
+2026-08-31,20:45,4,Dijon,Saint Etienne,Dijon,Stade Gaston Gerard,Jugado,2-3
+2026-09-04,20:00,5,Grenoble,Annecy,Grenoble,Stade des Alpes,Jugado,1-2
+2026-09-04,20:00,5,Laval,RED Star FC 93,Laval,Stade Francis Le Basser,Jugado,1-2
+2026-09-04,20:00,5,PAU,Sochaux,Bizanos,Nouste Camp,Jugado,1-1
+2026-09-04,20:00,5,Boulogne,Dijon,Boulogne-sur-Mer,Stade de la Libération,Jugado,1-1
+2026-09-04,20:00,5,Dunkerque,Clermont Foot,Dunkerque,Stade Marcel Tribut,Jugado,1-1
+2026-09-05,14:00,5,Reims,Guingamp,Reims,Stade Auguste-Delaune,Jugado,2-2
+2026-09-05,14:00,5,Metz,Rodez,Metz,Stade Saint Symphorien,Jugado,4-1
+2026-09-05,20:00,5,Saint Etienne,Montpellier,Saint Etienne,Stade Geoffroy Guichard,Jugado,3-1
+2026-09-07,20:45,5,Nantes,Nancy,Nantes,Stade de la Beaujoire,Jugado,1-0
+2026-09-11,20:00,6,Montpellier,PAU,Montpellier,Stade de la Mosson,Jugado,1-0
+2026-09-11,20:00,6,Dijon,Laval,Dijon,,Jugado,3-2
+2026-09-11,20:00,6,Clermont Foot,Boulogne,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,0-0
+2026-09-11,20:00,6,Nancy,Reims,Nancy,Stade Marcel Picot,Jugado,1-2
+2026-09-11,20:00,6,Rodez,Grenoble,Rodez,Stade Paul-Lignon,Jugado,0-1
+2026-09-12,14:00,6,Guingamp,Annecy,Guingamp,Stade de Roudourou,Jugado,2-1
+2026-09-12,14:00,6,Sochaux,Nantes,Montbéliard,Stade Auguste Bonal,Jugado,1-0
+2026-09-12,20:00,6,Dunkerque,Saint Etienne,Dunkerque,Stade Marcel Tribut,Jugado,2-1
+2026-09-14,20:45,6,RED Star FC 93,Metz,Paris - Saint-Ouen,Stade Bauer,Jugado,1-0
+2026-09-18,20:00,7,Reims,Montpellier,Reims,Stade Auguste-Delaune,Jugado,1-1
+2026-09-18,20:00,7,Grenoble,Clermont Foot,Grenoble,Stade des Alpes,Jugado,1-1
+2026-09-18,20:00,7,Laval,Sochaux,Laval,Stade Francis-Le Basser,Jugado,1-1
+2026-09-18,20:00,7,PAU,Dunkerque,Pau,Nouste Camp,Jugado,2-0
+2026-09-18,20:00,7,Rodez,Nancy,Rodez,Stade Paul Lignon,Jugado,3-4
+2026-09-18,20:00,7,Annecy,Dijon,Avignon,Parc des Sports d’Annecy,Jugado,1-2
+2026-09-19,14:00,7,Guingamp,RED Star FC 93,Guingamp,Stade de Roudourou,Jugado,1-3
+2026-09-19,14:00,7,Boulogne,Nantes,Boulogne-Sur-Mer,Stade de la Libération,Jugado,1-2
+2026-09-19,20:00,7,Metz,Saint Etienne,Metz,Stade Saint-Symphorien,Jugado,2-2
+2026-10-09,20:00,8,Montpellier,Grenoble,Montpellier,Stade de la Mosson,Jugado,2-0
+2026-10-09,20:00,8,Nancy,Guingamp,Nancy,Stade Marcel-Picot,Jugado,1-0
+2026-10-09,20:00,8,Sochaux,Boulogne,Montbeliard,Stade Bonal,Jugado,1-1
+2026-10-09,20:00,8,PAU,Laval,Pau,Nouste Camp,Jugado,3-2
+2026-10-09,20:00,8,Dunkerque,Annecy,Dunkirk,Stade Marcel Tribut,Jugado,0-1
+2026-10-10,14:00,8,Nantes,Reims,Nantes,Stade de la Beaujoire,Jugado,0-0
+2026-10-10,14:00,8,Clermont Foot,RED Star FC 93,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,2-3
+2026-10-10,20:00,8,Saint Etienne,Rodez,Saint Etienne,Stade Geoffroy-Guichard,Jugado,2-0
+2026-10-12,20:45,8,Dijon,Metz,Dijon,Stade Gaston-Gérard,Jugado,4-2
+2026-10-16,20:00,9,Guingamp,PAU,Guingamp,Stade de Roudourou,Jugado,1-2
+2026-10-16,20:00,9,Reims,Dijon,Reims,Stade Auguste-Delaune,Jugado,4-2
+2026-10-16,20:00,9,Grenoble,Boulogne,Grenoble,Stade des Alpes,Jugado,0-2
+2026-10-16,20:00,9,Laval,Clermont Foot,Laval,Stade Francis-Le Basser,Jugado,3-3
+2026-10-16,20:00,9,Annecy,Nancy,Avignon,Parc des Sports d’Annecy,Jugado,1-2
+2026-10-17,14:00,9,Nantes,Dunkerque,Nantes,Stade de la Beaujoire,Jugado,2-3
+2026-10-17,14:00,9,Metz,Sochaux,Metz,Stade Saint-Symphorien,Jugado,3-2
+2026-10-17,20:00,9,RED Star FC 93,Saint Etienne,Saint-Ouen,Stade de Paris,Jugado,0-1
+2026-10-19,20:45,9,Rodez,Montpellier,Rodez,Stade Paul Lignon,Jugado,0-3
+2026-10-23,20:00,10,Clermont Foot,Guingamp,Clermont-Ferrand,Stade Gabriel Montpied,Jugado,0-2
+2026-10-23,20:00,10,Nancy,Laval,Nancy,Stade Marcel-Picot,Jugado,1-0
+2026-10-23,20:00,10,Sochaux,Annecy,Montbeliard,Stade Bonal,Jugado,1-3
+2026-10-23,20:00,10,PAU,Grenoble,Pau,Nouste Camp,Jugado,2-1
+2026-10-23,20:00,10,Dunkerque,Metz,Dunkirk,Stade Marcel Tribut,Jugado,1-1
+2026-10-24,14:00,10,Dijon,Rodez,Dijon,Stade Gaston-Gérard,Jugado,1-2
+2026-10-24,20:45,10,Saint Etienne,Nantes,Saint Etienne,Stade Geoffroy-Guichard,Jugado,1-0
+2026-10-26,20:45,10,Montpellier,RED Star FC 93,Montpellier,Stade de la Mosson,Jugado,2-1
+2026-10-26,20:45,10,Boulogne,Reims,Boulogne-Sur-Mer,Stade de la Libération,Jugado,1-1
+2026-10-30,20:00,11,Nantes,Clermont Foot,Nantes,Stade de la Beaujoire,Por jugar,
+2026-10-30,20:00,11,Grenoble,Dijon,Grenoble,Stade des Alpes,Por jugar,
+2026-10-30,20:00,11,Metz,PAU,Metz,Stade Saint-Symphorien,Por jugar,
+2026-10-30,20:00,11,Laval,Boulogne,Laval,Stade Francis-Le Basser,Por jugar,
+2026-10-30,20:00,11,Rodez,Dunkerque,Rodez,Stade Paul Lignon,Por jugar,
+2026-10-31,14:00,11,Reims,Sochaux,Reims,Stade Auguste-Delaune,Por jugar,
+2026-10-31,14:00,11,Annecy,Montpellier,Avignon,Parc des Sports d’Annecy,Por jugar,
+2026-10-31,20:00,11,Guingamp,Saint Etienne,Guingamp,Stade de Roudourou,Por jugar,
+2026-11-02,20:45,11,RED Star FC 93,Nancy,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2026-11-06,20:00,12,Montpellier,Metz,Montpellier,Stade de la Mosson,Por jugar,
+2026-11-06,20:00,12,Dijon,RED Star FC 93,Dijon,,Por jugar,
+2026-11-06,20:00,12,Clermont Foot,Rodez,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2026-11-06,20:00,12,Grenoble,Reims,Grenoble,Stade des Alpes,Por jugar,
+2026-11-06,20:00,12,Nancy,Sochaux,Nancy,Stade Marcel Picot,Por jugar,
+2026-11-06,20:00,12,Saint Etienne,Laval,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2026-11-06,20:00,12,PAU,Nantes,Pau,Nouste Camp,Por jugar,
+2026-11-06,20:00,12,Boulogne,Annecy,Boulogne-sur-Mer,,Por jugar,
+2026-11-06,20:00,12,Dunkerque,Guingamp,Dunkerque,Stade Marcel Tribut,Por jugar,
+2026-11-20,20:00,13,Nantes,Grenoble,Nantes,Stade de la Beaujoire,Por jugar,
+2026-11-20,20:00,13,Guingamp,Rodez,Guingamp,Stade de Roudourou,Por jugar,
+2026-11-20,20:00,13,Reims,Saint Etienne,Reims,Stade Auguste-Delaune,Por jugar,
+2026-11-20,20:00,13,Nancy,Dijon,Nancy,Stade Marcel Picot,Por jugar,
+2026-11-20,20:00,13,RED Star FC 93,PAU,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2026-11-20,20:00,13,Metz,Boulogne,Metz,Stade Saint-Symphorien,Por jugar,
+2026-11-20,20:00,13,Sochaux,Dunkerque,Montbéliard,Stade Auguste Bonal,Por jugar,
+2026-11-20,20:00,13,Laval,Montpellier,Laval,Stade Francis Le Basser,Por jugar,
+2026-11-20,20:00,13,Annecy,Clermont Foot,Annecy,Parc des Sports,Por jugar,
+2026-12-04,20:00,14,Montpellier,Nantes,Montpellier,Stade de la Mosson,Por jugar,
+2026-12-04,20:00,14,Dijon,Sochaux,Dijon,,Por jugar,
+2026-12-04,20:00,14,Clermont Foot,Metz,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2026-12-04,20:00,14,Grenoble,Guingamp,Grenoble,Stade des Alpes,Por jugar,
+2026-12-04,20:00,14,Saint Etienne,Nancy,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2026-12-04,20:00,14,Boulogne,PAU,Boulogne-sur-Mer,,Por jugar,
+2026-12-04,20:00,14,Rodez,Reims,Rodez,Stade Paul-Lignon,Por jugar,
+2026-12-04,20:00,14,Dunkerque,RED Star FC 93,Dunkerque,Stade Marcel Tribut,Por jugar,
+2026-12-04,20:00,14,Annecy,Laval,Annecy,Parc des Sports,Por jugar,
+2026-12-11,20:00,15,Nantes,Annecy,Nantes,Stade de la Beaujoire,Por jugar,
+2026-12-11,20:00,15,Guingamp,Dijon,Guingamp,Stade de Roudourou,Por jugar,
+2026-12-11,20:00,15,Nancy,Clermont Foot,Nancy,Stade Marcel Picot,Por jugar,
+2026-12-11,20:00,15,RED Star FC 93,Grenoble,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2026-12-11,20:00,15,Metz,Reims,Metz,Stade Saint-Symphorien,Por jugar,
+2026-12-11,20:00,15,Sochaux,Montpellier,Montbéliard,Stade Auguste Bonal,Por jugar,
+2026-12-11,20:00,15,Laval,Dunkerque,Laval,Stade Francis Le Basser,Por jugar,
+2026-12-11,20:00,15,PAU,Saint Etienne,Pau,Nouste Camp,Por jugar,
+2026-12-11,20:00,15,Boulogne,Rodez,Boulogne-sur-Mer,,Por jugar,
+2027-01-02,20:00,16,Montpellier,Guingamp,Montpellier,Stade de la Mosson,Por jugar,
+2027-01-02,20:00,16,Dijon,Nantes,Dijon,,Por jugar,
+2027-01-02,20:00,16,Reims,Laval,Reims,Stade Auguste-Delaune,Por jugar,
+2027-01-02,20:00,16,Clermont Foot,PAU,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-01-02,20:00,16,Grenoble,Sochaux,Grenoble,Stade des Alpes,Por jugar,
+2027-01-02,20:00,16,Metz,Nancy,Metz,Stade Saint-Symphorien,Por jugar,
+2027-01-02,20:00,16,Rodez,RED Star FC 93,Rodez,Stade Paul-Lignon,Por jugar,
+2027-01-02,20:00,16,Dunkerque,Boulogne,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-01-02,20:00,16,Annecy,Saint Etienne,Annecy,Parc des Sports,Por jugar,
+2027-01-15,20:00,17,Montpellier,Clermont Foot,Montpellier,Stade de la Mosson,Por jugar,
+2027-01-15,20:00,17,Nantes,Metz,Nantes,Stade de la Beaujoire,Por jugar,
+2027-01-15,20:00,17,Dijon,Dunkerque,Dijon,,Por jugar,
+2027-01-15,20:00,17,Nancy,Grenoble,Nancy,Stade Marcel Picot,Por jugar,
+2027-01-15,20:00,17,RED Star FC 93,Annecy,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-01-15,20:00,17,Sochaux,Rodez,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-01-15,20:00,17,Laval,Guingamp,Laval,Stade Francis Le Basser,Por jugar,
+2027-01-15,20:00,17,Saint Etienne,Boulogne,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-01-15,20:00,17,PAU,Reims,Pau,Nouste Camp,Por jugar,
+2027-01-22,20:00,18,Guingamp,Nancy,Guingamp,Stade de Roudourou,Por jugar,
+2027-01-22,20:00,18,Reims,RED Star FC 93,Reims,Stade Auguste-Delaune,Por jugar,
+2027-01-22,20:00,18,Clermont Foot,Saint Etienne,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-01-22,20:00,18,Grenoble,Montpellier,Grenoble,Stade des Alpes,Por jugar,
+2027-01-22,20:00,18,Metz,Dijon,Metz,Stade Saint-Symphorien,Por jugar,
+2027-01-22,20:00,18,Laval,PAU,Laval,Stade Francis Le Basser,Por jugar,
+2027-01-22,20:00,18,Boulogne,Sochaux,Boulogne-sur-Mer,,Por jugar,
+2027-01-22,20:00,18,Rodez,Annecy,Rodez,Stade Paul-Lignon,Por jugar,
+2027-01-22,20:00,18,Dunkerque,Nantes,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-01-29,20:00,19,Montpellier,Rodez,Montpellier,Stade de la Mosson,Por jugar,
+2027-01-29,20:00,19,Nantes,Guingamp,Nantes,Stade de la Beaujoire,Por jugar,
+2027-01-29,20:00,19,Dijon,Clermont Foot,Dijon,,Por jugar,
+2027-01-29,20:00,19,Nancy,Boulogne,Nancy,Stade Marcel Picot,Por jugar,
+2027-01-29,20:00,19,RED Star FC 93,Laval,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-01-29,20:00,19,Sochaux,Reims,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-01-29,20:00,19,Saint Etienne,Dunkerque,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-01-29,20:00,19,PAU,Metz,Pau,Nouste Camp,Por jugar,
+2027-01-29,20:00,19,Annecy,Grenoble,Annecy,Parc des Sports,Por jugar,
+2027-02-05,20:00,20,Guingamp,Dunkerque,Guingamp,Stade de Roudourou,Por jugar,
+2027-02-05,20:00,20,Reims,Nancy,Reims,Stade Auguste-Delaune,Por jugar,
+2027-02-05,20:00,20,Grenoble,Saint Etienne,Grenoble,Stade des Alpes,Por jugar,
+2027-02-05,20:00,20,RED Star FC 93,Montpellier,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-02-05,20:00,20,Metz,Annecy,Metz,Stade Saint-Symphorien,Por jugar,
+2027-02-05,20:00,20,Sochaux,PAU,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-02-05,20:00,20,Laval,Dijon,Laval,Stade Francis Le Basser,Por jugar,
+2027-02-05,20:00,20,Boulogne,Clermont Foot,Boulogne-sur-Mer,,Por jugar,
+2027-02-05,20:00,20,Rodez,Nantes,Rodez,Stade Paul-Lignon,Por jugar,
+2027-02-12,20:00,21,Montpellier,Reims,Montpellier,Stade de la Mosson,Por jugar,
+2027-02-12,20:00,21,Nantes,Boulogne,Nantes,Stade de la Beaujoire,Por jugar,
+2027-02-12,20:00,21,Dijon,Grenoble,Dijon,,Por jugar,
+2027-02-12,20:00,21,Clermont Foot,Laval,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-02-12,20:00,21,Nancy,RED Star FC 93,Nancy,Stade Marcel Picot,Por jugar,
+2027-02-12,20:00,21,Saint Etienne,Metz,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-02-12,20:00,21,Rodez,Guingamp,Rodez,Stade Paul-Lignon,Por jugar,
+2027-02-12,20:00,21,Dunkerque,PAU,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-02-12,20:00,21,Annecy,Sochaux,Annecy,Parc des Sports,Por jugar,
+2027-02-19,20:00,22,Guingamp,Clermont Foot,Guingamp,Stade de Roudourou,Por jugar,
+2027-02-19,20:00,22,Reims,Nantes,Reims,Stade Auguste-Delaune,Por jugar,
+2027-02-19,20:00,22,Grenoble,Rodez,Grenoble,Stade des Alpes,Por jugar,
+2027-02-19,20:00,22,Metz,Montpellier,Metz,Stade Saint-Symphorien,Por jugar,
+2027-02-19,20:00,22,Sochaux,Dijon,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-02-19,20:00,22,Laval,Annecy,Laval,Stade Francis Le Basser,Por jugar,
+2027-02-19,20:00,22,PAU,RED Star FC 93,Pau,Nouste Camp,Por jugar,
+2027-02-19,20:00,22,Boulogne,Saint Etienne,Boulogne-sur-Mer,,Por jugar,
+2027-02-19,20:00,22,Dunkerque,Nancy,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-02-26,20:00,23,Montpellier,Laval,Montpellier,Stade de la Mosson,Por jugar,
+2027-02-26,20:00,23,Nantes,PAU,Nantes,Stade de la Beaujoire,Por jugar,
+2027-02-26,20:00,23,Dijon,Nancy,Dijon,,Por jugar,
+2027-02-26,20:00,23,Clermont Foot,Dunkerque,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-02-26,20:00,23,RED Star FC 93,Guingamp,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-02-26,20:00,23,Metz,Grenoble,Metz,Stade Saint-Symphorien,Por jugar,
+2027-02-26,20:00,23,Saint Etienne,Sochaux,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-02-26,20:00,23,Rodez,Boulogne,Rodez,Stade Paul-Lignon,Por jugar,
+2027-02-26,20:00,23,Annecy,Reims,Annecy,Parc des Sports,Por jugar,
+2027-03-05,20:00,24,Montpellier,Annecy,Montpellier,Stade de la Mosson,Por jugar,
+2027-03-05,20:00,24,Reims,Rodez,Reims,Stade Auguste-Delaune,Por jugar,
+2027-03-05,20:00,24,Grenoble,RED Star FC 93,Grenoble,Stade des Alpes,Por jugar,
+2027-03-05,20:00,24,Nancy,Nantes,Nancy,Stade Marcel Picot,Por jugar,
+2027-03-05,20:00,24,Sochaux,Metz,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-03-05,20:00,24,Saint Etienne,Guingamp,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-03-05,20:00,24,PAU,Clermont Foot,Pau,Nouste Camp,Por jugar,
+2027-03-05,20:00,24,Boulogne,Laval,Boulogne-sur-Mer,,Por jugar,
+2027-03-05,20:00,24,Dunkerque,Dijon,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-03-12,20:00,25,Nantes,Saint Etienne,Nantes,Stade de la Beaujoire,Por jugar,
+2027-03-12,20:00,25,Guingamp,Grenoble,Guingamp,Stade de Roudourou,Por jugar,
+2027-03-12,20:00,25,Clermont Foot,Montpellier,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-03-12,20:00,25,Nancy,PAU,Nancy,Stade Marcel Picot,Por jugar,
+2027-03-12,20:00,25,RED Star FC 93,Dijon,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-03-12,20:00,25,Metz,Dunkerque,Metz,Stade Saint-Symphorien,Por jugar,
+2027-03-12,20:00,25,Laval,Reims,Laval,Stade Francis Le Basser,Por jugar,
+2027-03-12,20:00,25,Rodez,Sochaux,Rodez,Stade Paul-Lignon,Por jugar,
+2027-03-12,20:00,25,Annecy,Boulogne,Annecy,Parc des Sports,Por jugar,
+2027-03-19,20:00,26,Dijon,Annecy,Dijon,,Por jugar,
+2027-03-19,20:00,26,Guingamp,Laval,Guingamp,Stade de Roudourou,Por jugar,
+2027-03-19,20:00,26,Reims,Clermont Foot,Reims,Stade Auguste-Delaune,Por jugar,
+2027-03-19,20:00,26,Grenoble,Nantes,Grenoble,Stade des Alpes,Por jugar,
+2027-03-19,20:00,26,Sochaux,Nancy,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-03-19,20:00,26,Saint Etienne,RED Star FC 93,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-03-19,20:00,26,PAU,Montpellier,Pau,Nouste Camp,Por jugar,
+2027-03-19,20:00,26,Boulogne,Metz,Boulogne-sur-Mer,,Por jugar,
+2027-03-19,20:00,26,Dunkerque,Rodez,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-04-02,20:00,27,Montpellier,Dunkerque,Montpellier,Stade de la Mosson,Por jugar,
+2027-04-02,20:00,27,Nantes,Sochaux,Nantes,Stade de la Beaujoire,Por jugar,
+2027-04-02,20:00,27,Reims,PAU,Reims,Stade Auguste-Delaune,Por jugar,
+2027-04-02,20:00,27,Clermont Foot,Grenoble,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-04-02,20:00,27,Nancy,Saint Etienne,Nancy,Stade Marcel Picot,Por jugar,
+2027-04-02,20:00,27,RED Star FC 93,Boulogne,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-04-02,20:00,27,Laval,Metz,Laval,Stade Francis Le Basser,Por jugar,
+2027-04-02,20:00,27,Rodez,Dijon,Rodez,Stade Paul-Lignon,Por jugar,
+2027-04-02,20:00,27,Annecy,Guingamp,Annecy,Parc des Sports,Por jugar,
+2027-04-09,20:00,28,Dijon,Reims,Dijon,,Por jugar,
+2027-04-09,20:00,28,Guingamp,Montpellier,Guingamp,Stade de Roudourou,Por jugar,
+2027-04-09,20:00,28,Clermont Foot,Nancy,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-04-09,20:00,28,Metz,Nantes,Metz,Stade Saint-Symphorien,Por jugar,
+2027-04-09,20:00,28,Sochaux,RED Star FC 93,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-04-09,20:00,28,Saint Etienne,Annecy,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-04-09,20:00,28,PAU,Rodez,Pau,Nouste Camp,Por jugar,
+2027-04-09,20:00,28,Boulogne,Grenoble,Boulogne-sur-Mer,,Por jugar,
+2027-04-09,20:00,28,Dunkerque,Laval,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-04-16,20:00,29,Montpellier,Sochaux,Montpellier,Stade de la Mosson,Por jugar,
+2027-04-16,20:00,29,Dijon,Guingamp,Dijon,,Por jugar,
+2027-04-16,20:00,29,Reims,Metz,Reims,Stade Auguste-Delaune,Por jugar,
+2027-04-16,20:00,29,Grenoble,Nancy,Grenoble,Stade des Alpes,Por jugar,
+2027-04-16,20:00,29,RED Star FC 93,Nantes,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-04-16,20:00,29,Laval,Saint Etienne,Laval,Stade Francis Le Basser,Por jugar,
+2027-04-16,20:00,29,PAU,Boulogne,Pau,Nouste Camp,Por jugar,
+2027-04-16,20:00,29,Rodez,Clermont Foot,Rodez,Stade Paul-Lignon,Por jugar,
+2027-04-16,20:00,29,Annecy,Dunkerque,Annecy,Parc des Sports,Por jugar,
+2027-04-23,20:00,30,Nantes,Montpellier,Nantes,Stade de la Beaujoire,Por jugar,
+2027-04-23,20:00,30,Guingamp,Reims,Guingamp,Stade de Roudourou,Por jugar,
+2027-04-23,20:00,30,Grenoble,PAU,Grenoble,Stade des Alpes,Por jugar,
+2027-04-23,20:00,30,Nancy,Annecy,Nancy,Stade Marcel Picot,Por jugar,
+2027-04-23,20:00,30,RED Star FC 93,Rodez,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-04-23,20:00,30,Metz,Clermont Foot,Metz,Stade Saint-Symphorien,Por jugar,
+2027-04-23,20:00,30,Sochaux,Laval,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-04-23,20:00,30,Saint Etienne,Dijon,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-04-23,20:00,30,Boulogne,Dunkerque,Boulogne-sur-Mer,,Por jugar,
+2027-04-30,20:00,31,Montpellier,Saint Etienne,Montpellier,Stade de la Mosson,Por jugar,
+2027-04-30,20:00,31,Dijon,Boulogne,Dijon,,Por jugar,
+2027-04-30,20:00,31,Reims,Grenoble,Reims,Stade Auguste-Delaune,Por jugar,
+2027-04-30,20:00,31,Clermont Foot,Nantes,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-04-30,20:00,31,Laval,Nancy,Laval,Stade Francis Le Basser,Por jugar,
+2027-04-30,20:00,31,PAU,Guingamp,Pau,Nouste Camp,Por jugar,
+2027-04-30,20:00,31,Rodez,Metz,Rodez,Stade Paul-Lignon,Por jugar,
+2027-04-30,20:00,31,Dunkerque,Sochaux,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-04-30,20:00,31,Annecy,RED Star FC 93,Annecy,Parc des Sports,Por jugar,
+2027-05-07,20:00,32,Nantes,Dijon,Nantes,Stade de la Beaujoire,Por jugar,
+2027-05-07,20:00,32,Guingamp,Metz,Guingamp,Stade de Roudourou,Por jugar,
+2027-05-07,20:00,32,Grenoble,Laval,Grenoble,Stade des Alpes,Por jugar,
+2027-05-07,20:00,32,Nancy,Rodez,Nancy,Stade Marcel Picot,Por jugar,
+2027-05-07,20:00,32,RED Star FC 93,Dunkerque,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-05-07,20:00,32,Sochaux,Clermont Foot,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-05-07,20:00,32,Saint Etienne,Reims,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-05-07,20:00,32,Boulogne,Montpellier,Boulogne-sur-Mer,,Por jugar,
+2027-05-07,20:00,32,Annecy,PAU,Annecy,Parc des Sports,Por jugar,
+2027-05-14,20:00,33,Montpellier,Nancy,Montpellier,Stade de la Mosson,Por jugar,
+2027-05-14,20:00,33,Nantes,Laval,Nantes,Stade de la Beaujoire,Por jugar,
+2027-05-14,20:00,33,Clermont Foot,Annecy,Clermont-Ferrand,Stade Gabriel Montpied,Por jugar,
+2027-05-14,20:00,33,Metz,RED Star FC 93,Metz,Stade Saint-Symphorien,Por jugar,
+2027-05-14,20:00,33,Sochaux,Grenoble,Montbéliard,Stade Auguste Bonal,Por jugar,
+2027-05-14,20:00,33,PAU,Dijon,Pau,Nouste Camp,Por jugar,
+2027-05-14,20:00,33,Boulogne,Guingamp,Boulogne-sur-Mer,,Por jugar,
+2027-05-14,20:00,33,Rodez,Saint Etienne,Rodez,Stade Paul-Lignon,Por jugar,
+2027-05-14,20:00,33,Dunkerque,Reims,Dunkerque,Stade Marcel Tribut,Por jugar,
+2027-05-22,20:00,34,Dijon,Montpellier,Dijon,,Por jugar,
+2027-05-22,20:00,34,Guingamp,Sochaux,Guingamp,Stade de Roudourou,Por jugar,
+2027-05-22,20:00,34,Reims,Boulogne,Reims,Stade Auguste-Delaune,Por jugar,
+2027-05-22,20:00,34,Grenoble,Dunkerque,Grenoble,Stade des Alpes,Por jugar,
+2027-05-22,20:00,34,Nancy,Metz,Nancy,Stade Marcel Picot,Por jugar,
+2027-05-22,20:00,34,RED Star FC 93,Clermont Foot,Paris - Saint-Ouen,Stade Bauer,Por jugar,
+2027-05-22,20:00,34,Laval,Rodez,Laval,Stade Francis Le Basser,Por jugar,
+2027-05-22,20:00,34,Saint Etienne,PAU,Saint-Ètienne,Stade Geoffroy-Guichard,Por jugar,
+2027-05-22,20:00,34,Annecy,Nantes,Annecy,Parc des Sports,Por jugar,

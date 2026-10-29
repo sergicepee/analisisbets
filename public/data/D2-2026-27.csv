@@ -1,0 +1,307 @@
+date,time,matchday,home_team,away_team,city,stadium,status,result
+2026-08-07,20:30,1,VfL Bochum,Hertha BSC,Bochum,Vonovia Ruhrstadion,Jugado,0-1
+2026-08-08,13:00,1,1. FC Magdeburg,Eintracht Braunschweig,Magdeburg,Avnet Arena,Jugado,1-6
+2026-08-08,13:00,1,1. FC Heidenheim,VfL Osnabrück,Heidenheim,Voith-Arena,Jugado,4-3
+2026-08-08,13:00,1,SV Darmstadt 98,Holstein Kiel,Darmstadt,Merck-Stadion am Bollenfalltor,Jugado,2-2
+2026-08-08,13:00,1,Karlsruher SC,Arminia Bielefeld,Karlsruhe,BBBank Wildpark,Jugado,2-1
+2026-08-08,20:30,1,VfL Wolfsburg,1. FC Kaiserslautern,Wolfsburg,Volkswagen Arena,Jugado,0-0
+2026-08-09,13:30,1,1. FC Nürnberg,Dynamo Dresden,Nuremberg,Max-Morlock-Stadion,Jugado,3-0
+2026-08-09,13:30,1,FC St. Pauli,SpVgg Greuther Fürth,Hamburg,Millerntor-Stadion,Jugado,1-1
+2026-08-09,13:30,1,Energie Cottbus,Hannover 96,Cottbus,LEAG Energie Stadion,Jugado,3-1
+2026-08-14,18:30,2,Holstein Kiel,FC St. Pauli,Kiel,Holstein-Stadion,Jugado,2-2
+2026-08-14,18:30,2,Eintracht Braunschweig,VfL Bochum,Braunschweig,Eintracht-Stadion,Jugado,0-1
+2026-08-15,13:00,2,Hertha BSC,1. FC Heidenheim,Berlin,Olympiastadion,Jugado,4-1
+2026-08-15,13:00,2,SpVgg Greuther Fürth,1. FC Nürnberg,Fürth,Sportpark Ronhof Thomas Sommer,Jugado,2-4
+2026-08-15,13:00,2,VfL Osnabrück,1. FC Magdeburg,Osnabruck,Bremer Brücke,Jugado,0-3
+2026-08-15,20:30,2,1. FC Kaiserslautern,Karlsruher SC,Kaiserslautern,Fritz Walter Stadion,Jugado,0-0
+2026-08-16,13:30,2,Hannover 96,VfL Wolfsburg,Hannover,Heinz-von-Heiden-Arena,Jugado,0-1
+2026-08-16,13:30,2,Dynamo Dresden,SV Darmstadt 98,Dresden,Rudolf-Harbig-Stadion,Jugado,1-0
+2026-08-16,13:30,2,Arminia Bielefeld,Energie Cottbus,Bielefeld,Schüco-Arena,Jugado,3-0
+2026-08-28,18:30,3,VfL Bochum,VfL Osnabrück,Bochum,Vonovia Ruhrstadion,Jugado,0-1
+2026-08-28,18:30,3,Eintracht Braunschweig,Hertha BSC,Braunschweig,Eintracht-Stadion,Jugado,3-5
+2026-08-29,13:00,3,1. FC Heidenheim,Dynamo Dresden,Heidenheim,Voith-Arena,Jugado,5-3
+2026-08-29,13:00,3,Karlsruher SC,VfL Wolfsburg,Karlsruhe,BBBank Wildpark,Jugado,2-5
+2026-08-29,13:00,3,Energie Cottbus,SpVgg Greuther Fürth,Cottbus,LEAG Energie Stadion,Jugado,3-4
+2026-08-29,20:30,3,1. FC Nürnberg,Arminia Bielefeld,Nuremberg,Max-Morlock-Stadion,Jugado,4-1
+2026-08-30,13:30,3,1. FC Magdeburg,Holstein Kiel,Magdeburg,Avnet Arena,Jugado,2-0
+2026-08-30,13:30,3,SV Darmstadt 98,Hannover 96,Darmstadt,Merck-Stadion am Bollenfalltor,Jugado,0-1
+2026-08-30,13:30,3,FC St. Pauli,1. FC Kaiserslautern,Hamburg,Millerntor-Stadion,Jugado,1-2
+2026-09-04,18:30,4,Hannover 96,Karlsruher SC,Hannover,Heinz-von-Heiden-Arena,Jugado,2-2
+2026-09-04,18:30,4,Arminia Bielefeld,FC St. Pauli,Bielefeld,Schüco-Arena,Jugado,2-2
+2026-09-05,13:00,4,VfL Wolfsburg,Energie Cottbus,Wolfsburg,Volkswagen Arena,Jugado,4-4
+2026-09-05,13:00,4,Holstein Kiel,1. FC Nürnberg,Kiel,Holstein-Stadion,Jugado,2-2
+2026-09-05,13:00,4,1. FC Kaiserslautern,SV Darmstadt 98,Kaiserslautern,Fritz Walter Stadion,Jugado,3-0
+2026-09-05,20:30,4,Dynamo Dresden,VfL Bochum,Dresden,Rudolf-Harbig-Stadion,Jugado,1-2
+2026-09-06,13:30,4,Hertha BSC,1. FC Magdeburg,Berlin,Olympiastadion,Jugado,2-1
+2026-09-06,13:30,4,SpVgg Greuther Fürth,1. FC Heidenheim,Fürth,Sportpark Ronhof Thomas Sommer,Jugado,0-1
+2026-09-06,13:30,4,VfL Osnabrück,Eintracht Braunschweig,Osnabruck,Bremer Brücke,Jugado,3-1
+2026-09-11,18:30,5,1. FC Nürnberg,Hannover 96,Nuremberg,Max-Morlock-Stadion,Jugado,2-1
+2026-09-11,18:30,5,SV Darmstadt 98,Arminia Bielefeld,Darmstadt,Merck-Stadion am Bollenfalltor,Jugado,2-1
+2026-09-12,13:00,5,VfL Bochum,SpVgg Greuther Fürth,Bochum,Vonovia Ruhrstadion,Jugado,1-1
+2026-09-12,13:00,5,1. FC Magdeburg,1. FC Kaiserslautern,Magdeburg,Avnet Arena,Jugado,3-0
+2026-09-12,13:00,5,Eintracht Braunschweig,Dynamo Dresden,Braunschweig,Eintracht-Stadion,Jugado,2-2
+2026-09-12,20:30,5,FC St. Pauli,VfL Wolfsburg,Hamburg,Millerntor-Stadion,Jugado,1-0
+2026-09-13,13:30,5,1. FC Heidenheim,Holstein Kiel,Heidenheim an der Brenz,Voith-Arena,Jugado,1-0
+2026-09-13,13:30,5,Karlsruher SC,Energie Cottbus,Karlsruhe,BBBank Wildpark,Jugado,0-3
+2026-09-13,13:30,5,VfL Osnabrück,Hertha BSC,Osnabruck,Bremer Brücke,Jugado,1-3
+2026-09-18,18:30,6,VfL Wolfsburg,SV Darmstadt 98,Wolfsburg,Volkswagen Arena,Jugado,5-1
+2026-09-18,18:30,6,SpVgg Greuther Fürth,1. FC Magdeburg,Fürth,Sportpark Ronhof Thomas Sommer,Jugado,1-1
+2026-09-19,13:00,6,Holstein Kiel,VfL Osnabrück,Kiel,Holstein-Stadion,Jugado,1-1
+2026-09-19,13:00,6,1. FC Kaiserslautern,Eintracht Braunschweig,Kaiserslautern,Fritz-Walter-Stadion,Jugado,1-0
+2026-09-19,13:00,6,Karlsruher SC,1. FC Nürnberg,Karlsruhe,BBBank Wildpark,Jugado,0-1
+2026-09-19,20:30,6,Dynamo Dresden,Hertha BSC,Dresden,Rudolf-Harbig Stadion,Jugado,1-2
+2026-09-20,13:30,6,Hannover 96,VfL Bochum,Hannover,Heinz-von-Heiden-Arena,Jugado,2-1
+2026-09-20,13:30,6,Arminia Bielefeld,1. FC Heidenheim,Bielefeld,Schüco-Arena,Jugado,2-2
+2026-09-20,13:30,6,Energie Cottbus,FC St. Pauli,Cottbus,Stadion der Freundschaft,Jugado,1-1
+2026-10-09,18:30,7,1. FC Heidenheim,1. FC Kaiserslautern,Heidenheim,Voith-Arena,Jugado,0-0
+2026-10-09,18:30,7,Eintracht Braunschweig,Holstein Kiel,Braunschweig,Eintracht-Stadion,Jugado,1-0
+2026-10-10,13:00,7,1. FC Magdeburg,Hannover 96,Magdeburg,Avnet Arena,Jugado,3-0
+2026-10-10,13:00,7,SV Darmstadt 98,Energie Cottbus,Darmstadt,Merck-Stadion am Böllenfalltor,Jugado,3-1
+2026-10-10,13:00,7,VfL Osnabrück,Dynamo Dresden,Osnabruck,Stadion an der Bremer Brücke,Jugado,1-1
+2026-10-10,20:30,7,1. FC Nürnberg,VfL Wolfsburg,Nuremberg,Max-Morlock-Stadion,Jugado,4-4
+2026-10-11,13:30,7,Hertha BSC,SpVgg Greuther Fürth,Berlin,Olympiastadion,Jugado,2-1
+2026-10-11,13:30,7,VfL Bochum,Arminia Bielefeld,Bochum,Vonovia Ruhrstadion,Jugado,0-1
+2026-10-11,13:30,7,FC St. Pauli,Karlsruher SC,St. Pauli Burger,Millerntor-Stadion,Jugado,2-0
+2026-10-16,18:30,8,Holstein Kiel,Hertha BSC,Kiel,Holstein-Stadion,Jugado,0-0
+2026-10-16,18:30,8,Energie Cottbus,1. FC Nürnberg,Cottbus,Stadion der Freundschaft,Jugado,1-1
+2026-10-17,13:00,8,VfL Wolfsburg,1. FC Heidenheim,Wolfsburg,Volkswagen Arena,Jugado,3-1
+2026-10-17,13:00,8,SpVgg Greuther Fürth,Eintracht Braunschweig,Fürth,Sportpark Ronhof Thomas Sommer,Jugado,2-0
+2026-10-17,13:00,8,1. FC Kaiserslautern,VfL Bochum,Kaiserslautern,Fritz-Walter-Stadion,Jugado,2-0
+2026-10-17,20:30,8,Hannover 96,FC St. Pauli,Hannover,Heinz-von-Heiden-Arena,Jugado,1-1
+2026-10-18,13:30,8,Dynamo Dresden,1. FC Magdeburg,Dresden,Rudolf-Harbig Stadion,Jugado,2-0
+2026-10-18,13:30,8,Arminia Bielefeld,VfL Osnabrück,Bielefeld,Schüco-Arena,Jugado,2-1
+2026-10-18,13:30,8,Karlsruher SC,SV Darmstadt 98,Karlsruhe,BBBank Wildpark,Jugado,4-0
+2026-10-23,18:30,9,VfL Bochum,VfL Wolfsburg,Bochum,Vonovia Ruhrstadion,Jugado,1-1
+2026-10-23,18:30,9,SV Darmstadt 98,FC St. Pauli,Darmstadt,Merck-Stadion am Böllenfalltor,Jugado,0-0
+2026-10-24,13:00,9,Hertha BSC,Arminia Bielefeld,Berlin,Olympiastadion,Jugado,1-0
+2026-10-24,13:00,9,1. FC Magdeburg,Karlsruher SC,Magdeburg,Avnet Arena,Jugado,6-1
+2026-10-24,13:00,9,1. FC Heidenheim,Energie Cottbus,Heidenheim,Voith-Arena,Jugado,1-1
+2026-10-24,20:30,9,1. FC Nürnberg,1. FC Kaiserslautern,Nuremberg,Max-Morlock-Stadion,Jugado,0-1
+2026-10-25,13:30,9,Holstein Kiel,Dynamo Dresden,Kiel,Holstein-Stadion,Jugado,3-0
+2026-10-25,13:30,9,Eintracht Braunschweig,Hannover 96,Braunschweig,Eintracht-Stadion,Jugado,2-0
+2026-10-25,13:30,9,VfL Osnabrück,SpVgg Greuther Fürth,Osnabruck,Stadion an der Bremer Brücke,Jugado,3-0
+2026-10-30,18:30,10,Arminia Bielefeld,Eintracht Braunschweig,Bielefeld,Schüco-Arena,Por jugar,
+2026-10-30,18:30,10,Energie Cottbus,VfL Bochum,Cottbus,Stadion der Freundschaft,Por jugar,
+2026-10-31,13:00,10,VfL Wolfsburg,VfL Osnabrück,Wolfsburg,Volkswagen Arena,Por jugar,
+2026-10-31,13:00,10,SV Darmstadt 98,1. FC Magdeburg,Darmstadt,Merck-Stadion am Böllenfalltor,Por jugar,
+2026-10-31,13:00,10,1. FC Kaiserslautern,Hertha BSC,Kaiserslautern,Fritz-Walter-Stadion,Por jugar,
+2026-10-31,20:30,10,Karlsruher SC,1. FC Heidenheim,Karlsruhe,BBBank Wildpark,Por jugar,
+2026-11-01,13:30,10,Hannover 96,Dynamo Dresden,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2026-11-01,13:30,10,SpVgg Greuther Fürth,Holstein Kiel,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2026-11-01,13:30,10,FC St. Pauli,1. FC Nürnberg,Hamburg,Millerntor-Stadion,Por jugar,
+2026-11-06,18:30,11,Dynamo Dresden,SpVgg Greuther Fürth,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2026-11-06,18:30,11,Eintracht Braunschweig,Energie Cottbus,Braunschweig,Eintracht-Stadion,Por jugar,
+2026-11-07,13:00,11,1. FC Nürnberg,SV Darmstadt 98,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2026-11-07,13:00,11,Holstein Kiel,Arminia Bielefeld,Kiel,Holstein-Stadion,Por jugar,
+2026-11-07,13:00,11,VfL Osnabrück,1. FC Kaiserslautern,,,Por jugar,
+2026-11-07,20:30,11,Hertha BSC,VfL Wolfsburg,Berlin,Olympiastadion,Por jugar,
+2026-11-08,13:30,11,VfL Bochum,Karlsruher SC,Bochum,Vonovia Ruhrstadion,Por jugar,
+2026-11-08,13:30,11,1. FC Magdeburg,FC St. Pauli,Magdeburg,Avnet-Arena,Por jugar,
+2026-11-08,13:30,11,1. FC Heidenheim,Hannover 96,Heidenheim,Voith-Arena,Por jugar,
+2026-11-20,18:30,12,SV Darmstadt 98,1. FC Heidenheim,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2026-11-20,18:30,12,Arminia Bielefeld,1. FC Magdeburg,Bielefeld,,Por jugar,
+2026-11-21,13:00,12,VfL Wolfsburg,Holstein Kiel,Wolfsburg,Volkswagen Arena,Por jugar,
+2026-11-21,13:00,12,Hannover 96,SpVgg Greuther Fürth,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2026-11-21,13:00,12,1. FC Nürnberg,Eintracht Braunschweig,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2026-11-21,20:30,12,FC St. Pauli,VfL Bochum,Hamburg,Millerntor-Stadion,Por jugar,
+2026-11-22,13:30,12,1. FC Kaiserslautern,Dynamo Dresden,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2026-11-22,13:30,12,Karlsruher SC,VfL Osnabrück,Karlsruhe,BBBank Wildpark,Por jugar,
+2026-11-22,13:30,12,Energie Cottbus,Hertha BSC,Cottbus,LEAG Energie Stadion,Por jugar,
+2026-11-27,18:30,13,VfL Bochum,SV Darmstadt 98,Bochum,Vonovia Ruhrstadion,Por jugar,
+2026-11-27,18:30,13,1. FC Heidenheim,1. FC Nürnberg,Heidenheim,Voith-Arena,Por jugar,
+2026-11-28,13:00,13,Hertha BSC,Karlsruher SC,Berlin,Olympiastadion,Por jugar,
+2026-11-28,13:00,13,Dynamo Dresden,FC St. Pauli,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2026-11-28,13:00,13,Holstein Kiel,1. FC Kaiserslautern,Kiel,Holstein-Stadion,Por jugar,
+2026-11-28,13:30,13,SpVgg Greuther Fürth,Arminia Bielefeld,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2026-11-28,13:30,13,1. FC Magdeburg,Energie Cottbus,Magdeburg,Avnet-Arena,Por jugar,
+2026-11-28,13:30,13,Eintracht Braunschweig,VfL Wolfsburg,Braunschweig,Eintracht-Stadion,Por jugar,
+2026-11-28,20:30,13,VfL Osnabrück,Hannover 96,,,Por jugar,
+2026-12-05,13:30,14,VfL Wolfsburg,1. FC Magdeburg,Wolfsburg,Volkswagen Arena,Por jugar,
+2026-12-05,13:30,14,Hannover 96,Hertha BSC,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2026-12-05,13:30,14,1. FC Nürnberg,VfL Bochum,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2026-12-05,13:30,14,SV Darmstadt 98,Eintracht Braunschweig,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2026-12-05,13:30,14,FC St. Pauli,1. FC Heidenheim,Hamburg,Millerntor-Stadion,Por jugar,
+2026-12-05,13:30,14,Arminia Bielefeld,Dynamo Dresden,Bielefeld,,Por jugar,
+2026-12-05,13:30,14,1. FC Kaiserslautern,SpVgg Greuther Fürth,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2026-12-05,13:30,14,Karlsruher SC,Holstein Kiel,Karlsruhe,BBBank Wildpark,Por jugar,
+2026-12-05,13:30,14,Energie Cottbus,VfL Osnabrück,Cottbus,LEAG Energie Stadion,Por jugar,
+2026-12-12,13:30,15,Hertha BSC,SV Darmstadt 98,Berlin,Olympiastadion,Por jugar,
+2026-12-12,13:30,15,VfL Bochum,1. FC Heidenheim,Bochum,Vonovia Ruhrstadion,Por jugar,
+2026-12-12,13:30,15,SpVgg Greuther Fürth,VfL Wolfsburg,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2026-12-12,13:30,15,1. FC Magdeburg,1. FC Nürnberg,Magdeburg,Avnet-Arena,Por jugar,
+2026-12-12,13:30,15,Dynamo Dresden,Energie Cottbus,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2026-12-12,13:30,15,Arminia Bielefeld,1. FC Kaiserslautern,Bielefeld,,Por jugar,
+2026-12-12,13:30,15,Holstein Kiel,Hannover 96,Kiel,Holstein-Stadion,Por jugar,
+2026-12-12,13:30,15,Eintracht Braunschweig,Karlsruher SC,Braunschweig,Eintracht-Stadion,Por jugar,
+2026-12-12,13:30,15,VfL Osnabrück,FC St. Pauli,,,Por jugar,
+2026-12-19,13:30,16,VfL Wolfsburg,Arminia Bielefeld,Wolfsburg,Volkswagen Arena,Por jugar,
+2026-12-19,13:30,16,Hannover 96,1. FC Kaiserslautern,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2026-12-19,13:30,16,1. FC Nürnberg,VfL Osnabrück,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2026-12-19,13:30,16,VfL Bochum,1. FC Magdeburg,Bochum,Vonovia Ruhrstadion,Por jugar,
+2026-12-19,13:30,16,1. FC Heidenheim,Eintracht Braunschweig,Heidenheim,Voith-Arena,Por jugar,
+2026-12-19,13:30,16,SV Darmstadt 98,SpVgg Greuther Fürth,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2026-12-19,13:30,16,FC St. Pauli,Hertha BSC,Hamburg,Millerntor-Stadion,Por jugar,
+2026-12-19,13:30,16,Karlsruher SC,Dynamo Dresden,Karlsruhe,BBBank Wildpark,Por jugar,
+2026-12-19,13:30,16,Energie Cottbus,Holstein Kiel,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-01-16,13:30,17,Hertha BSC,1. FC Nürnberg,Berlin,Olympiastadion,Por jugar,
+2027-01-16,13:30,17,SpVgg Greuther Fürth,Karlsruher SC,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-01-16,13:30,17,1. FC Magdeburg,1. FC Heidenheim,Magdeburg,Avnet-Arena,Por jugar,
+2027-01-16,13:30,17,Dynamo Dresden,VfL Wolfsburg,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-01-16,13:30,17,Arminia Bielefeld,Hannover 96,Bielefeld,,Por jugar,
+2027-01-16,13:30,17,Holstein Kiel,VfL Bochum,Kiel,Holstein-Stadion,Por jugar,
+2027-01-16,13:30,17,Eintracht Braunschweig,FC St. Pauli,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-01-16,13:30,17,1. FC Kaiserslautern,Energie Cottbus,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-01-16,13:30,17,VfL Osnabrück,SV Darmstadt 98,,,Por jugar,
+2027-01-23,13:30,18,Hertha BSC,VfL Bochum,Berlin,Olympiastadion,Por jugar,
+2027-01-23,13:30,18,Hannover 96,Energie Cottbus,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-01-23,13:30,18,SpVgg Greuther Fürth,FC St. Pauli,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-01-23,13:30,18,Dynamo Dresden,1. FC Nürnberg,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-01-23,13:30,18,Arminia Bielefeld,Karlsruher SC,Bielefeld,,Por jugar,
+2027-01-23,13:30,18,Holstein Kiel,SV Darmstadt 98,Kiel,Holstein-Stadion,Por jugar,
+2027-01-23,13:30,18,Eintracht Braunschweig,1. FC Magdeburg,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-01-23,13:30,18,1. FC Kaiserslautern,VfL Wolfsburg,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-01-23,13:30,18,VfL Osnabrück,1. FC Heidenheim,,,Por jugar,
+2027-01-30,13:30,19,VfL Wolfsburg,Hannover 96,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-01-30,13:30,19,1. FC Nürnberg,SpVgg Greuther Fürth,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-01-30,13:30,19,VfL Bochum,Eintracht Braunschweig,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-01-30,13:30,19,1. FC Magdeburg,VfL Osnabrück,Magdeburg,Avnet-Arena,Por jugar,
+2027-01-30,13:30,19,1. FC Heidenheim,Hertha BSC,Heidenheim,Voith-Arena,Por jugar,
+2027-01-30,13:30,19,SV Darmstadt 98,Dynamo Dresden,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-01-30,13:30,19,FC St. Pauli,Holstein Kiel,Hamburg,Millerntor-Stadion,Por jugar,
+2027-01-30,13:30,19,Karlsruher SC,1. FC Kaiserslautern,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-01-30,13:30,19,Energie Cottbus,Arminia Bielefeld,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-02-06,13:30,20,Hertha BSC,Eintracht Braunschweig,Berlin,Olympiastadion,Por jugar,
+2027-02-06,13:30,20,VfL Wolfsburg,Karlsruher SC,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-02-06,13:30,20,Hannover 96,SV Darmstadt 98,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-02-06,13:30,20,SpVgg Greuther Fürth,Energie Cottbus,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-02-06,13:30,20,Dynamo Dresden,1. FC Heidenheim,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-02-06,13:30,20,Arminia Bielefeld,1. FC Nürnberg,Bielefeld,,Por jugar,
+2027-02-06,13:30,20,Holstein Kiel,1. FC Magdeburg,Kiel,Holstein-Stadion,Por jugar,
+2027-02-06,13:30,20,1. FC Kaiserslautern,FC St. Pauli,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-02-06,13:30,20,VfL Osnabrück,VfL Bochum,,,Por jugar,
+2027-02-13,13:30,21,1. FC Nürnberg,Holstein Kiel,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-02-13,13:30,21,VfL Bochum,Dynamo Dresden,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-02-13,13:30,21,1. FC Magdeburg,Hertha BSC,Magdeburg,Avnet-Arena,Por jugar,
+2027-02-13,13:30,21,1. FC Heidenheim,SpVgg Greuther Fürth,Heidenheim,Voith-Arena,Por jugar,
+2027-02-13,13:30,21,SV Darmstadt 98,1. FC Kaiserslautern,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-02-13,13:30,21,FC St. Pauli,Arminia Bielefeld,Hamburg,Millerntor-Stadion,Por jugar,
+2027-02-13,13:30,21,Eintracht Braunschweig,VfL Osnabrück,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-02-13,13:30,21,Karlsruher SC,Hannover 96,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-02-13,13:30,21,Energie Cottbus,VfL Wolfsburg,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-02-20,13:30,22,Hertha BSC,VfL Osnabrück,Berlin,Olympiastadion,Por jugar,
+2027-02-20,13:30,22,VfL Wolfsburg,FC St. Pauli,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-02-20,13:30,22,Hannover 96,1. FC Nürnberg,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-02-20,13:30,22,SpVgg Greuther Fürth,VfL Bochum,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-02-20,13:30,22,Dynamo Dresden,Eintracht Braunschweig,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-02-20,13:30,22,Arminia Bielefeld,SV Darmstadt 98,Bielefeld,,Por jugar,
+2027-02-20,13:30,22,Holstein Kiel,1. FC Heidenheim,Kiel,Holstein-Stadion,Por jugar,
+2027-02-20,13:30,22,1. FC Kaiserslautern,1. FC Magdeburg,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-02-20,13:30,22,Energie Cottbus,Karlsruher SC,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-02-27,13:30,23,Hertha BSC,Dynamo Dresden,Berlin,Olympiastadion,Por jugar,
+2027-02-27,13:30,23,1. FC Nürnberg,Karlsruher SC,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-02-27,13:30,23,VfL Bochum,Hannover 96,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-02-27,13:30,23,1. FC Magdeburg,SpVgg Greuther Fürth,Magdeburg,Avnet-Arena,Por jugar,
+2027-02-27,13:30,23,1. FC Heidenheim,Arminia Bielefeld,Heidenheim,Voith-Arena,Por jugar,
+2027-02-27,13:30,23,SV Darmstadt 98,VfL Wolfsburg,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-02-27,13:30,23,FC St. Pauli,Energie Cottbus,Hamburg,Millerntor-Stadion,Por jugar,
+2027-02-27,13:30,23,Eintracht Braunschweig,1. FC Kaiserslautern,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-02-27,13:30,23,VfL Osnabrück,Holstein Kiel,,,Por jugar,
+2027-03-03,13:30,24,VfL Wolfsburg,1. FC Nürnberg,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-03-03,13:30,24,Hannover 96,1. FC Magdeburg,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-03-03,13:30,24,SpVgg Greuther Fürth,Hertha BSC,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-03-03,13:30,24,Dynamo Dresden,VfL Osnabrück,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-03-03,13:30,24,Arminia Bielefeld,VfL Bochum,Bielefeld,,Por jugar,
+2027-03-03,13:30,24,Holstein Kiel,Eintracht Braunschweig,Kiel,Holstein-Stadion,Por jugar,
+2027-03-03,13:30,24,1. FC Kaiserslautern,1. FC Heidenheim,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-03-03,13:30,24,Karlsruher SC,FC St. Pauli,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-03-03,13:30,24,Energie Cottbus,SV Darmstadt 98,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-03-06,13:30,25,Hertha BSC,Holstein Kiel,Berlin,Olympiastadion,Por jugar,
+2027-03-06,13:30,25,1. FC Nürnberg,Energie Cottbus,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-03-06,13:30,25,VfL Bochum,1. FC Kaiserslautern,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-03-06,13:30,25,1. FC Magdeburg,Dynamo Dresden,Magdeburg,Avnet-Arena,Por jugar,
+2027-03-06,13:30,25,1. FC Heidenheim,VfL Wolfsburg,Heidenheim,Voith-Arena,Por jugar,
+2027-03-06,13:30,25,SV Darmstadt 98,Karlsruher SC,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-03-06,13:30,25,FC St. Pauli,Hannover 96,Hamburg,Millerntor-Stadion,Por jugar,
+2027-03-06,13:30,25,Eintracht Braunschweig,SpVgg Greuther Fürth,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-03-06,13:30,25,VfL Osnabrück,Arminia Bielefeld,,,Por jugar,
+2027-03-13,13:30,26,VfL Wolfsburg,VfL Bochum,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-03-13,13:30,26,Hannover 96,Eintracht Braunschweig,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-03-13,13:30,26,SpVgg Greuther Fürth,VfL Osnabrück,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-03-13,13:30,26,Dynamo Dresden,Holstein Kiel,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-03-13,13:30,26,FC St. Pauli,SV Darmstadt 98,Hamburg,Millerntor-Stadion,Por jugar,
+2027-03-13,13:30,26,Arminia Bielefeld,Hertha BSC,Bielefeld,,Por jugar,
+2027-03-13,13:30,26,1. FC Kaiserslautern,1. FC Nürnberg,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-03-13,13:30,26,Karlsruher SC,1. FC Magdeburg,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-03-13,13:30,26,Energie Cottbus,1. FC Heidenheim,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-03-20,13:30,27,Hertha BSC,1. FC Kaiserslautern,Berlin,Olympiastadion,Por jugar,
+2027-03-20,13:30,27,1. FC Nürnberg,FC St. Pauli,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-03-20,13:30,27,VfL Bochum,Energie Cottbus,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-03-20,13:30,27,1. FC Magdeburg,SV Darmstadt 98,Magdeburg,Avnet-Arena,Por jugar,
+2027-03-20,13:30,27,1. FC Heidenheim,Karlsruher SC,Heidenheim,Voith-Arena,Por jugar,
+2027-03-20,13:30,27,Dynamo Dresden,Hannover 96,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-03-20,13:30,27,Holstein Kiel,SpVgg Greuther Fürth,Kiel,Holstein-Stadion,Por jugar,
+2027-03-20,13:30,27,Eintracht Braunschweig,Arminia Bielefeld,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-03-20,13:30,27,VfL Osnabrück,VfL Wolfsburg,,,Por jugar,
+2027-04-03,13:30,28,VfL Wolfsburg,Hertha BSC,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-04-03,13:30,28,Hannover 96,1. FC Heidenheim,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-04-03,13:30,28,SpVgg Greuther Fürth,Dynamo Dresden,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-04-03,13:30,28,SV Darmstadt 98,1. FC Nürnberg,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-04-03,13:30,28,FC St. Pauli,1. FC Magdeburg,Hamburg,Millerntor-Stadion,Por jugar,
+2027-04-03,13:30,28,Arminia Bielefeld,Holstein Kiel,Bielefeld,,Por jugar,
+2027-04-03,13:30,28,1. FC Kaiserslautern,VfL Osnabrück,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-04-03,13:30,28,Karlsruher SC,VfL Bochum,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-04-03,13:30,28,Energie Cottbus,Eintracht Braunschweig,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-04-10,13:30,29,Hertha BSC,Energie Cottbus,Berlin,Olympiastadion,Por jugar,
+2027-04-10,13:30,29,VfL Bochum,FC St. Pauli,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-04-10,13:30,29,SpVgg Greuther Fürth,Hannover 96,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-04-10,13:30,29,1. FC Magdeburg,Arminia Bielefeld,Magdeburg,Avnet-Arena,Por jugar,
+2027-04-10,13:30,29,1. FC Heidenheim,SV Darmstadt 98,Heidenheim,Voith-Arena,Por jugar,
+2027-04-10,13:30,29,Dynamo Dresden,1. FC Kaiserslautern,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-04-10,13:30,29,Holstein Kiel,VfL Wolfsburg,Kiel,Holstein-Stadion,Por jugar,
+2027-04-10,13:30,29,Eintracht Braunschweig,1. FC Nürnberg,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-04-10,13:30,29,VfL Osnabrück,Karlsruher SC,,,Por jugar,
+2027-04-17,13:30,30,VfL Wolfsburg,Eintracht Braunschweig,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-04-17,13:30,30,Hannover 96,VfL Osnabrück,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-04-17,13:30,30,1. FC Nürnberg,1. FC Heidenheim,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-04-17,13:30,30,SV Darmstadt 98,VfL Bochum,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-04-17,13:30,30,FC St. Pauli,Dynamo Dresden,Hamburg,Millerntor-Stadion,Por jugar,
+2027-04-17,13:30,30,Arminia Bielefeld,SpVgg Greuther Fürth,Bielefeld,,Por jugar,
+2027-04-17,13:30,30,1. FC Kaiserslautern,Holstein Kiel,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-04-17,13:30,30,Karlsruher SC,Hertha BSC,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-04-17,13:30,30,Energie Cottbus,1. FC Magdeburg,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-04-24,13:30,31,Hertha BSC,Hannover 96,Berlin,Olympiastadion,Por jugar,
+2027-04-24,13:30,31,VfL Bochum,1. FC Nürnberg,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-04-24,13:30,31,SpVgg Greuther Fürth,1. FC Kaiserslautern,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-04-24,13:30,31,1. FC Magdeburg,VfL Wolfsburg,Magdeburg,Avnet-Arena,Por jugar,
+2027-04-24,13:30,31,1. FC Heidenheim,FC St. Pauli,Heidenheim,Voith-Arena,Por jugar,
+2027-04-24,13:30,31,Dynamo Dresden,Arminia Bielefeld,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-04-24,13:30,31,Holstein Kiel,Karlsruher SC,Kiel,Holstein-Stadion,Por jugar,
+2027-04-24,13:30,31,Eintracht Braunschweig,SV Darmstadt 98,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-04-24,13:30,31,VfL Osnabrück,Energie Cottbus,,,Por jugar,
+2027-05-08,13:30,32,VfL Wolfsburg,SpVgg Greuther Fürth,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-05-08,13:30,32,Hannover 96,Holstein Kiel,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-05-08,13:30,32,1. FC Nürnberg,1. FC Magdeburg,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-05-08,13:30,32,1. FC Heidenheim,VfL Bochum,Heidenheim,Voith-Arena,Por jugar,
+2027-05-08,13:30,32,SV Darmstadt 98,Hertha BSC,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-05-08,13:30,32,FC St. Pauli,VfL Osnabrück,Hamburg,Millerntor-Stadion,Por jugar,
+2027-05-08,13:30,32,1. FC Kaiserslautern,Arminia Bielefeld,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-05-08,13:30,32,Karlsruher SC,Eintracht Braunschweig,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-05-08,13:30,32,Energie Cottbus,Dynamo Dresden,Cottbus,LEAG Energie Stadion,Por jugar,
+2027-05-15,13:30,33,Hertha BSC,FC St. Pauli,Berlin,Olympiastadion,Por jugar,
+2027-05-15,13:30,33,SpVgg Greuther Fürth,SV Darmstadt 98,Fürth,Sportpark Ronhof Thomas Sommer,Por jugar,
+2027-05-15,13:30,33,1. FC Magdeburg,VfL Bochum,Magdeburg,Avnet-Arena,Por jugar,
+2027-05-15,13:30,33,Dynamo Dresden,Karlsruher SC,Dresden,Rudolf-Harbig-Stadion,Por jugar,
+2027-05-15,13:30,33,Arminia Bielefeld,VfL Wolfsburg,Bielefeld,,Por jugar,
+2027-05-15,13:30,33,Holstein Kiel,Energie Cottbus,Kiel,Holstein-Stadion,Por jugar,
+2027-05-15,13:30,33,Eintracht Braunschweig,1. FC Heidenheim,Braunschweig,Eintracht-Stadion,Por jugar,
+2027-05-15,13:30,33,1. FC Kaiserslautern,Hannover 96,Kaiserslautern,Fritz Walter Stadion,Por jugar,
+2027-05-15,13:30,33,VfL Osnabrück,1. FC Nürnberg,,,Por jugar,
+2027-05-23,15:30,34,VfL Wolfsburg,Dynamo Dresden,Wolfsburg,Volkswagen Arena,Por jugar,
+2027-05-23,15:30,34,Hannover 96,Arminia Bielefeld,Hannover,Heinz-von-Heiden-Arena,Por jugar,
+2027-05-23,15:30,34,1. FC Nürnberg,Hertha BSC,Nuremberg,Max-Morlock-Stadion,Por jugar,
+2027-05-23,15:30,34,VfL Bochum,Holstein Kiel,Bochum,Vonovia Ruhrstadion,Por jugar,
+2027-05-23,15:30,34,1. FC Heidenheim,1. FC Magdeburg,Heidenheim,Voith-Arena,Por jugar,
+2027-05-23,15:30,34,SV Darmstadt 98,VfL Osnabrück,Darmstadt,Merck-Stadion am Bollenfalltor,Por jugar,
+2027-05-23,15:30,34,FC St. Pauli,Eintracht Braunschweig,Hamburg,Millerntor-Stadion,Por jugar,
+2027-05-23,15:30,34,Karlsruher SC,SpVgg Greuther Fürth,Karlsruhe,BBBank Wildpark,Por jugar,
+2027-05-23,15:30,34,Energie Cottbus,1. FC Kaiserslautern,Cottbus,LEAG Energie Stadion,Por jugar,

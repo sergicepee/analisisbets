@@ -1,0 +1,463 @@
+date,time,matchday,home_team,away_team,city,stadium,status,result
+2026-08-14,20:30,1,Real Sociedad II,Castellón,San Sebastian,Estadio Zubieta,Jugado,0-1
+2026-08-15,17:00,1,FC Andorra,AD Ceuta FC,Encamp,Estadi de la FAF,Jugado,5-1
+2026-08-15,19:00,1,Oviedo,Granada CF,Oviedo,Estadio Nuevo Carlos Tartiere,Jugado,0-0
+2026-08-15,19:00,1,Cadiz,Celta de Vigo II,Cadiz,JP Financial Estadio,Jugado,0-0
+2026-08-15,21:30,1,Mallorca,Valladolid,Palma de Mallorca,Estadi Mallorca Son Moix,Jugado,2-0
+2026-08-16,17:00,1,Eibar,Tenerife,Eibar,Estadio Municipal de Ipurua,Jugado,1-3
+2026-08-16,19:00,1,Girona,Leganes,Girona,Estadio Municipal de Montilivi,Jugado,1-1
+2026-08-16,19:00,1,Burgos,Cordoba,Burgos,Municipal El Plantio,Jugado,3-2
+2026-08-16,21:30,1,Las Palmas,Albacete,Las Palmas,Estadio de Gran Canaria,Jugado,2-1
+2026-08-17,19:00,1,Sporting Gijon,Sabadell,Gijon,El Molinón,Jugado,0-0
+2026-08-17,21:30,1,Almeria,Eldense,Almeria,UD Almeria Stadium,Jugado,3-0
+2026-08-21,21:00,2,Cordoba,Girona,Cordoba,Estadio Nuevo Arcángel,Jugado,2-1
+2026-08-22,17:00,2,Oviedo,Leganes,Oviedo,Estadio Nuevo Carlos Tartiere,Jugado,0-1
+2026-08-22,19:00,2,Albacete,Real Sociedad II,Albacete,Estadio Carlos Belmonte,Jugado,1-2
+2026-08-22,19:00,2,AD Ceuta FC,Las Palmas,Ceuta,Estadio Municipal Alfonso Murube,Jugado,0-2
+2026-08-22,21:30,2,Eldense,Cadiz,Elda,Estadio Nuevo Pepico Amat,Jugado,2-2
+2026-08-23,17:00,2,Eibar,Valladolid,Eibar,Estadio Municipal de Ipurua,Jugado,1-0
+2026-08-23,19:00,2,Sporting Gijon,Burgos,Gijon,El Molinón,Jugado,1-0
+2026-08-23,19:00,2,Castellón,Sabadell,Castellon,Estadio Municipal de Castalia,Jugado,0-0
+2026-08-23,21:30,2,Tenerife,Almeria,Santa Cruz de Tenerife,Heliodoro Rodríguez López,Jugado,1-0
+2026-08-24,19:00,2,Celta de Vigo II,FC Andorra,Vigo,Estadio Abanca Balaídos,Jugado,4-2
+2026-08-24,21:30,2,Granada CF,Mallorca,Granada,Estadio Nuevo Los Carmenes,Jugado,2-0
+2026-08-28,21:00,3,Tenerife,Sporting Gijon,Santa Cruz de Tenerife,Heliodoro Rodríguez López,Jugado,0-1
+2026-08-29,17:00,3,Sabadell,Almeria,Sabadell,Estadi de la Nova Creu Alta,Jugado,1-0
+2026-08-29,19:00,3,Leganes,Eldense,Leganes,Estadio Municipal de Butarque,Jugado,1-0
+2026-08-29,19:00,3,Albacete,Oviedo,Albacete,Estadio Carlos Belmonte,Jugado,0-1
+2026-08-29,21:30,3,Girona,Las Palmas,Girona,Estadio Municipal de Montilivi,Jugado,5-2
+2026-08-30,17:00,3,FC Andorra,Eibar,Encamp,Estadi de la FAF,Jugado,0-1
+2026-08-30,19:00,3,Cadiz,Valladolid,Cadiz,JP Financial Estadio,Jugado,1-1
+2026-08-30,19:00,3,Mallorca,AD Ceuta FC,Palma de Mallorca,Estadi Mallorca Son Moix,Jugado,3-0
+2026-08-30,21:30,3,Cordoba,Granada CF,Cordoba,Estadio Nuevo Arcángel,Jugado,1-3
+2026-08-31,19:00,3,Burgos,Real Sociedad II,Burgos,Municipal El Plantio,Jugado,2-2
+2026-08-31,21:30,3,Celta de Vigo II,Castellón,Vigo,Municipal de Barreiro,Jugado,1-2
+2026-09-04,20:30,4,Las Palmas,Leganes,Las Palmas,Estadio de Gran Canaria,Jugado,0-0
+2026-09-05,14:00,4,Real Sociedad II,Tenerife,San Sebastian,Estadio Zubieta,Jugado,1-1
+2026-09-05,16:15,4,Sporting Gijon,Girona,Gijon,El Molinón,Jugado,0-2
+2026-09-05,18:30,4,Valladolid,FC Andorra,Valladolid,José Zorrilla,Jugado,1-0
+2026-09-05,18:30,4,AD Ceuta FC,Celta de Vigo II,Ceuta,Estadio Municipal Alfonso Murube,Jugado,0-2
+2026-09-05,21:00,4,Eldense,Mallorca,Elda,Estadio Nuevo Pepico Amat,Jugado,0-0
+2026-09-06,14:00,4,Eibar,Granada CF,Eibar,Estadio Municipal de Ipurua,Jugado,3-0
+2026-09-06,16:15,4,Oviedo,Burgos,Oviedo,Estadio Nuevo Carlos Tartiere,Jugado,0-0
+2026-09-06,18:30,4,Castellón,Albacete,Castellon,Estadio Municipal de Castalia,Jugado,2-0
+2026-09-06,21:00,4,Almeria,Cadiz,Almeria,UD Almeria Stadium,Jugado,3-2
+2026-09-07,20:30,4,Sabadell,Cordoba,Sabadell,Estadi de la Nova Creu Alta,Jugado,3-2
+2026-09-11,20:30,5,Burgos,AD Ceuta FC,Burgos,Municipal El Plantio,Jugado,3-1
+2026-09-12,14:00,5,FC Andorra,Real Sociedad II,Encamp,Estadi de la FAF,Jugado,1-3
+2026-09-12,16:15,5,Cadiz,Las Palmas,Cadiz,JP Financial Estadio,Jugado,0-1
+2026-09-12,18:30,5,Girona,Castellón,Girona,Estadio Municipal de Montilivi,Jugado,1-2
+2026-09-12,18:30,5,Granada CF,Albacete,Granada,Estadio Nuevo Los Carmenes,Jugado,1-1
+2026-09-12,21:00,5,Cordoba,Almeria,Cordoba,Estadio Nuevo Arcángel,Jugado,0-2
+2026-09-13,14:00,5,Sporting Gijon,Eldense,Gijon,El Molinón,Jugado,0-1
+2026-09-13,16:15,5,Valladolid,Oviedo,Valladolid,José Zorrilla,Jugado,0-3
+2026-09-13,18:30,5,Mallorca,Sabadell,Palma de Mallorca,Estadi Mallorca Son Moix,Jugado,2-0
+2026-09-13,21:00,5,Tenerife,Leganes,Santa Cruz de Tenerife,Heliodoro Rodríguez López,Jugado,2-0
+2026-09-14,20:30,5,Celta de Vigo II,Eibar,Vigo,Estadio Abanca Balaídos,Jugado,0-4
+2026-09-18,20:30,6,Albacete,Cordoba,Albacete,Estadio Carlos Belmonte,Jugado,1-2
+2026-09-19,14:00,6,Real Sociedad II,Mallorca,San Sebastian,Estadio Zubieta,Jugado,0-1
+2026-09-19,16:15,6,FC Andorra,Sporting Gijon,Encamp,Estadi de la FAF,Jugado,1-3
+2026-09-19,18:30,6,Castellón,Tenerife,Castellon,Estadio Municipal de Castalia,Jugado,5-0
+2026-09-19,18:30,6,Eldense,Eibar,Elda,Estadio Nuevo Pepico Amat,Jugado,1-2
+2026-09-19,21:00,6,Cadiz,Girona,Cadiz,JP Financial Estadio,Jugado,1-2
+2026-09-20,14:00,6,Sabadell,Oviedo,Sabadell,Estadi de la Nova Creu Alta,Jugado,3-1
+2026-09-20,16:15,6,AD Ceuta FC,Valladolid,Ceuta,Estadio Municipal Alfonso Murube,Jugado,1-1
+2026-09-20,18:30,6,Las Palmas,Burgos,Las Palmas,Estadio de Gran Canaria,Jugado,1-2
+2026-09-20,18:30,6,Almeria,Celta de Vigo II,Almeria,UD Almería Stadium,Jugado,2-0
+2026-09-20,21:00,6,Leganes,Granada CF,Leganes,Estadio Municipal de Butarque,Jugado,3-2
+2026-09-25,20:30,7,Girona,Albacete,Girona,Estadi Montilivi,Jugado,2-0
+2026-09-26,14:00,7,AD Ceuta FC,Real Sociedad II,Ceuta,Estadio Municipal Alfonso Murube,Jugado,3-1
+2026-09-26,16:15,7,Granada CF,FC Andorra,Granada,Nuevo Los Cármenes,Jugado,2-3
+2026-09-26,18:30,7,Tenerife,Cadiz,Santa Cruz de Tenerife,Heliodoro Rodríguez López,Jugado,1-1
+2026-09-26,18:30,7,Celta de Vigo II,Sabadell,Vigo,Municipal de Balaídos,Jugado,1-1
+2026-09-27,14:00,7,Valladolid,Cordoba,Valladolid,Estadio José Zorrilla,Jugado,3-1
+2026-09-27,16:15,7,Mallorca,Almeria,Parma,Estadi Mallorca Son Moix,Jugado,0-1
+2026-09-27,18:30,7,Eibar,Las Palmas,Eibar,Ipurua Municipal Stadium,Jugado,3-2
+2026-09-27,18:30,7,Burgos,Eldense,Burgos,Municipal El Plantio,Jugado,1-0
+2026-09-27,21:00,7,Oviedo,Sporting Gijon,Oviedo,Nuevo Carlos Tartiere,Jugado,2-0
+2026-09-28,20:30,7,Leganes,Castellón,Leganes,Municipal de Butarque,Jugado,0-2
+2026-10-02,20:30,8,Eldense,Oviedo,Elda,Estadio Nuevo Pepico Amat,Jugado,4-1
+2026-10-03,14:00,8,Albacete,Eibar,Albacete,Estadio Carlos Belmonte,Jugado,1-3
+2026-10-03,16:15,8,Almeria,Burgos,Almeria,UD Almería Stadium,Jugado,2-1
+2026-10-03,18:30,8,Cadiz,Leganes,Cadiz,JP Financial Estadio,Jugado,4-0
+2026-10-04,14:00,8,Real Sociedad II,Granada CF,San Sebastian,Estadio Ciudad Deportiva Zubieta,Jugado,2-3
+2026-10-04,16:15,8,Sporting Gijon,Celta de Vigo II,Gijon,El Molinón-Enrique Castro Quini,Jugado,3-2
+2026-10-04,18:30,8,Las Palmas,Valladolid,Las Palmas de Gran Canaria,Gran Canaria,Jugado,2-2
+2026-10-04,18:30,8,Castellón,AD Ceuta FC,Castellon,Estadio Municipal Castalia,Jugado,1-1
+2026-10-04,21:00,8,Girona,Mallorca,Girona,Estadi Montilivi,Jugado,0-0
+2026-10-04,21:00,8,Sabadell,FC Andorra,Sabadell,Nova Creu Alta,Jugado,0-0
+2026-10-05,20:30,8,Cordoba,Tenerife,Cordoba,Estadio Nuevo Arcángel,Jugado,3-2
+2026-10-10,16:15,9,AD Ceuta FC,Sabadell,Ceuta,Estadio Municipal Alfonso Murube,Jugado,1-2
+2026-10-10,18:30,9,Eldense,Cordoba,Alicante,Nuevo Pepico Amat,Jugado,2-1
+2026-10-10,21:00,9,Celta de Vigo II,Real Sociedad II,Vigo,Municipal de Balaídos,Jugado,4-1
+2026-10-11,14:00,9,FC Andorra,Castellón,Andorra,Estadi de la FAF,Jugado,1-0
+2026-10-11,16:15,9,Almeria,Leganes,Almeria,UD Almería Stadium,Jugado,3-0
+2026-10-11,18:30,9,Mallorca,Las Palmas,Parma,Estadi Mallorca Son Moix,Jugado,3-1
+2026-10-11,21:00,9,Cadiz,Sporting Gijon,Cadiz,Nuevo Mirandilla,Jugado,0-1
+2026-10-12,14:00,9,Valladolid,Albacete,Valladolid,Estadio José Zorrilla,Jugado,5-0
+2026-10-12,16:15,9,Burgos,Granada CF,Burgos,Municipal El Plantio,Jugado,0-1
+2026-10-12,18:30,9,Oviedo,Eibar,Oviedo,Nuevo Carlos Tartiere,Jugado,3-1
+2026-10-12,21:00,9,Tenerife,Girona,Santa Cruz de Tenerife,Heliodoro Rodríguez López,Jugado,1-1
+2026-10-16,20:30,10,Leganes,Cordoba,Leganes,Estadio Municipal de Butarque,Jugado,0-1
+2026-10-17,14:00,10,Real Sociedad II,Almeria,San Sebastian,Estadio Zubieta,Jugado,2-4
+2026-10-17,16:15,10,Eibar,Mallorca,Eibar,Estadio Municipal de Ipurua,Jugado,1-1
+2026-10-17,18:30,10,Sporting Gijon,Albacete,Gijon,El Molinón-Enrique Castro Quini,Jugado,2-1
+2026-10-17,21:00,10,Las Palmas,Castellón,Las Palmas,Estadio de Gran Canaria,Jugado,0-3
+2026-10-18,14:00,10,AD Ceuta FC,Oviedo,Ceuta,Estadio Municipal Alfonso Murube,Jugado,1-2
+2026-10-18,16:15,10,Granada CF,Cadiz,Granada,Nuevo Los Cármenes,Jugado,2-0
+2026-10-18,18:30,10,Girona,FC Andorra,Girona,Estadio Municipal de Montilivi,Jugado,2-0
+2026-10-18,18:30,10,Valladolid,Eldense,Valladolid,Estadio José Zorrilla,Jugado,2-3
+2026-10-18,21:00,10,Burgos,Sabadell,Burgos,Municipal El Plantio,Jugado,1-0
+2026-10-19,20:30,10,Celta de Vigo II,Tenerife,Vigo,Municipal de Balaídos,Jugado,1-1
+2026-10-23,20:30,11,Granada CF,Valladolid,Granada,Nuevo Los Cármenes,Jugado,2-1
+2026-10-24,14:00,11,Cordoba,Eibar,Cordoba,Estadio Nuevo Arcángel,Jugado,2-0
+2026-10-24,16:15,11,Leganes,Mallorca,Leganes,Municipal de Butarque,Jugado,1-1
+2026-10-24,18:30,11,Las Palmas,Real Sociedad II,Las Palmas de Gran Canaria,Gran Canaria,Jugado,1-0
+2026-10-24,18:30,11,Girona,Celta de Vigo II,Girona,Estadi Montilivi,Jugado,5-1
+2026-10-24,21:00,11,Almeria,Oviedo,Almeria,UD Almería Stadium,Jugado,2-2
+2026-10-25,14:00,11,Sabadell,Tenerife,Sabadell,Nova Creu Alta,Jugado,1-1
+2026-10-25,16:15,11,Albacete,Eldense,Albacete,Carlos Belmonte,Jugado,2-0
+2026-10-25,16:15,11,Cadiz,AD Ceuta FC,Cadiz,Nuevo Mirandilla,Jugado,3-1
+2026-10-25,18:30,11,Castellón,Sporting Gijon,Castellon,Estadio Municipal Castalia,Jugado,4-0
+2026-10-26,20:30,11,FC Andorra,Burgos,Andorra,Estadi de la FAF,Jugado,2-3
+2026-10-31,14:00,12,Real Sociedad II,Girona,San Sebastian,Estadio Ciudad Deportiva Zubieta,Por jugar,
+2026-10-31,16:15,12,Eibar,Almeria,Eibar,Ipurua Municipal Stadium,Por jugar,
+2026-10-31,18:30,12,Celta de Vigo II,Cordoba,Vigo,Municipal de Balaídos,Por jugar,
+2026-10-31,21:00,12,Albacete,Sabadell,Albacete,Carlos Belmonte,Por jugar,
+2026-11-01,14:00,12,Eldense,Granada CF,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2026-11-01,16:15,12,AD Ceuta FC,Sporting Gijon,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2026-11-01,18:30,12,Burgos,Castellón,Burgos,,Por jugar,
+2026-11-01,21:00,12,Tenerife,FC Andorra,Santa Cruz de Tenerife,,Por jugar,
+2026-11-02,16:15,12,Oviedo,Las Palmas,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2026-11-02,18:30,12,Valladolid,Leganes,Valladolid,,Por jugar,
+2026-11-02,21:00,12,Mallorca,Cadiz,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2026-11-06,20:30,13,Castellón,Eibar,Castellon,Estadio Municipal de Castalia,Por jugar,
+2026-11-07,14:00,13,Burgos,Celta de Vigo II,Burgos,,Por jugar,
+2026-11-07,16:15,13,Cadiz,Oviedo,Cadiz,JP Financial Estadio,Por jugar,
+2026-11-07,18:30,13,Leganes,Albacete,Leganes,Estadio Municipal de Butarque,Por jugar,
+2026-11-07,18:30,13,Cordoba,AD Ceuta FC,Cordoba,,Por jugar,
+2026-11-07,21:00,13,Granada CF,Tenerife,Granada,,Por jugar,
+2026-11-08,14:00,13,FC Andorra,Mallorca,Encamp,Estadi de la FAF,Por jugar,
+2026-11-08,16:15,13,Girona,Almeria,Girona,Estadio Municipal de Montilivi,Por jugar,
+2026-11-08,18:30,13,Las Palmas,Eldense,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2026-11-08,18:30,13,Sporting Gijon,Valladolid,,,Por jugar,
+2026-11-09,20:30,13,Sabadell,Real Sociedad II,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2026-11-13,20:30,14,Leganes,Burgos,Leganes,Estadio Municipal de Butarque,Por jugar,
+2026-11-14,14:00,14,Valladolid,Castellón,Valladolid,,Por jugar,
+2026-11-14,16:15,14,Real Sociedad II,Sporting Gijon,San Sebastian,Estadio Zubieta,Por jugar,
+2026-11-14,18:30,14,Almeria,FC Andorra,,,Por jugar,
+2026-11-14,18:30,14,Mallorca,Cordoba,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2026-11-14,21:00,14,Oviedo,Girona,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2026-11-15,14:00,14,Tenerife,AD Ceuta FC,Santa Cruz de Tenerife,,Por jugar,
+2026-11-15,16:15,14,Granada CF,Las Palmas,Granada,,Por jugar,
+2026-11-15,18:30,14,Eibar,Cadiz,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2026-11-15,18:30,14,Eldense,Sabadell,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2026-11-16,20:30,14,Albacete,Celta de Vigo II,Albacete,Estadio Carlos Belmonte,Por jugar,
+2026-11-22,17:00,15,Girona,Eibar,Girona,Estadio Municipal de Montilivi,Por jugar,
+2026-11-22,17:00,15,Cordoba,Oviedo,Cordoba,,Por jugar,
+2026-11-22,17:00,15,Tenerife,Mallorca,Santa Cruz de Tenerife,,Por jugar,
+2026-11-22,17:00,15,Sporting Gijon,Las Palmas,,,Por jugar,
+2026-11-22,17:00,15,Castellón,Eldense,Castellon,Estadio Municipal de Castalia,Por jugar,
+2026-11-22,17:00,15,FC Andorra,Leganes,Encamp,Estadi de la FAF,Por jugar,
+2026-11-22,17:00,15,Celta de Vigo II,Valladolid,Vigo,Municipal de Barreiro,Por jugar,
+2026-11-22,17:00,15,Burgos,Albacete,Burgos,,Por jugar,
+2026-11-22,17:00,15,Real Sociedad II,Cadiz,San Sebastian,Anoeta,Por jugar,
+2026-11-22,17:00,15,Sabadell,Granada CF,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2026-11-22,17:00,15,AD Ceuta FC,Almeria,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2026-11-29,17:00,16,Las Palmas,FC Andorra,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2026-11-29,17:00,16,Leganes,Sabadell,Leganes,Estadio Municipal de Butarque,Por jugar,
+2026-11-29,17:00,16,Eibar,Burgos,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2026-11-29,17:00,16,Granada CF,AD Ceuta FC,Granada,,Por jugar,
+2026-11-29,17:00,16,Oviedo,Celta de Vigo II,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2026-11-29,17:00,16,Valladolid,Real Sociedad II,Valladolid,,Por jugar,
+2026-11-29,17:00,16,Albacete,Tenerife,Albacete,Estadio Carlos Belmonte,Por jugar,
+2026-11-29,17:00,16,Almeria,Sporting Gijon,,,Por jugar,
+2026-11-29,17:00,16,Cadiz,Cordoba,Cadiz,JP Financial Estadio,Por jugar,
+2026-11-29,17:00,16,Mallorca,Castellón,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2026-11-29,17:00,16,Eldense,Girona,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2026-12-06,17:00,17,Girona,Valladolid,Girona,Estadio Municipal de Montilivi,Por jugar,
+2026-12-06,17:00,17,Cordoba,Las Palmas,Cordoba,,Por jugar,
+2026-12-06,17:00,17,Tenerife,Eldense,Santa Cruz de Tenerife,,Por jugar,
+2026-12-06,17:00,17,Sporting Gijon,Granada CF,,,Por jugar,
+2026-12-06,17:00,17,Castellón,Almeria,Castellon,Estadio Municipal de Castalia,Por jugar,
+2026-12-06,17:00,17,FC Andorra,Oviedo,Encamp,Estadi de la FAF,Por jugar,
+2026-12-06,17:00,17,Celta de Vigo II,Mallorca,Vigo,Municipal de Barreiro,Por jugar,
+2026-12-06,17:00,17,Burgos,Cadiz,Burgos,,Por jugar,
+2026-12-06,17:00,17,Real Sociedad II,Leganes,San Sebastian,Anoeta,Por jugar,
+2026-12-06,17:00,17,Sabadell,Eibar,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2026-12-06,17:00,17,AD Ceuta FC,Albacete,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2026-12-13,17:00,18,Las Palmas,Celta de Vigo II,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2026-12-13,17:00,18,Leganes,AD Ceuta FC,Leganes,Estadio Municipal de Butarque,Por jugar,
+2026-12-13,17:00,18,Eibar,Sporting Gijon,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2026-12-13,17:00,18,Cordoba,Castellón,Cordoba,,Por jugar,
+2026-12-13,17:00,18,Granada CF,Girona,Granada,,Por jugar,
+2026-12-13,17:00,18,Oviedo,Real Sociedad II,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2026-12-13,17:00,18,Valladolid,Tenerife,Valladolid,,Por jugar,
+2026-12-13,17:00,18,Almeria,Albacete,,,Por jugar,
+2026-12-13,17:00,18,Cadiz,Sabadell,Cadiz,JP Financial Estadio,Por jugar,
+2026-12-13,17:00,18,Mallorca,Burgos,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2026-12-13,17:00,18,Eldense,FC Andorra,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2026-12-20,17:00,19,Tenerife,Oviedo,Santa Cruz de Tenerife,,Por jugar,
+2026-12-20,17:00,19,Albacete,Mallorca,Albacete,Estadio Carlos Belmonte,Por jugar,
+2026-12-20,17:00,19,Almeria,Valladolid,,,Por jugar,
+2026-12-20,17:00,19,Sporting Gijon,Leganes,,,Por jugar,
+2026-12-20,17:00,19,Castellón,Granada CF,Castellon,Estadio Municipal de Castalia,Por jugar,
+2026-12-20,17:00,19,FC Andorra,Cadiz,Encamp,Estadi de la FAF,Por jugar,
+2026-12-20,17:00,19,Celta de Vigo II,Eldense,Vigo,Municipal de Barreiro,Por jugar,
+2026-12-20,17:00,19,Burgos,Girona,Burgos,,Por jugar,
+2026-12-20,17:00,19,Real Sociedad II,Cordoba,San Sebastian,Anoeta,Por jugar,
+2026-12-20,17:00,19,Sabadell,Las Palmas,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2026-12-20,17:00,19,AD Ceuta FC,Eibar,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-01-03,17:00,20,Las Palmas,Tenerife,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-01-03,17:00,20,Leganes,Celta de Vigo II,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-01-03,17:00,20,Eibar,Real Sociedad II,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-01-03,17:00,20,Girona,Sabadell,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-01-03,17:00,20,Cordoba,FC Andorra,Cordoba,,Por jugar,
+2027-01-03,17:00,20,Granada CF,Almeria,Granada,,Por jugar,
+2027-01-03,17:00,20,Oviedo,Castellón,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-01-03,17:00,20,Valladolid,Burgos,Valladolid,,Por jugar,
+2027-01-03,17:00,20,Cadiz,Albacete,Cadiz,JP Financial Estadio,Por jugar,
+2027-01-03,17:00,20,Mallorca,Sporting Gijon,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-01-03,17:00,20,Eldense,AD Ceuta FC,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-01-10,17:00,21,Leganes,Eibar,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-01-10,17:00,21,Tenerife,Burgos,Santa Cruz de Tenerife,,Por jugar,
+2027-01-10,17:00,21,Albacete,FC Andorra,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-01-10,17:00,21,Almeria,Las Palmas,,,Por jugar,
+2027-01-10,17:00,21,Sporting Gijon,Cordoba,,,Por jugar,
+2027-01-10,17:00,21,Mallorca,Oviedo,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-01-10,17:00,21,Castellón,Cadiz,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-01-10,17:00,21,Celta de Vigo II,Granada CF,Vigo,Municipal de Barreiro,Por jugar,
+2027-01-10,17:00,21,Real Sociedad II,Eldense,San Sebastian,Anoeta,Por jugar,
+2027-01-10,17:00,21,Sabadell,Valladolid,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-01-10,17:00,21,AD Ceuta FC,Girona,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-01-17,17:00,22,Las Palmas,Girona,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-01-17,17:00,22,Eibar,Celta de Vigo II,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-01-17,17:00,22,Cordoba,Sabadell,Cordoba,,Por jugar,
+2027-01-17,17:00,22,Granada CF,Real Sociedad II,Granada,,Por jugar,
+2027-01-17,17:00,22,Oviedo,Almeria,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-01-17,17:00,22,Valladolid,AD Ceuta FC,Valladolid,,Por jugar,
+2027-01-17,17:00,22,Cadiz,Mallorca,Cadiz,JP Financial Estadio,Por jugar,
+2027-01-17,17:00,22,Castellón,Leganes,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-01-17,17:00,22,FC Andorra,Tenerife,Encamp,Estadi de la FAF,Por jugar,
+2027-01-17,17:00,22,Burgos,Sporting Gijon,Burgos,,Por jugar,
+2027-01-17,17:00,22,Eldense,Albacete,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-01-24,17:00,23,Leganes,Valladolid,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-01-24,17:00,23,Girona,Oviedo,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-01-24,17:00,23,Tenerife,Eibar,Santa Cruz de Tenerife,,Por jugar,
+2027-01-24,17:00,23,Albacete,Granada CF,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-01-24,17:00,23,Almeria,Cordoba,,,Por jugar,
+2027-01-24,17:00,23,Cadiz,Eldense,Cadiz,JP Financial Estadio,Por jugar,
+2027-01-24,17:00,23,Sporting Gijon,Castellón,,,Por jugar,
+2027-01-24,17:00,23,Mallorca,FC Andorra,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-01-24,17:00,23,Celta de Vigo II,Burgos,Vigo,Municipal de Barreiro,Por jugar,
+2027-01-24,17:00,23,Real Sociedad II,Las Palmas,San Sebastian,Anoeta,Por jugar,
+2027-01-24,17:00,23,Sabadell,AD Ceuta FC,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-01-31,17:00,24,Las Palmas,Sporting Gijon,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-01-31,17:00,24,Eibar,Albacete,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-01-31,17:00,24,Girona,Real Sociedad II,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-01-31,17:00,24,Cordoba,Mallorca,Cordoba,,Por jugar,
+2027-01-31,17:00,24,Granada CF,Sabadell,Granada,,Por jugar,
+2027-01-31,17:00,24,Oviedo,Cadiz,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-01-31,17:00,24,Valladolid,Celta de Vigo II,Valladolid,,Por jugar,
+2027-01-31,17:00,24,FC Andorra,Almeria,Encamp,Estadi de la FAF,Por jugar,
+2027-01-31,17:00,24,Burgos,Leganes,Burgos,,Por jugar,
+2027-01-31,17:00,24,Eldense,Castellón,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-01-31,17:00,24,AD Ceuta FC,Tenerife,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-02-07,17:00,25,Leganes,Oviedo,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-02-07,17:00,25,Cordoba,Cadiz,Cordoba,,Por jugar,
+2027-02-07,17:00,25,Tenerife,Granada CF,Santa Cruz de Tenerife,,Por jugar,
+2027-02-07,17:00,25,Albacete,Valladolid,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-02-07,17:00,25,Almeria,Eibar,,,Por jugar,
+2027-02-07,17:00,25,Sporting Gijon,AD Ceuta FC,,,Por jugar,
+2027-02-07,17:00,25,Mallorca,Eldense,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-02-07,17:00,25,Castellón,Las Palmas,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-02-07,17:00,25,Celta de Vigo II,Girona,Vigo,Municipal de Barreiro,Por jugar,
+2027-02-07,17:00,25,Real Sociedad II,FC Andorra,San Sebastian,Anoeta,Por jugar,
+2027-02-07,17:00,25,Sabadell,Burgos,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-02-14,17:00,26,Las Palmas,Eibar,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-02-14,17:00,26,Girona,Cordoba,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-02-14,17:00,26,Granada CF,Leganes,Granada,,Por jugar,
+2027-02-14,17:00,26,Oviedo,Sabadell,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-02-14,17:00,26,Valladolid,Sporting Gijon,Valladolid,,Por jugar,
+2027-02-14,17:00,26,Albacete,Castellón,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-02-14,17:00,26,Cadiz,Real Sociedad II,Cadiz,JP Financial Estadio,Por jugar,
+2027-02-14,17:00,26,FC Andorra,Celta de Vigo II,Encamp,Estadi de la FAF,Por jugar,
+2027-02-14,17:00,26,Burgos,Almeria,Burgos,,Por jugar,
+2027-02-14,17:00,26,Eldense,Tenerife,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-02-14,17:00,26,AD Ceuta FC,Mallorca,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-02-21,17:00,27,Leganes,Cadiz,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-02-21,17:00,27,Eibar,Oviedo,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-02-21,17:00,27,Cordoba,Burgos,Cordoba,,Por jugar,
+2027-02-21,17:00,27,Tenerife,Albacete,Santa Cruz de Tenerife,,Por jugar,
+2027-02-21,17:00,27,Almeria,AD Ceuta FC,,,Por jugar,
+2027-02-21,17:00,27,Sporting Gijon,FC Andorra,,,Por jugar,
+2027-02-21,17:00,27,Mallorca,Granada CF,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-02-21,17:00,27,Castellón,Girona,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-02-21,17:00,27,Celta de Vigo II,Las Palmas,Vigo,Municipal de Barreiro,Por jugar,
+2027-02-21,17:00,27,Real Sociedad II,Valladolid,San Sebastian,Anoeta,Por jugar,
+2027-02-21,17:00,27,Sabadell,Eldense,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-02-28,17:00,28,Las Palmas,Sabadell,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-02-28,17:00,28,Girona,Sporting Gijon,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-02-28,17:00,28,Granada CF,Cordoba,Granada,,Por jugar,
+2027-02-28,17:00,28,Oviedo,Tenerife,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-02-28,17:00,28,Valladolid,Eibar,Valladolid,,Por jugar,
+2027-02-28,17:00,28,Albacete,Burgos,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-02-28,17:00,28,Cadiz,Almeria,Cadiz,JP Financial Estadio,Por jugar,
+2027-02-28,17:00,28,Mallorca,Real Sociedad II,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-02-28,17:00,28,Castellón,FC Andorra,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-02-28,17:00,28,Eldense,Celta de Vigo II,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-02-28,17:00,28,AD Ceuta FC,Leganes,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-03-07,17:00,29,Las Palmas,Granada CF,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-03-07,17:00,29,Leganes,Tenerife,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-03-07,17:00,29,Eibar,Eldense,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-03-07,17:00,29,Cordoba,Valladolid,Cordoba,,Por jugar,
+2027-03-07,17:00,29,Almeria,Castellón,,,Por jugar,
+2027-03-07,17:00,29,Sporting Gijon,Cadiz,,,Por jugar,
+2027-03-07,17:00,29,FC Andorra,Girona,Encamp,Estadi de la FAF,Por jugar,
+2027-03-07,17:00,29,Celta de Vigo II,Oviedo,Vigo,Municipal de Barreiro,Por jugar,
+2027-03-07,17:00,29,Burgos,Mallorca,Burgos,,Por jugar,
+2027-03-07,17:00,29,Real Sociedad II,AD Ceuta FC,San Sebastian,Anoeta,Por jugar,
+2027-03-07,17:00,29,Sabadell,Albacete,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-03-14,17:00,30,Girona,Burgos,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-03-14,17:00,30,Oviedo,Cordoba,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-03-14,17:00,30,Tenerife,Sabadell,Santa Cruz de Tenerife,,Por jugar,
+2027-03-14,17:00,30,Valladolid,Almeria,Valladolid,,Por jugar,
+2027-03-14,17:00,30,Albacete,Las Palmas,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-03-14,17:00,30,Cadiz,Granada CF,Cadiz,JP Financial Estadio,Por jugar,
+2027-03-14,17:00,30,Mallorca,Leganes,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-03-14,17:00,30,Castellón,Celta de Vigo II,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-03-14,17:00,30,Real Sociedad II,Eibar,San Sebastian,Anoeta,Por jugar,
+2027-03-14,17:00,30,Eldense,Sporting Gijon,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-03-14,17:00,30,AD Ceuta FC,FC Andorra,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-03-21,17:00,31,Las Palmas,Oviedo,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-03-21,17:00,31,Leganes,Girona,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-03-21,17:00,31,Eibar,AD Ceuta FC,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-03-21,17:00,31,Cordoba,Eldense,Cordoba,,Por jugar,
+2027-03-21,17:00,31,Granada CF,Castellón,Granada,,Por jugar,
+2027-03-21,17:00,31,Valladolid,Cadiz,Valladolid,,Por jugar,
+2027-03-21,17:00,31,Almeria,Real Sociedad II,,,Por jugar,
+2027-03-21,17:00,31,Sporting Gijon,Mallorca,,,Por jugar,
+2027-03-21,17:00,31,FC Andorra,Albacete,Encamp,Estadi de la FAF,Por jugar,
+2027-03-21,17:00,31,Burgos,Tenerife,Burgos,,Por jugar,
+2027-03-21,17:00,31,Sabadell,Celta de Vigo II,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-03-28,17:00,32,Eibar,FC Andorra,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-03-28,17:00,32,Girona,Cadiz,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-03-28,17:00,32,Oviedo,Valladolid,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-03-28,17:00,32,Tenerife,Las Palmas,Santa Cruz de Tenerife,,Por jugar,
+2027-03-28,17:00,32,Albacete,Almeria,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-03-28,17:00,32,Castellón,Cordoba,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-03-28,17:00,32,Celta de Vigo II,Sporting Gijon,Vigo,Municipal de Barreiro,Por jugar,
+2027-03-28,17:00,32,Real Sociedad II,Burgos,San Sebastian,Anoeta,Por jugar,
+2027-03-28,17:00,32,Sabadell,Mallorca,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-03-28,17:00,32,Eldense,Leganes,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-03-28,17:00,32,AD Ceuta FC,Granada CF,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-04-04,17:00,33,Las Palmas,AD Ceuta FC,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-04-04,17:00,33,Leganes,Almeria,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-04-04,17:00,33,Cordoba,Celta de Vigo II,Cordoba,,Por jugar,
+2027-04-04,17:00,33,Granada CF,Eibar,Granada,,Por jugar,
+2027-04-04,17:00,33,Valladolid,Sabadell,Valladolid,,Por jugar,
+2027-04-04,17:00,33,Cadiz,Castellón,Cadiz,JP Financial Estadio,Por jugar,
+2027-04-04,17:00,33,Sporting Gijon,Tenerife,,,Por jugar,
+2027-04-04,17:00,33,Mallorca,Girona,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-04-04,17:00,33,FC Andorra,Eldense,Encamp,Estadi de la FAF,Por jugar,
+2027-04-04,17:00,33,Burgos,Oviedo,Burgos,,Por jugar,
+2027-04-04,17:00,33,Real Sociedad II,Albacete,San Sebastian,Anoeta,Por jugar,
+2027-04-11,17:00,34,Las Palmas,Mallorca,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-04-11,17:00,34,Eibar,Cordoba,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-04-11,17:00,34,Girona,Granada CF,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-04-11,17:00,34,Oviedo,Eldense,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-04-11,17:00,34,Albacete,AD Ceuta FC,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-04-11,17:00,34,Almeria,Tenerife,,,Por jugar,
+2027-04-11,17:00,34,Sporting Gijon,Real Sociedad II,,,Por jugar,
+2027-04-11,17:00,34,Castellón,Burgos,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-04-11,17:00,34,FC Andorra,Valladolid,Encamp,Estadi de la FAF,Por jugar,
+2027-04-11,17:00,34,Celta de Vigo II,Cadiz,Vigo,Municipal de Barreiro,Por jugar,
+2027-04-11,17:00,34,Sabadell,Leganes,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-04-18,17:00,35,Leganes,Las Palmas,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-04-18,17:00,35,Cordoba,Albacete,Cordoba,,Por jugar,
+2027-04-18,17:00,35,Granada CF,Oviedo,Granada,,Por jugar,
+2027-04-18,17:00,35,Tenerife,Real Sociedad II,Santa Cruz de Tenerife,,Por jugar,
+2027-04-18,17:00,35,Valladolid,Girona,Valladolid,,Por jugar,
+2027-04-18,17:00,35,Cadiz,FC Andorra,Cadiz,JP Financial Estadio,Por jugar,
+2027-04-18,17:00,35,Mallorca,Eibar,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-04-18,17:00,35,Celta de Vigo II,Almeria,Vigo,Municipal de Barreiro,Por jugar,
+2027-04-18,17:00,35,Sabadell,Sporting Gijon,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-04-18,17:00,35,Eldense,Burgos,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-04-18,17:00,35,AD Ceuta FC,Castellón,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-04-25,17:00,36,Las Palmas,Cadiz,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-04-25,17:00,36,Eibar,Sabadell,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-04-25,17:00,36,Girona,Tenerife,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-04-25,17:00,36,Albacete,Leganes,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-04-25,17:00,36,Almeria,Granada CF,,,Por jugar,
+2027-04-25,17:00,36,Sporting Gijon,Oviedo,,,Por jugar,
+2027-04-25,17:00,36,Castellón,Mallorca,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-04-25,17:00,36,FC Andorra,Cordoba,Encamp,Estadi de la FAF,Por jugar,
+2027-04-25,17:00,36,Burgos,Valladolid,Burgos,,Por jugar,
+2027-04-25,17:00,36,Real Sociedad II,Celta de Vigo II,San Sebastian,Anoeta,Por jugar,
+2027-04-25,17:00,36,AD Ceuta FC,Eldense,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-05-02,17:00,37,Leganes,Sporting Gijon,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-05-02,17:00,37,Cordoba,Real Sociedad II,Cordoba,,Por jugar,
+2027-05-02,17:00,37,Granada CF,Burgos,Granada,,Por jugar,
+2027-05-02,17:00,37,Oviedo,Albacete,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-05-02,17:00,37,Tenerife,Castellón,Santa Cruz de Tenerife,,Por jugar,
+2027-05-02,17:00,37,Valladolid,Mallorca,Valladolid,,Por jugar,
+2027-05-02,17:00,37,Cadiz,Eibar,Cadiz,JP Financial Estadio,Por jugar,
+2027-05-02,17:00,37,FC Andorra,Las Palmas,Encamp,Estadi de la FAF,Por jugar,
+2027-05-02,17:00,37,Celta de Vigo II,AD Ceuta FC,Vigo,Municipal de Barreiro,Por jugar,
+2027-05-02,17:00,37,Sabadell,Girona,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-05-02,17:00,37,Eldense,Almeria,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-05-09,17:00,38,Eibar,Leganes,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-05-09,17:00,38,Granada CF,Sporting Gijon,Granada,,Por jugar,
+2027-05-09,17:00,38,Tenerife,Cordoba,Santa Cruz de Tenerife,,Por jugar,
+2027-05-09,17:00,38,Albacete,Girona,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-05-09,17:00,38,Almeria,Sabadell,,,Por jugar,
+2027-05-09,17:00,38,Mallorca,Celta de Vigo II,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-05-09,17:00,38,Castellón,Valladolid,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-05-09,17:00,38,Burgos,FC Andorra,Burgos,,Por jugar,
+2027-05-09,17:00,38,Real Sociedad II,Oviedo,San Sebastian,Anoeta,Por jugar,
+2027-05-09,17:00,38,Eldense,Las Palmas,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-05-09,17:00,38,AD Ceuta FC,Cadiz,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-05-16,17:00,39,Las Palmas,Almeria,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-05-16,17:00,39,Girona,Eldense,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-05-16,17:00,39,Cordoba,Leganes,Cordoba,,Por jugar,
+2027-05-16,17:00,39,Oviedo,AD Ceuta FC,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-05-16,17:00,39,Valladolid,Granada CF,Valladolid,,Por jugar,
+2027-05-16,17:00,39,Cadiz,Burgos,Cadiz,JP Financial Estadio,Por jugar,
+2027-05-16,17:00,39,Sporting Gijon,Eibar,,,Por jugar,
+2027-05-16,17:00,39,Mallorca,Tenerife,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-05-16,17:00,39,Castellón,Real Sociedad II,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-05-16,17:00,39,FC Andorra,Sabadell,Encamp,Estadi de la FAF,Por jugar,
+2027-05-16,17:00,39,Celta de Vigo II,Albacete,Vigo,Municipal de Barreiro,Por jugar,
+2027-05-23,17:00,40,Leganes,FC Andorra,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-05-23,17:00,40,Eibar,Castellón,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-05-23,17:00,40,Granada CF,Celta de Vigo II,Granada,,Por jugar,
+2027-05-23,17:00,40,Oviedo,Mallorca,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-05-23,17:00,40,Tenerife,Valladolid,Santa Cruz de Tenerife,,Por jugar,
+2027-05-23,17:00,40,Albacete,Sporting Gijon,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-05-23,17:00,40,Almeria,Girona,,,Por jugar,
+2027-05-23,17:00,40,Burgos,Las Palmas,Burgos,,Por jugar,
+2027-05-23,17:00,40,Sabadell,Cadiz,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-05-23,17:00,40,Eldense,Real Sociedad II,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-05-23,17:00,40,AD Ceuta FC,Cordoba,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,
+2027-05-30,17:00,41,Las Palmas,Cordoba,Las Palmas,Estadio de Gran Canaria,Por jugar,
+2027-05-30,17:00,41,Girona,AD Ceuta FC,Girona,Estadio Municipal de Montilivi,Por jugar,
+2027-05-30,17:00,41,Cadiz,Tenerife,Cadiz,JP Financial Estadio,Por jugar,
+2027-05-30,17:00,41,Sporting Gijon,Almeria,,,Por jugar,
+2027-05-30,17:00,41,Mallorca,Albacete,Palma de Mallorca,Estadi Mallorca Son Moix,Por jugar,
+2027-05-30,17:00,41,Castellón,Oviedo,Castellon,Estadio Municipal de Castalia,Por jugar,
+2027-05-30,17:00,41,FC Andorra,Granada CF,Encamp,Estadi de la FAF,Por jugar,
+2027-05-30,17:00,41,Celta de Vigo II,Leganes,Vigo,Municipal de Barreiro,Por jugar,
+2027-05-30,17:00,41,Burgos,Eibar,Burgos,,Por jugar,
+2027-05-30,17:00,41,Real Sociedad II,Sabadell,San Sebastian,Anoeta,Por jugar,
+2027-05-30,17:00,41,Eldense,Valladolid,Elda,Estadio Nuevo Pepico Amat,Por jugar,
+2027-06-06,17:00,42,Leganes,Real Sociedad II,Leganes,Estadio Municipal de Butarque,Por jugar,
+2027-06-06,17:00,42,Eibar,Girona,Eibar,Estadio Municipal de Ipurua,Por jugar,
+2027-06-06,17:00,42,Cordoba,Sporting Gijon,Cordoba,,Por jugar,
+2027-06-06,17:00,42,Granada CF,Eldense,Granada,,Por jugar,
+2027-06-06,17:00,42,Oviedo,FC Andorra,Oviedo,Estadio Nuevo Carlos Tartiere,Por jugar,
+2027-06-06,17:00,42,Tenerife,Celta de Vigo II,Santa Cruz de Tenerife,,Por jugar,
+2027-06-06,17:00,42,Valladolid,Las Palmas,Valladolid,,Por jugar,
+2027-06-06,17:00,42,Albacete,Cadiz,Albacete,Estadio Carlos Belmonte,Por jugar,
+2027-06-06,17:00,42,Almeria,Mallorca,,,Por jugar,
+2027-06-06,17:00,42,Sabadell,Castellón,Sabadell,Estadi de la Nova Creu Alta,Por jugar,
+2027-06-06,17:00,42,AD Ceuta FC,Burgos,Ceuta,Estadio Municipal Alfonso Murube,Por jugar,

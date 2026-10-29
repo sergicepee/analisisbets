@@ -71,7 +71,7 @@ async function readFixtures(): Promise<Fixture[]> {
   const file = path.join(process.cwd(), "public", "data", "la-liga-es-2026-27.csv");
   const laLigaFixtures = await readScheduleFile(file, CSV_LEAGUES.find((league) => league.id === LEAGUE_ID)!);
   const otherLeagueFixtures = await Promise.all(CSV_LEAGUES.filter((league) => league.code !== "SP1").map((league) => {
-    const scheduleFile = path.join(process.cwd(), "public", "data", "fixtures", `${league.code}-2026-27.csv`);
+    const scheduleFile = path.join(process.cwd(), "public", "data", `${league.code}-2026-27.csv`);
     return readScheduleFile(scheduleFile, league);
   }));
   return [...laLigaFixtures, ...otherLeagueFixtures.flat()].sort((a, b) => a.timestamp - b.timestamp);
