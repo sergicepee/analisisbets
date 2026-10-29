@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: `${BRAND.name} · Análisis de fútbol`,
   description: "Estimaciones y estadísticas de fútbol para analizar partidos. No son garantías.",
 };
-export const viewport: Viewport = { themeColor: "#080b0d", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#080b0d", width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getLang();
