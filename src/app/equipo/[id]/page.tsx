@@ -48,7 +48,6 @@ export default async function Page({ params, searchParams }: { params: { id: str
     chartGames = series.map((game) => ({ ...game, opponentLogo: getTeamLogoUrl(game.opponent, country), opponentLogoFallback: getTeamLogoFallbackUrl(game.opponent, country) }));
   } catch (e) { error = errMsg(e); }
   const team = { id, name: name ?? `Equipo ${id}`, logo: getTeamLogoUrl(name ?? "", csvLeagueById(leagueId ?? 0)?.country ?? "") };
-  const metrics: [Metric, string][] = [["goals", "Goles"], ["shots", "Tiros"], ["shotsOn", "TAP"], ["corners", "Córners"], ["cards", "Tarjetas"]];
   const date = todayStr();
   return (
     <>
