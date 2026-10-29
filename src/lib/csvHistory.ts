@@ -1,6 +1,5 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { readPublicData } from "./publicData";
 import { FORM_MATCHES } from "./config";
 import { CSV_LEAGUES, csvLeagueById } from "./csvLeagues";
 import { canonicalTeamName, csvTeamId } from "./csvFixtures";
@@ -58,8 +57,7 @@ async function readMatchesFrom(code: string, leagueId: number, season: number): 
   const fileName = `${code}-${season}-${String(season + 1).slice(-2)}.csv`;
   const league = csvLeagueById(leagueId);
   if (!league) return [];
-  const file = path.join(process.cwd(), "public", "data", "football-data", fileName);
-  const text = await readFile(file, "utf8");
+  const text = await readPublicData(`football-data/${fileName}`);
   const lines = text.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
   const headers = csvLine(lines.shift() ?? "");
   const index = (name: string) => headers.findIndex((header) => header.trim().toLowerCase() === name.toLowerCase());

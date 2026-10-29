@@ -1,11 +1,9 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { readPublicData } from "./publicData";
 import { getTz } from "./prefs";
 import { CSV_LEAGUES } from "./csvLeagues";
 import type { Fixture } from "./types";
 
-const LEAGUE_ID = 140;
 let fixturesPromise: Promise<Fixture[]> | null = null;
 
 function parseCsvLine(line: string): string[] {
@@ -68,17 +66,15 @@ export function csvTeamId(name: string): number {
 }
 
 async function readFixtures(): Promise<Fixture[]> {
-  const file = path.join(process.cwd(), "public", "data", "la-liga-es-2026-27.csv");
-  const laLigaFixtures = await readScheduleFile(file, CSV_LEAGUES.find((league) => league.id === LEAGUE_ID)!);
-  const otherLeagueFixtures = await Promise.all(CSV_LEAGUES.filter((league) => league.code !== "SP1").map((league) => {
-    const scheduleFile = path.join(process.cwd(), "public", "data", `${league.code}-2026-27.csv`);
-    return readScheduleFile(scheduleFile, league);
-  }));
-  return [...laLigaFixtures, ...otherLeagueFixtures.flat()].sort((a, b) => a.timestamp - b.timestamp);
+  const results = await Promise.allSettled(CSV_LEAGUES.map((league) =>
+    readScheduleFile(league.code === "SP1" ? "la-liga-es-2026-27.csv" : `${league.code}-2026-27.csv`, league),
+  ));
+  results.forEach((r, i) => { if (r.status === "rejected") console.error(`CSV ${CSV_LEAGUES[i].code} no cargado:`, r.reason); });
+  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).sort((a, b) => a.timestamp - b.timestamp);
 }
 
-async function readScheduleFile(file: string, league: (typeof CSV_LEAGUES)[number]): Promise<Fixture[]> {
-  const text = await readFile(file, "utf8");
+async function readScheduleFile(fileName: string, league: (typeof CSV_LEAGUES)[number]): Promise<Fixture[]> {
+  const text = await readPublicData(fileName);
   const rows = text.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
   const headers = parseCsvLine(rows.shift() ?? "");
   const col = (name: string) => headers.findIndex((header) => header.trim().toLowerCase() === name.toLowerCase());
@@ -122,7 +118,10 @@ function footballDataTimestamp(date: string, time: string, timeZone: string): nu
 }
 
 export function getCsvFixtures(): Promise<Fixture[]> {
-  fixturesPromise ??= readFixtures();
+  fixturesPromise ??= readFixtures().then((all) => {
+    if (!all.length) fixturesPromise = null; // no cachear un fallo total
+    return all;
+  });
   return fixturesPromise;
 }
 

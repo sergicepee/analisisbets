@@ -4,7 +4,7 @@ const nextConfig = {
   images: { unoptimized: true },
   experimental: {
     outputFileTracingIncludes: {
-      '/*': ['./public/data/**/*.csv'],
+      '/**/*': ['./public/data/**/*.csv'],
     },
   },
 };
