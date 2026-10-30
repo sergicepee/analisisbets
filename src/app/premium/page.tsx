@@ -54,7 +54,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           const cents = plan.price?.unitAmount ?? plan.fallbackCents;
           const currency = plan.price?.currency ?? "EUR";
           const daily = formatAmount(Math.round(cents / plan.dailyDays), currency);
-          return <article key={plan.id} className={`relative flex min-w-0 flex-col rounded-3xl border p-5 pt-7 ${plan.popular ? "border-brand bg-gradient-to-b from-brand/10 to-card shadow-[0_0_35px_rgba(255,51,71,0.12)]" : "border-line bg-card"}`}>
+          return <article key={plan.id} className={`relative flex min-w-0 flex-col rounded-3xl border p-5 pt-7 ${plan.popular ? "border-brand bg-gradient-to-b from-brand/10 to-card shadow-[0_0_35px_rgba(173,201,163,0.12)]" : "border-line bg-card"}`}>
             {plan.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-4 py-1 text-xs font-extrabold text-black">♛ Más popular</span>}
             {plan.bestValue && <span className="absolute right-4 top-4 rounded-full bg-brand/15 px-3 py-1 text-xs font-extrabold text-brand">Mejor precio</span>}
             <h2 className="text-2xl font-black">{plan.title}</h2>

@@ -25,6 +25,6 @@ export function ManageSubscriptionButton() {
     <button type="button" onClick={manage} disabled={busy} className="rounded-full border border-line px-5 py-2.5 text-sm font-bold disabled:opacity-60">
       {busy ? "Abriendo Stripe…" : "Gestionar o cancelar suscripción"}
     </button>
-    {error && <p role="alert" className="mt-2 text-xs text-brand">{error}</p>}
+    {error && <p role="alert" className="mt-2 text-xs text-loss">{error}</p>}
   </div>;
 }

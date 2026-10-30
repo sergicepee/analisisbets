@@ -4,7 +4,7 @@ import { Shield } from "./Shield";
 import { num, pct } from "@/lib/format";
 import { t } from "@/lib/i18n";
 
-const BAR: Record<Tone, string> = { up: "bg-chartHit", flat: "bg-warn", down: "bg-brand", none: "bg-muted/40" };
+const BAR: Record<Tone, string> = { up: "bg-chartHit", flat: "bg-warn", down: "bg-loss", none: "bg-muted/40" };
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
 export function StatCard({
@@ -76,7 +76,7 @@ export type TrendRow = { label: string; a: number | null; b: number | null; m: n
 const chip = (v: number | null, kind: "pct" | "num") => {
   if (v === null) return <span className="text-muted">—</span>;
   if (kind === "num") return <span className="rounded-lg bg-card2 px-2.5 py-1 font-bold">{num(v, 1)}</span>;
-  const c = v >= 65 ? "bg-chartHit/15 text-chartHit" : v <= 35 ? "bg-brand/15 text-brand" : "bg-warn/20 text-warn";
+  const c = v >= 65 ? "bg-chartHit/15 text-chartHit" : v <= 35 ? "bg-loss/15 text-loss" : "bg-warn/20 text-warn";
   return <span className={`rounded-lg px-2.5 py-1 font-bold ${c}`}>{pct(v)}</span>;
 };
 export function TrendTable({ title, rows, aName, bName, note, sub, totalHead = "Partido" }: { title: string; rows: TrendRow[]; aName: string; bName: string; note?: string; sub?: string; totalHead?: string }) {

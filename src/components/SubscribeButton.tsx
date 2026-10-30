@@ -29,6 +29,6 @@ export function SubscribeButton({ plan, disabled = false }: { plan: "weekly" | "
     <button type="button" disabled={disabled || busy} onClick={subscribe} className="w-full rounded-full bg-brand px-5 py-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:opacity-50">
       {busy ? "Conectando con Stripe…" : disabled ? "Plan no configurado" : "Suscribirme con Stripe"}
     </button>
-    {error && <p role="alert" className="mt-2 text-xs text-brand">{error}</p>}
+    {error && <p role="alert" className="mt-2 text-xs text-loss">{error}</p>}
   </div>;
 }

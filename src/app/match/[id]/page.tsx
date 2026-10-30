@@ -1,19 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CalendarDays, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { t } from "@/lib/i18n";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchList } from "@/components/MatchList";
+import { FollowMatchButton } from "@/components/FollowMatchButton";
 import { Workspace } from "@/components/Workspace";
-import { Flag, Shield } from "@/components/Shield";
-import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconShoe, IconSwap, IconTarget } from "@/components/icons";
+import { Shield } from "@/components/Shield";
+import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconNext, IconShoe, IconSwap, IconTarget } from "@/components/icons";
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
 import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
 import { getUser } from "@/lib/auth";
+import { getCsvTeamProfile } from "@/lib/csvHistory";
+import { csvTeamId } from "@/lib/csvFixtures";
 import { hasSubscriberAccess } from "@/lib/subscriptions";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
-import { countryEs, errMsg, friendlyApiError, fullDateTime, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
+import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
+import { getLocale, getTz } from "@/lib/prefs";
 import {
   LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, matchOverPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
 } from "@/lib/metrics";
@@ -54,13 +59,23 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
   let pa0: TeamProfile | null = null;
   let pb0: TeamProfile | null = null;
-  if (!premiumLocked) {
-    [pa0, pb0] = await Promise.all([
-      grab(getTeamProfile(f.home.id, needStats, f.season, f.timestamp, f.leagueId, f.home.name)),
-      grab(getTeamProfile(f.away.id, needStats, f.season, f.timestamp, f.leagueId, f.away.name)),
-    ]);
-  }
+  const includeStats = premiumLocked ? false : needStats;
+  [pa0, pb0] = await Promise.all([
+    grab(getTeamProfile(f.home.id, includeStats, f.season, f.timestamp, f.leagueId, f.home.name)),
+    grab(getTeamProfile(f.away.id, includeStats, f.season, f.timestamp, f.leagueId, f.away.name)),
+  ]);
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
+  const [csvHomeForm, csvAwayForm] = await Promise.all([
+    getCsvTeamProfile(csvTeamId(f.home.name), false, f.timestamp, f.leagueId).catch(() => EMPTY(f.home.id)),
+    getCsvTeamProfile(csvTeamId(f.away.name), false, f.timestamp, f.leagueId).catch(() => EMPTY(f.away.id)),
+  ]);
+  const mergeForm = (primary: TeamProfile, fallback: TeamProfile): TeamProfile => {
+    const rows = new Map<number, (typeof primary.rows)[number]>();
+    fallback.rows.forEach((row) => rows.set(row.fixtureId, row));
+    primary.rows.forEach((row) => rows.set(row.fixtureId, row));
+    return { ...primary, rows: [...rows.values()].sort((a, b) => a.ts - b.ts).slice(-FORM_MATCHES) };
+  };
+  const headerPa = mergeForm(pa, csvHomeForm), headerPb = mergeForm(pb, csvAwayForm);
   const g = statusGroup(f);
 
   return (
@@ -69,7 +84,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
-        <MatchHeader f={f} pa={pa} pb={pb} returnTo={`/match/${f.id}?date=${date}`} />
+        <MatchHeader f={f} pa={headerPa} pb={headerPb} returnTo={`/match/${f.id}?date=${date}`} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
             <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
@@ -99,40 +114,59 @@ function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb:
     `${e.player} ${e.minute}${e.extra ? `+${e.extra}` : ""}′${e.detail === "Own Goal" ? " (p.p.)" : e.detail === "Penalty" ? " (p)" : ""}`;
   const forHome = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.away.id : e.teamId === f.home.id));
   const forAway = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.home.id : e.teamId === f.away.id));
+  const dateLabel = new Intl.DateTimeFormat(getLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: getTz() }).format(new Date(f.timestamp * 1000));
+  const matchday = f.round.match(/(\d+)\s*$/)?.[1];
+  const roundLabel = matchday ? `${t("Jornada")} ${matchday}` : f.round;
   return (
-    <section className="card min-w-0 p-3 sm:p-4">
-      <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm font-bold text-brand"><Flag src={f.flag} /><span className="truncate">{countryEs(f.country, f.flag)} · {f.leagueName}{f.round ? ` · ${f.round}` : ""}</span></div>
-      <div className="mt-1 text-xs text-muted">{fullDateTime(f.timestamp)}{f.venue ? ` · ${f.venue}` : ""}</div>
-      <div className="mt-4 flex min-w-0 items-center justify-between gap-1 sm:gap-2">
-        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} role={t("Local")} p={pa} />
-        <div className="w-[36%] min-w-0 shrink text-center">
-          {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
-            : g === "finished" ? (<><div className="text-3xl font-black">{score}</div><div className="mt-1 rounded-full border border-line px-3 py-0.5 text-xs text-muted">{f.statusShort}</div></>)
-            : (<><div className="text-sm font-bold text-muted">VS</div><div className="mx-auto mt-2 w-fit max-w-full rounded-full border border-line px-1.5 py-1 text-[10px] leading-tight text-muted sm:px-3 sm:text-xs">{timeStr(f.timestamp)} · {g === "pending" ? t("Pendiente de actualizar") : f.statusShort}</div></>)}
+    <section className="relative isolate min-w-0 overflow-hidden rounded-2xl border border-slate-300/80 p-3 text-slate-900 shadow-sm sm:p-4" style={{ background: "linear-gradient(110deg, #eef3ee 0%, #f5f5ef 50%, #eef2f0 100%)" }}>
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
+        {f.home.logo && <div className="absolute -left-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-left bg-no-repeat opacity-30 blur-xl" style={{ backgroundImage: `url("${f.home.logo}")` }} />}
+        {f.away.logo && <div className="absolute -right-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-right bg-no-repeat opacity-30 blur-xl" style={{ backgroundImage: `url("${f.away.logo}")` }} />}
+      </div>
+      <div className="relative z-10">
+      <div className="flex justify-center">
+        <div className="flex min-w-0 items-center gap-2 rounded-full border border-slate-300/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-700">
+          <Shield src={f.leagueLogo ?? `https://media.api-sports.io/football/leagues/${f.leagueId}.png`} alt="" size={20} />
+          <span className="truncate">{f.leagueName}</span>
+          <IconNext className="h-3.5 w-3.5 shrink-0" />
         </div>
-        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} role={t("Visitante")} p={pb} />
+      </div>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-center text-[11px] text-slate-600 sm:text-xs">
+        <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 shrink-0" /><span className="capitalize">{dateLabel}</span></span>
+        {roundLabel && <span>{roundLabel}</span>}
+      </div>
+      {f.venue && <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-600 sm:text-xs"><MapPin className="h-3 w-3" />{f.venue}</div>}
+      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
+        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} p={pa} />
+        <div className="relative flex h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
+          {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
+            : g === "finished" ? (<><div className="text-3xl font-black text-slate-900">{score}</div><div className="mt-1 rounded-full border border-slate-300/80 bg-white/50 px-3 py-0.5 text-xs text-slate-600">{f.statusShort}</div></>)
+            : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600">{t("Pendiente de actualizar")}</div>}</>)}
+        </div>
+        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} p={pb} />
       </div>
       {(forHome.length > 0 || forAway.length > 0) && (
-        <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-muted">
+        <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-slate-600">
           <div className="space-y-0.5">{forHome.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
           <div className="space-y-0.5 text-right">{forAway.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
         </div>
       )}
+      <div className="flex justify-center"><FollowMatchButton fixtureId={f.id} /></div>
+      </div>
     </section>
   );
 }
-function TeamCol({ teamId, leagueId, season, returnTo, name, logo, role, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; role: string; p: TeamProfile }) {
+function TeamCol({ teamId, leagueId, season, returnTo, name, logo, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; p: TeamProfile }) {
   const form = p.rows.slice(-5);
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
-      <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="inline-flex rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-        <Shield src={logo} alt={name} size={44} />
+    <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+      <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="inline-flex rounded-2xl border border-slate-300/80 bg-white/75 p-2 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <Shield src={logo} alt={name} size={56} />
       </Link>
-      <div className="max-w-full truncate text-base font-extrabold sm:text-lg">{name}</div>
-      <div className="text-[11px] text-muted">{role}</div>
+      <div className="hero-serif min-h-[2.4em] max-w-full whitespace-normal break-words text-center text-[13px] font-normal uppercase leading-tight tracking-normal sm:text-sm">{name}</div>
       <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
         {form.map((r, i) => (
-          <span key={i} className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold text-black sm:h-5 sm:w-5 sm:text-[10px] ${r.result === "W" ? "bg-chartHit" : r.result === "D" ? "bg-warn" : "bg-brand"}`}>{r.result}</span>
+          <span key={i} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${r.result === "W" ? "bg-chartHit" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
         ))}
       </div>
     </div>
@@ -167,12 +201,12 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
           <div className="mb-1.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 text-[11px] font-bold leading-tight sm:text-sm">
             <span className="min-w-0 truncate text-left">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
             <span className="min-w-0 truncate text-center text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
-            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-chartHit">{Math.round(p1x2.away)}%</span></span>
+            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-loss">{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
             <div className="border-r-2 border-bg bg-brand" style={{ width: `${p1x2.home}%` }} />
             <div className="border-r-2 border-bg bg-drawbar" style={{ width: `${p1x2.draw}%` }} />
-            <div className="bg-chartHit" style={{ width: `${p1x2.away}%` }} />
+            <div className="bg-loss" style={{ width: `${p1x2.away}%` }} />
           </div>
           {!model && pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
         </div>

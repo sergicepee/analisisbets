@@ -114,7 +114,7 @@ function grade(p: Pick, stats: Awaited<ReturnType<typeof getFixtureStatsFor>> | 
 
 const resultText: Record<Result, string> = { hit: "ACIERTO", miss: "FALLO", void: "DEVOLUCIÓN", pending: "PENDIENTE" };
 const resultStyle: Record<Result, string> = {
-  hit: "border-chartHit/30 bg-chartHit/10 text-chartHit", miss: "border-brand/30 bg-brand/10 text-brand",
+  hit: "border-chartHit/30 bg-chartHit/10 text-chartHit", miss: "border-loss/30 bg-loss/10 text-loss",
   void: "border-line bg-panel text-muted", pending: "border-line bg-panel text-muted",
 };
 

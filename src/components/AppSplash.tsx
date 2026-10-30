@@ -29,9 +29,9 @@ export function AppSplash() {
   return (
     <div className={`app-launch-splash${leaving ? " is-leaving" : ""}`} aria-hidden="true">
       <svg className="app-launch-mark" width="180" height="180" viewBox="0 0 32 32" fill="none">
-        <circle className="app-launch-orbit" cx="16" cy="16" r="11.44" stroke="#ff3347" strokeWidth="2.64" strokeDasharray="54.56 17.6" strokeLinecap="round" />
-        <circle cx="16" cy="16" r="5.28" stroke="#ff3347" strokeWidth="2.2" />
-        <circle cx="16" cy="16" r="1.58" fill="#ff3347" />
+        <circle className="app-launch-orbit" cx="16" cy="16" r="11.44" stroke="#adc9a3" strokeWidth="2.64" strokeDasharray="54.56 17.6" strokeLinecap="round" />
+        <circle cx="16" cy="16" r="5.28" stroke="#adc9a3" strokeWidth="2.2" />
+        <circle cx="16" cy="16" r="1.58" fill="#adc9a3" />
       </svg>
     </div>
   );
