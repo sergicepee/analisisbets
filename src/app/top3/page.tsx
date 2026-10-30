@@ -14,6 +14,7 @@ import { t } from "@/lib/i18n";
 import { getUser } from "@/lib/auth";
 import { hasSubscriberAccess } from "@/lib/subscriptions";
 import { IconLock } from "@/components/icons";
+import { Top3Countdown } from "@/components/Top3Countdown";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -181,6 +182,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           <p className="mt-1 text-sm text-muted">Partidos destacados de la jornada. Los pronósticos están disponibles con Premium.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
+        <Top3Countdown date={date} />
         {error && <Notice tone="warn">{error}</Notice>}
         {!error && picks.length === 0 && <Notice>No hay tres selecciones con suficientes datos para esta fecha.</Notice>}
         {picks.map((k, i) => {
