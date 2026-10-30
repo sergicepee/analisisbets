@@ -120,8 +120,8 @@ function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb:
   return (
     <section className="relative isolate min-w-0 overflow-hidden rounded-2xl border border-slate-300/80 p-3 text-slate-900 shadow-sm sm:p-4" style={{ background: "linear-gradient(110deg, #eef3ee 0%, #f5f5ef 50%, #eef2f0 100%)" }}>
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
-        {f.home.logo && <div className="absolute -left-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-left bg-no-repeat opacity-30 blur-xl" style={{ backgroundImage: `url("${f.home.logo}")` }} />}
-        {f.away.logo && <div className="absolute -right-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-right bg-no-repeat opacity-30 blur-xl" style={{ backgroundImage: `url("${f.away.logo}")` }} />}
+        {f.home.logo && <div className="absolute -left-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-left bg-no-repeat opacity-30 blur-xl team-color-halo" style={{ backgroundImage: `url("${f.home.logo}")` }} />}
+        {f.away.logo && <div className="absolute -right-[28%] top-1/2 h-[90%] w-[65%] -translate-y-1/2 bg-contain bg-right bg-no-repeat opacity-30 blur-xl team-color-halo" style={{ backgroundImage: `url("${f.away.logo}")` }} />}
       </div>
       <div className="relative z-10">
       <div className="flex justify-center">

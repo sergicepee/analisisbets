@@ -65,7 +65,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
       {ordered.map((g, i) => (
         <div key={g[0].leagueId} className="space-y-3">
           <section className="overflow-hidden rounded-2xl border border-line bg-card">
-            <div className="flex min-h-11 items-center gap-2.5 bg-card2 px-3 py-2.5 sm:px-4">
+            <div className="flex min-h-11 items-center gap-2.5 bg-[#191919] px-3 py-2.5 sm:px-4">
               <Shield src={g[0].leagueLogo} fallbackSrc={g[0].flag} alt="" size={23} />
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(g[0].country, g[0].flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{g[0].leagueName}</span>
