@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Flag, Shield } from "./Shield";
 import { IconGo } from "./icons";
 import { useT } from "./I18nProvider";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 
 type Item = { id: number; name: string; type: string; logo: string | null };
 type Group = { country: string; flag: string | null; items: Item[] };
@@ -13,7 +14,9 @@ const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").t
 function LeagueLink({ i }: { i: Item }) {
   return (
     <Link href={`/liga/${i.id}`} className="flex items-center gap-3 rounded-xl border border-line bg-card2 px-3 py-2.5">
-      <Shield src={i.logo} alt="" size={28} />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white p-1">
+        <Shield src={getLeagueLogoUrl(i.id, i.logo)} alt="" size={28} />
+      </span>
       <div className="min-w-0 flex-1"><div className="truncate text-sm font-bold">{i.name}</div><div className="text-xs text-muted">{i.type}</div></div>
       <IconGo className="h-4 w-4 shrink-0 text-muted" />
     </Link>

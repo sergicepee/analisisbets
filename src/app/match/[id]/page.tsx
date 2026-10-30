@@ -18,6 +18,7 @@ import { hasSubscriberAccess } from "@/lib/subscriptions";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { getLocale, getTz } from "@/lib/prefs";
 import {
   LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, matchOverPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
@@ -126,7 +127,7 @@ function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb:
       <div className="relative z-10">
       <div className="flex justify-center">
         <div className="flex min-w-0 items-center gap-2 rounded-full border border-slate-300/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-700">
-          <Shield src={f.leagueLogo ?? `https://media.api-sports.io/football/leagues/${f.leagueId}.png`} alt="" size={20} />
+          <Shield src={getLeagueLogoUrl(f.leagueId, f.leagueLogo)} alt="" size={20} />
           <span className="truncate">{f.leagueName}</span>
           <IconNext className="h-3.5 w-3.5 shrink-0" />
         </div>

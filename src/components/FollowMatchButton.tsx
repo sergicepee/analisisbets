@@ -73,7 +73,7 @@ export function FavoriteMatchButton({ fixtureId }: { fixtureId: number }) {
   }
 
   return (
-    <button type="button" aria-label={favorite ? "Quitar de favoritos" : "Añadir a favoritos"} aria-pressed={favorite} onClick={toggleFavorite} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${favorite ? "text-brand" : "text-muted hover:bg-card2 hover:text-brand"}`}>
+    <button type="button" aria-label={favorite ? "Quitar de favoritos" : "Añadir a favoritos"} aria-pressed={favorite} onClick={toggleFavorite} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${favorite ? "text-brand" : "text-muted hover:text-brand"}`}>
       <Star className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
     </button>
   );

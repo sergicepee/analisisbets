@@ -5,6 +5,7 @@ import { Shield } from "@/components/Shield";
 import { getLeagueSeasons, getLeagueTeams, getLeagues } from "@/lib/apifootball";
 import { getTeamLogoFallbackUrl } from "@/lib/apifootball";
 import { csvLeagueById } from "@/lib/csvLeagues";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
   const selected = Number(searchParams.season) || seasons[0];
   const teams = await getLeagueTeams(id, selected);
   return <><Header back="/leagues" /><main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-3xl">
-    <div className="flex items-center gap-3"><Shield src={leagueLogo ?? `https://media.api-sports.io/football/leagues/${id}.png`} fallbackSrc={league?.flag} alt="" size={46}/><div><h1 className="text-2xl font-black">{league?.name ?? "Liga"}</h1><p className="text-sm text-muted">{league?.country}</p></div></div>
+    <div className="flex items-center gap-3"><Shield src={getLeagueLogoUrl(id, leagueLogo)} fallbackSrc={league?.flag} alt="" size={46}/><div><h1 className="text-2xl font-black">{league?.name ?? "Liga"}</h1><p className="text-sm text-muted">{league?.country}</p></div></div>
     {teams.length ? <section className="space-y-2"><h2 className="font-bold">Equipos · {teams.length}</h2><div className="grid gap-2 sm:grid-cols-2">{teams.map((team) => <Link key={team.id} href={`/equipo/${team.id}?league=${id}&season=${selected}&name=${encodeURIComponent(team.name)}`} className="card flex items-center gap-3 px-3 py-2.5"><Shield src={team.logo ?? null} fallbackSrc={getTeamLogoFallbackUrl(team.name, league?.country ?? "")} alt={team.name} size={34}/><span className="min-w-0 flex-1 truncate text-sm font-semibold">{team.name}</span><span className="text-muted">›</span></Link>)}</div></section> : <Notice>No hay equipos históricos disponibles para esta liga.</Notice>}
   </main></>;
 }

@@ -9,6 +9,7 @@ import { IconBall, IconCalendar, IconInfo, IconMatches, IconTrophy } from "./ico
 import { getFixturesByDate } from "@/lib/apifootball";
 import { apiEnabled, LEAGUE_IDS, PRIORITY_LEAGUES, SHOW_PREMIUM } from "@/lib/config";
 import { countryEs, errMsg, statusGroup, todayStr } from "@/lib/format";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import type { Fixture, StatusGroup } from "@/lib/types";
 import { t } from "@/lib/i18n";
 
@@ -16,7 +17,6 @@ const FILTERS: [string, string][] = [
   ["all", "Todos"], ...(apiEnabled ? [["live", "En vivo"] as [string, string]] : []), ["finished", "Finalizados"],
   ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
-
 export async function MatchList({ date, filter = "all", leagueId = null, selectedId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number }) {
   const today = todayStr();
   let fixtures: Fixture[] = [];
@@ -66,7 +66,9 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
         <div key={g[0].leagueId} className="space-y-3">
           <section className="overflow-hidden rounded-2xl border border-line bg-card">
             <div className="flex min-h-11 items-center gap-2.5 bg-[#191919] px-3 py-2.5 sm:px-4">
-              <Shield src={g[0].leagueLogo} fallbackSrc={g[0].flag} alt="" size={23} />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white p-1">
+                <Shield src={getLeagueLogoUrl(g[0].leagueId, g[0].leagueLogo)} alt="" size={23} />
+              </span>
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(g[0].country, g[0].flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{g[0].leagueName}</span>
             </div>
