@@ -3,7 +3,8 @@ import { MatchRow } from "@/components/MatchRow";
 import { Notice } from "@/components/ui";
 import { Shield } from "@/components/Shield";
 import { getLeagueSeasons, getLeagueTeams, getTeamLogoFallbackUrl, getTeamLogoUrl, getTeamSeasonMatchSeries, getTeamSeasonProfile, getTeamUpcomingFixtures, getTeamProfile } from "@/lib/apifootball";
-import { errMsg, todayStr } from "@/lib/format";
+import { countryEs, errMsg, todayStr } from "@/lib/format";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import type { Fixture, TeamProfile } from "@/lib/types";
 import { TeamStatsChart, type TeamGamePoint } from "@/components/TeamStatsChart";
 import Link from "next/link";
@@ -49,6 +50,8 @@ export default async function Page({ params, searchParams }: { params: { id: str
   } catch (e) { error = errMsg(e); }
   const team = { id, name: name ?? `Equipo ${id}`, logo: getTeamLogoUrl(name ?? "", csvLeagueById(leagueId ?? 0)?.country ?? "") };
   const date = todayStr();
+  const upcomingGroups = new Map<number, Fixture[]>();
+  for (const fixture of next) upcomingGroups.set(fixture.leagueId, [...(upcomingGroups.get(fixture.leagueId) ?? []), fixture]);
   return (
     <>
       <Header back={back} />
@@ -61,7 +64,19 @@ export default async function Page({ params, searchParams }: { params: { id: str
         {error && <Notice tone="warn">{error}</Notice>}
         {chartGames.length > 0 && <section className="space-y-2"><h2 className="font-bold">Estadísticas · {season}/{String(season + 1).slice(-2)}</h2><TeamStatsChart games={chartGames} /></section>}
         {profile && chartGames.length === 0 && <Notice>Hay estadísticas resumidas, pero no un historial partido a partido disponible para dibujar la gráfica.</Notice>}
-        {next.length > 0 && <section className="space-y-2"><h2 className="font-bold">Próximos partidos</h2>{next.map((f) => <MatchRow key={f.id} f={f} date={date} />)}</section>}
+        {next.length > 0 && <section className="space-y-2"><h2 className="font-bold">Próximos partidos</h2>{[...upcomingGroups.values()].map((fixtures) => {
+          const league = fixtures[0];
+          return <div key={league.leagueId} className="overflow-hidden rounded-2xl border border-line bg-card">
+            <div className="flex min-h-11 items-center gap-2.5 bg-[#191919] px-3 py-2.5 sm:px-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white p-1">
+                <Shield src={getLeagueLogoUrl(league.leagueId, league.leagueLogo)} alt="" size={23} />
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(league.country, league.flag)}</span>
+              <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{league.leagueName}</span>
+            </div>
+            {fixtures.map((f) => <MatchRow key={f.id} f={f} date={date} />)}
+          </div>;
+        })}</section>}
         {!profile && !next.length && !error && <Notice>Sin datos disponibles para este equipo y temporada.</Notice>}
       </main>
     </>

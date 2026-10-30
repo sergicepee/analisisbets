@@ -10,9 +10,9 @@ export function MatchRow({ f, date, selected = false }: { f: Fixture; date: stri
   const g = statusGroup(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   return (
-    <div className={`flex min-w-0 items-center gap-1.5 border-t border-line px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
+    <div className={`flex min-w-0 items-center gap-1.5 border-t border-line px-2 transition-colors hover:bg-card2 active:bg-card2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
       <FavoriteMatchButton fixtureId={f.id} />
-      <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 transition-colors active:bg-card2 sm:px-1">
+      <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
         <div className="w-11 shrink-0 text-left sm:w-14">
           {g === "live" || g === "finished" ? (
             <>

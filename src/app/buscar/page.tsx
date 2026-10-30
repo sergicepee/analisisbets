@@ -4,6 +4,7 @@ import { Flag, Shield } from "@/components/Shield";
 import { Notice } from "@/components/ui";
 import { getLeagues, searchTeams, type TeamHit } from "@/lib/apifootball";
 import { countryEs, errMsg } from "@/lib/format";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import type { LeagueInfo } from "@/lib/types";
 import { IconGo, IconSearch } from "@/components/icons";
 
@@ -36,7 +37,9 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
             <h2 className="font-bold">Ligas</h2>
             {leagues.map((l) => (
               <Link key={l.id} href={`/liga/${l.id}`} className="card flex items-center gap-3 px-3 py-2.5">
-                <Shield src={l.logo} alt="" size={28} />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white p-1">
+                  <Shield src={getLeagueLogoUrl(l.id, l.logo)} alt="" size={28} />
+                </span>
                 <div className="flex-1"><div className="text-sm font-bold">{l.name}</div><div className="flex items-center gap-1.5 text-xs text-muted"><Flag src={l.flag} />{countryEs(l.country, l.flag)}</div></div>
                 <IconGo className="h-4 w-4 text-muted" />
               </Link>
