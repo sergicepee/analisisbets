@@ -181,17 +181,25 @@ async function addCsvTeamLogos(fixtures: Fixture[]): Promise<Fixture[]> {
 }
 
 // In CSV mode, a kickoff time alone is not enough to call a fixture finished.
-// Keep it pending until both the result and match statistics are in the CSVs.
+// The fixtures CSV supplies the schedule; football-data supplies final scores and statistics.
 async function updateCsvFixtureStates(fixtures: Fixture[]): Promise<Fixture[]> {
   const now = Date.now() / 1000;
   return Promise.all(fixtures.map(async (fixture) => {
-    if (fixture.timestamp > now || fixture.statusShort === "SUSP") return fixture;
-    const stats = await getCsvStatsForFixture(fixture);
-    const hasResult = fixture.goalsHome !== null && fixture.goalsAway !== null;
-    if (hasResult && stats?.hasData) {
-      return { ...fixture, statusShort: "FT", statusLong: "Match Finished" };
+    if (fixture.statusShort === "SUSP") return { ...fixture, goalsHome: null, goalsAway: null };
+    if (fixture.timestamp > now) {
+      return { ...fixture, statusShort: "NS", statusLong: "Not Started", elapsed: null, goalsHome: null, goalsAway: null };
     }
-    return { ...fixture, statusShort: "NS", statusLong: "Pendiente de actualizar", elapsed: null };
+    const stats = await getCsvStatsForFixture(fixture);
+    if (stats?.hasData) {
+      return {
+        ...fixture, statusShort: "FT", statusLong: "Match Finished",
+        goalsHome: stats.goalsHome, goalsAway: stats.goalsAway,
+      };
+    }
+    return {
+      ...fixture, statusShort: "NS", statusLong: "Pendiente de actualizar",
+      elapsed: null, goalsHome: null, goalsAway: null,
+    };
   }));
 }
 
