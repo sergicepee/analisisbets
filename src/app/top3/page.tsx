@@ -11,6 +11,9 @@ import { csvLeagueById } from "@/lib/csvLeagues";
 import { calibrateCsvPicks } from "@/lib/csvCalibration";
 import type { Fixture, Metric, TeamProfile } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { getUser } from "@/lib/auth";
+import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { IconLock } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -114,7 +117,27 @@ const resultStyle: Record<Result, string> = {
   void: "border-line bg-panel text-muted", pending: "border-line bg-panel text-muted",
 };
 
+function LockedPrediction() {
+  return <div className="relative mt-3 min-h-32 overflow-hidden rounded-xl border border-line bg-card p-3">
+    <div aria-hidden="true" className="select-none space-y-3 blur-xl opacity-45">
+      <div className="flex items-center justify-between"><span className="h-3 w-32 rounded-full bg-brand" /><span className="h-7 w-14 rounded-md bg-warn" /></div>
+      <div className="h-2 rounded-full bg-line"><div className="h-full w-2/3 rounded-full bg-brand" /></div>
+      <div className="flex gap-2"><span className="h-5 w-20 rounded-md bg-chartHit" /><span className="h-5 w-16 rounded-md bg-brand" /></div>
+    </div>
+    <div className="absolute inset-0 grid place-items-center bg-bg/50 p-2">
+      <div className="rounded-xl border border-line bg-card/95 px-4 py-2.5 text-center shadow-xl">
+        <IconLock className="mx-auto h-4 w-4" />
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted">Pronóstico Premium</p>
+        <p className="mt-0.5 text-xs font-extrabold">Solo para suscriptores</p>
+        <Link href="/premium" className="mt-2 inline-flex rounded-full bg-brand px-4 py-1.5 text-xs font-extrabold text-black">Ver planes</Link>
+      </div>
+    </div>
+  </div>;
+}
+
 export default async function Page({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+  const user = await getUser();
+  const isSubscriber = user ? await hasSubscriberAccess(user.id) : false;
   const today = todayStr();
   const date = isDate(searchParams.date) ? searchParams.date as string : today;
   let picks: Pick[] = [];
@@ -144,10 +167,10 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
     picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
   } catch (e) { error = errMsg(e); }
 
-  const grades = await Promise.all(picks.map(async (p) => {
+  const grades: Result[] = isSubscriber ? await Promise.all(picks.map(async (p) => {
     const stats = doneStatus(p.f) && ["cards", "corners", "shotsOn"].includes(p.market) ? await getFixtureStatsFor(p.f).catch(() => null) : null;
     return grade(p, stats);
-  }));
+  })) : picks.map(() => "pending");
 
   return (
     <>
@@ -155,7 +178,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <main className="space-y-4 px-4 pb-8 pt-5 lg:mx-auto lg:max-w-5xl">
         <div>
           <h1 className="text-3xl font-black">{t("La combinada")}</h1>
-          <p className="mt-1 text-sm text-muted">Tres picks de partidos distintos con probabilidad estimada superior al 60 %. Incluye mercados de equipo y del partido.</p>
+          <p className="mt-1 text-sm text-muted">Partidos destacados de la jornada. Los pronósticos están disponibles con Premium.</p>
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         {error && <Notice tone="warn">{error}</Notice>}
@@ -164,10 +187,11 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           const result = grades[i];
           const score = k.f.goalsHome !== null && k.f.goalsAway !== null ? `${k.f.goalsHome} - ${k.f.goalsAway}` : null;
           return (
-            <Link key={k.f.id} href={`/match/${k.f.id}?date=${date}`} className={`card block p-4 ${result === "miss" ? "border-loss/50" : "border-win/40"}`}>
+            <article key={k.f.id} className={`card p-4 ${isSubscriber ? result === "miss" ? "border-loss/50" : "border-win/40" : "border-line"}`}>
+              <Link href={`/match/${k.f.id}?date=${date}`} className="block">
               <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-300">
                 <span className="flex min-w-0 items-center gap-1.5"><Flag src={k.f.flag} />{countryEs(k.f.country, k.f.flag)} · {k.f.leagueName}</span>
-                <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black ${resultStyle[result]}`}>{resultText[result]}</span>
+                {isSubscriber && <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black ${resultStyle[result]}`}>{resultText[result]}</span>}
               </div>
               <div className="mt-3 flex items-center gap-3">
                 <div className="flex h-14 w-12 shrink-0 items-center justify-center rounded-xl bg-win/20 text-lg font-black text-win">#{i + 1}</div>
@@ -178,20 +202,19 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
                 </div>
               </div>
               <div className="mt-2 text-center text-xs text-muted">{dayMonthTime(k.f.timestamp)}</div>
-              <div className="mt-3 rounded-xl border border-line bg-bg/60 p-3">
+              </Link>
+              {isSubscriber ? <div className="mt-3 rounded-xl border border-line bg-bg/60 p-3">
                 <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-wider text-muted">{k.market === "1x2" ? "Ganador" : k.market === "btts" ? "Ambos marcan" : k.market === "goals" ? "Goles" : k.market === "corners" ? "Córners" : k.market === "cards" ? "Tarjetas" : "TAP"}</span><b className="text-2xl font-black text-chartHit">{Math.round(k.p)}%</b></div>
                 <div className="mt-1 text-base font-extrabold">{k.selection}</div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-chartHit" style={{ width: `${k.p}%` }} /></div>
                 <div className="mt-2 text-[11px] text-muted">Muestra: {k.sample} partidos recientes por equipo{k.calibrationN ? ` · calibrado con ${k.calibrationN} partidos históricos` : " · sin calibración histórica suficiente"}.</div>
                 {result !== "pending" && score && <div className="mt-2 text-sm font-bold text-muted">Resultado final: <span className="text-white">{score}</span></div>}
                 {result === "pending" && doneStatus(k.f) && <div className="mt-2 text-xs text-muted">Resultado estadístico pendiente de actualizar.</div>}
-              </div>
-            </Link>
+              </div> : <LockedPrediction />}
+            </article>
           );
         })}
-        <Notice>
-          Se muestran selecciones con probabilidades estimadas superiores al 60 % e inferiores al 80 %. La probabilidad es una estimación del modelo, no una garantía.
-        </Notice>
+        <Notice>La combinada es una estimación estadística, no una garantía.</Notice>
       </main>
     </>
   );

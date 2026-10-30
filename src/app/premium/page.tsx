@@ -46,7 +46,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
 
       {state === "cancelado" && <Notice>El pago se canceló. No se ha realizado ningún cargo.</Notice>}
       {state === "success" && !active && <Notice>Stripe ha recibido el pago. Estamos confirmando tu suscripción; el acceso se activará en cuanto llegue la confirmación.</Notice>}
-      {active && <Notice>Tu suscripción Premium está activa. Ya puedes abrir las pestañas de Goles, Tiros, Esquinas y Tarjetas.</Notice>}
+      {active && <Notice>Tu suscripción Premium está activa. Ya puedes consultar la combinada y las pestañas de Goles, Tiros, Esquinas y Tarjetas.</Notice>}
       {active && <ManageSubscriptionButton />}
 
       <section aria-label="Planes de suscripción" className="grid items-stretch gap-5 pt-2 md:grid-cols-3">
@@ -66,7 +66,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
             </div>
             <p className="mt-4 min-h-[88px] text-sm leading-relaxed text-muted">Renovación automática. Cancela desde la gestión de suscripción en Premium; mantendrás el acceso hasta que termine el periodo pagado.</p>
             <ul className="mb-5 space-y-2 text-sm">
-              {["Estadísticas avanzadas", "Análisis completo del partido", "Todas las ligas"].map((feature) => <li key={feature} className="flex gap-2"><span className="font-bold text-brand">✓</span>{feature}</li>)}
+              {["Estadísticas avanzadas", "Análisis completo del partido", "La combinada Premium", "Todas las ligas"].map((feature) => <li key={feature} className="flex gap-2"><span className="font-bold text-brand">✓</span>{feature}</li>)}
             </ul>
             <div className="mt-auto">
               {active ? <div className="rounded-full border border-line px-4 py-3 text-center text-sm font-bold text-muted">Incluido en tu suscripción</div>
@@ -85,6 +85,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           {[
             [IconBars, "Estadísticas avanzadas", "Goles, tiros, TAP, córners, tarjetas y más."],
             [IconMatches, "Análisis completo del partido", "Información detallada para cada encuentro."],
+            [IconMatches, "La combinada Premium", "Pronósticos de la jornada con resultados y estadísticas detalladas."],
             [IconTrophy, "Todas las ligas", "Explora las competiciones disponibles en Pickzone."],
             [IconLock, "En todos tus dispositivos", "Web y móvil, cuando quieras."],
           ].map(([Icon, title, description]) => {
