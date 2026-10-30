@@ -1,0 +1,26 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { IconCalendar } from "./icons";
+
+export function DatePicker({ date, base, extra }: { date: string; base: string; extra: string }) {
+  const router = useRouter();
+
+  function selectDate(value: string) {
+    if (value) router.push(`${base}?date=${value}${extra}`);
+  }
+
+  return (
+    <label className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-sm font-semibold focus-within:ring-2 focus-within:ring-brand sm:gap-2 sm:text-base">
+      <IconCalendar className="h-3.5 w-3.5 text-brand sm:h-4 sm:w-4" />
+      <span>{date.split("-").reverse().join(".")}</span>
+      <input
+        type="date"
+        value={date}
+        onChange={(event) => selectDate(event.currentTarget.value)}
+        aria-label="Seleccionar fecha"
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+    </label>
+  );
+}
