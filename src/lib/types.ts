@@ -5,17 +5,20 @@ export interface TeamRef { id: number; name: string; logo: string | null; logoFa
 export interface FixtureEvent {
   minute: number; extra: number | null; teamId: number;
   player: string; type: string; detail: string;
+  playerId?: number; playerPhoto?: string | null; ownGoal?: boolean;
 }
 export interface Fixture {
   id: number; timestamp: number;
   leagueId: number; leagueName: string; country: string;
   flag: string | null; leagueLogo: string | null; season: number; round: string;
+  stage?: string;
   venue: string | null;
   statusShort: string; statusLong: string; elapsed: number | null;
   home: TeamRef; away: TeamRef;
   goalsHome: number | null; goalsAway: number | null;
   htHome: number | null; htAway: number | null;
   redCardsHome?: number; redCardsAway?: number;
+  homeStats?: MatchStat; awayStats?: MatchStat;
   events: FixtureEvent[];
 }
 
@@ -39,11 +42,6 @@ export interface TeamRow {
 }
 export interface TeamProfile { teamId: number; rows: TeamRow[] }
 
-export interface Prediction {
-  home: number; draw: number; away: number; advice: string | null;
-  /** Medias de goles a favor/en contra en los últimos partidos, tal como las da API-Football. */
-  last5: { home: { gf: number; ga: number; n: number }; away: { gf: number; ga: number; n: number } } | null;
-}
 export interface LeagueInfo {
   id: number; name: string; type: string; country: string; flag: string | null; logo: string | null;
 }

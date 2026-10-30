@@ -237,6 +237,6 @@ export async function getCsvStatsForFixture(fixture: Fixture): Promise<(StoredSt
     htHome: match.htHome, htAway: match.htAway,
     yellowHome: match.yellowHome, redHome: match.redHome,
     yellowAway: match.yellowAway, redAway: match.redAway,
-    hasData: [match.home.shots, match.home.corners, match.away.shots, match.away.corners].some((value) => value !== null),
+    hasData: [match.home, match.away].some((team) => Object.values(team).some((value) => value !== null)),
   };
 }

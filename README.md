@@ -1,14 +1,14 @@
 # PICKZONE · Análisis de fútbol
 
 Web móvil‑first (Next.js 14 + Tailwind) para estudiar partidos: probabilidades estimadas, tendencias de goles, tiros, córners y tarjetas, Top 3 del día, ranking por métricas y catálogo de ligas.
-Datos de **API‑Football** (solo servidor) y caché en **Supabase**. Marca, textos y código propios (inspirada en la organización de Oddster, sin reutilizar sus recursos).
+Datos de fútbol de **ESPN** (sin clave) con respaldo en los CSV locales y caché en **Supabase**. Si ESPN no responde, la web conserva el acceso a los datos CSV disponibles.
 
 ## Pantallas
 Móvil: una columna con barra inferior. Escritorio (≥1024 px): menú superior, buscador de equipos y ligas, y dos columnas (lista de partidos + ficha) con scroll independiente.
 
 Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (General gratis / Goles / Tiros / Córners / Tarjetas Premium) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
 
-## Probar en local (sin claves = modo DEMO)
+## Probar en local (ESPN no necesita claves)
 ```bash
 npm install
 cp .env.example .env.local
@@ -17,10 +17,9 @@ npm run dev        # http://localhost:3000
 
 ## Despliegue paso a paso
 1. **Supabase**: crea un proyecto → *SQL Editor* → pega y ejecuta `supabase/schema.sql`. En *Project Settings → API* copia la **URL** y la **service_role key**.
-2. **API‑Football**: crea cuenta en dashboard.api-football.com y copia tu API key (acceso directo, cabecera `x-apisports-key`).
-3. **GitHub**: sube esta carpeta a un repositorio.
-4. **Vercel**: *Add New → Project* → importa el repo. En *Environment Variables* añade `API_FOOTBALL_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL` (la misma URL) y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la clave *anon / publishable* de Supabase) (y los opcionales de `.env.example`). *Deploy*.
-5. Abre `/estado` en tu web: debe mostrar API‑Football y Supabase como “Conectada”.
+2. **GitHub**: sube esta carpeta a un repositorio.
+3. **Vercel**: *Add New → Project* → importa el repo. En *Environment Variables* añade `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL` (la misma URL) y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la clave *anon / publishable* de Supabase), además de los opcionales de `.env.example`. ESPN funciona sin clave.
+4. Abre `/estado` para comprobar la fuente ESPN y la configuración de Supabase. Para desactivar ESPN y usar solo los CSV, configura `USE_ESPN=false`.
 
 > Las claves solo se usan en servidor; nunca uses prefijo `NEXT_PUBLIC_`.
 
@@ -54,21 +53,19 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - Traducción al inglés: navegación, menús, ajustes, acceso, filtros, pestañas y los títulos y etiquetas principales. Algunos textos largos y mensajes de la API siguen en español.
 - **No incluido**: “Continuar con Telegram”. Supabase no lo trae de serie; requeriría crear un bot en @BotFather y un servicio propio de verificación.
 
-## Cuota de API (importante)
-- Plan gratis: 100 solicitudes/día y 10/min. Usa `API_MIN_INTERVAL_MS=6500`, `FORM_MATCHES=3`, `LEAGUE_IDS=<una liga>` (p. ej. `140` La Liga) y `MAX_ANALYSIS_FIXTURES=4`.
-- Caché: listado de hoy 90 s · otros días 15 min · partido en vivo 45 s · terminado 30 días · estadísticas de partidos terminados **para siempre** (tabla `fixture_stats`) · ligas 24 h · predicciones 12 h.
-- Si quedan menos de `QUOTA_RESERVE` solicitudes, solo se hacen llamadas esenciales (listado y ficha) y se sirven datos en caché.
-- Tiros/Córners/Tarjetas gastan llamadas la primera vez (1 + N por equipo); después quedan guardadas.
-- Vercel Hobby limita las funciones a 60 s: con plan gratis de API y pausa de 6,5 s, la primera carga de un partido puede tardar.
-
-## Limitación del plan gratuito de API‑Football
-El plan gratuito solo da acceso a las temporadas 2022–2024 en las consultas por temporada. Con él funcionan: listado de partidos del día, ficha, 1X2 y consejo de la predicción, y goles estimados (con las medias de los últimos 5 partidos que devuelve la predicción). **No** se pueden calcular promedios de tiros, tiros a puerta, córners y tarjetas, ni medias de liga, porque requieren la temporada actual. Con un plan de pago (ver precios vigentes en api-football.com/pricing) se activan solos, sin cambiar el código. La app recuerda el bloqueo 6 h para no gastar cuota.
+## Fuente y cobertura
+- ESPN es la fuente principal para las nueve competiciones configuradas en `src/lib/espn.ts`: La Liga, Premier League, Serie A, Bundesliga, Ligue 1, Champions League, Europa League, Conference League y Supercopa de la UEFA. Los CSV se conservan como respaldo y se pueden usar solos con `USE_ESPN=false`.
+- ESPN no requiere clave, pero las rutas públicas utilizadas no tienen un contrato de disponibilidad garantizado y podrían cambiar.
+- En las competiciones UEFA, el calendario separa fase de liga y eliminatorias; las eliminatorias agrupan los partidos por enfrentamiento y muestran el global cuando hay ida y vuelta. La clasificación solo aparece en fase de liga. Si ESPN no identifica una fase, los partidos se agrupan por fecha sin inferir jornadas o rondas.
+- Cuando ESPN no ofrece estadísticas de partido, se intenta completar con los CSV. Si no existen datos suficientes, se muestran guiones o avisos, no cifras inventadas.
+- La clasificación se calcula con los resultados de la temporada. Las zonas oficiales de clasificación no se obtienen actualmente de ESPN.
+- `FORM_MATCHES`, `LEAGUE_IDS` y `MAX_ANALYSIS_FIXTURES` permiten ajustar el tamaño del análisis y las ligas consideradas.
 
 ## Cómo se calculan los datos (no se inventa nada)
 - **Esperado por equipo** = media(lo que produce, lo que el rival concede) en sus últimos N partidos; total = suma.
-- **Probabilidades** de más de 1,5/2,5 y ambos marcan: modelo de Poisson. **1X2**: predicciones de API‑Football si existen; si no, Poisson.
+- **Probabilidades** de más de 1,5/2,5, ambos marcan y 1X2: modelo de Poisson calculado a partir de los partidos disponibles.
 - **Tendencias**: % de los últimos N partidos de cada equipo en que el total superó la línea; “Partido” promedia ambos.
-- **Media de liga**: goles desde la clasificación; resto desde los partidos ya guardados en Supabase (solo con ≥ `MIN_LEAGUE_SAMPLE`). Colores ±10%.
+- **Media de liga**: se calcula con los partidos disponibles de ESPN o, si faltan, con los CSV.
 - **Los 3 mejores**: mayor probabilidad 1X2 entre los próximos partidos analizados. Estimación, no pick seguro.
 - Sin datos suficientes se muestra “—” o un aviso.
 
@@ -76,10 +73,10 @@ El plan gratuito solo da acceso a las temporadas 2022–2024 en las consultas po
 - Marca: `src/lib/config.ts` y `src/components/Logo.tsx`.
 - Iconos: `src/components/icons.tsx` (un único archivo).
 - Colores: `tailwind.config.ts`.
-- Datos: `src/lib/apifootball.ts`, `src/lib/metrics.ts`.
+- Datos: `src/lib/espn.ts`, `src/lib/apifootball.ts` (fachada con respaldo CSV) y `src/lib/metrics.ts`.
 
 ## Pendiente / decisiones tuyas
-Autenticación y planes premium (no incluidos), banner promocional, estadísticas en vivo más allá del marcador, y revisar los términos de API‑Football si publicas la web.
+Estadísticas en vivo más allá del marcador y revisar las condiciones de uso de los datos de ESPN si publicas la web.
 
 ## Diferencias conscientes respecto a la referencia
 - No hay bloqueos “Solo para suscriptores”: todas las estadísticas están visibles. El banner/página Premium es una maqueta (sin pagos) y se oculta con `SHOW_PREMIUM_BANNER=false`.

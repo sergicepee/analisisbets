@@ -11,10 +11,9 @@ import { Workspace } from "@/components/Workspace";
 import { Shield } from "@/components/Shield";
 import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconNext, IconShoe, IconSwap, IconTarget } from "@/components/icons";
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
-import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
+import { getFixture, getLeagueAverages, getTeamProfile } from "@/lib/apifootball";
 import { getUser } from "@/lib/auth";
-import { getCsvStatsForFixture, getCsvTeamProfile } from "@/lib/csvHistory";
-import { csvTeamId } from "@/lib/csvFixtures";
+import { getCsvStatsForFixture } from "@/lib/csvHistory";
 import { getSubscriberAccess } from "@/lib/subscriptions";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
@@ -37,15 +36,6 @@ const OUTCOME_COLORS = {
 export const maxDuration = 60;
 
 const TABS = [["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget], ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard]] as const;
-/** Goles esperados: con nuestros datos si hay; si no, con las medias que da la predicción de la API. */
-function goalsExpected(pa: TeamProfile, pb: TeamProfile, pred: Awaited<ReturnType<typeof getPrediction>>) {
-  const own = expectedFor(pa, pb, "goals");
-  if (own) return { ...own, fromPrediction: false };
-  const l = pred?.last5;
-  if (!l) return null;
-  const home = (l.home.gf + l.away.ga) / 2, away = (l.away.gf + l.home.ga) / 2;
-  return { home, away, total: home + away, fromPrediction: true };
-}
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
 
 export default async function MatchPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
@@ -59,7 +49,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   const premiumLocked = tab !== "general" && !isSubscriber;
 
   let f: Fixture | null = null;
-  try { f = await getFixture(id); } catch (e) {
+  try { f = await getFixture(id, Number(searchParams.league) || undefined, date); } catch (e) {
     return <><Header back={`/?date=${date}`} /><main className="p-4"><Notice tone="warn">No se pudo cargar el partido: {errMsg(e)}</Notice></main></>;
   }
   if (!f) notFound();
@@ -78,17 +68,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     grab(getTeamProfile(f.away.id, includeStats, f.season, f.timestamp, f.leagueId, f.away.name)),
   ]);
   const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
-  const [csvHomeForm, csvAwayForm] = await Promise.all([
-    getCsvTeamProfile(csvTeamId(f.home.name), false, f.timestamp, f.leagueId).catch(() => EMPTY(f.home.id)),
-    getCsvTeamProfile(csvTeamId(f.away.name), false, f.timestamp, f.leagueId).catch(() => EMPTY(f.away.id)),
-  ]);
-  const mergeForm = (primary: TeamProfile, fallback: TeamProfile): TeamProfile => {
-    const rows = new Map<number, (typeof primary.rows)[number]>();
-    fallback.rows.forEach((row) => rows.set(row.fixtureId, row));
-    primary.rows.forEach((row) => rows.set(row.fixtureId, row));
-    return { ...primary, rows: [...rows.values()].sort((a, b) => a.ts - b.ts).slice(-FORM_MATCHES) };
-  };
-  const headerPa = mergeForm(pa, csvHomeForm), headerPb = mergeForm(pb, csvAwayForm);
+  const headerPa = pa, headerPb = pb;
   const g = statusGroup(f);
   const csvMatchStats = f.id < 0 ? await getCsvStatsForFixture(f) : null;
   const cardCounts = csvMatchStats
@@ -112,10 +92,10 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}
-        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
+        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}&league=${f.leagueId}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
-            <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
+            <Link key={key} href={`/match/${id}?tab=${key}&date=${date}&league=${f.leagueId}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
               <Icon className="h-4 w-4" /><I18nText text={label} />
             </Link>
           ))}
@@ -136,7 +116,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 // ───────────── Cabecera ─────────────
 function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initialFavorite }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string; isAuthenticated: boolean; initialFavorite: boolean }) {
   const g = statusGroup(f);
-  const csvLive = isWithinCsvLiveWindow(f);
+  const csvLive = f.id < 0 && isWithinCsvLiveWindow(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const halftimeScore = f.htHome !== null && f.htAway !== null ? `${f.htHome} - ${f.htAway}` : null;
   const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
@@ -212,13 +192,10 @@ function TeamCol({ teamId, leagueId, season, returnTo, name, logo, yellowCards, 
 // ───────────── General ─────────────
 async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
   const ownGoalEstimate = expectedFor(pa, pb, "goals");
-  const [pred, lavg] = await Promise.all([
-    ownGoalEstimate ? Promise.resolve(null) : getPrediction(f.id).catch(() => null),
-    getLeagueAverages(f.leagueId, f.season).catch(() => null),
-  ]);
-  const eg = ownGoalEstimate ? { ...ownGoalEstimate, fromPrediction: false } : goalsExpected(pa, pb, pred);
+  const lavg = await getLeagueAverages(f.leagueId, f.season).catch(() => null);
+  const eg = ownGoalEstimate;
   const model = eg ? poissonModel(eg.home, eg.away) : null;
-  const p1x2 = model ?? pred;
+  const p1x2 = model;
   const ex = (m: Metric) => expectedFor(pa, pb, m)?.total ?? null;
   const L = lavg;
 
@@ -231,7 +208,6 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
   return (
     <div className="min-w-0 space-y-4">
-      {eg?.fromPrediction && <Notice><I18nText text={`Goles estimados con la media de los últimos ${pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).`} /></Notice>}
       {p1x2 ? (
         <div>
           <div className="mb-1.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 text-[11px] font-bold leading-tight sm:text-sm">
@@ -244,7 +220,6 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
             <div className="border-r-2 border-bg" style={{ width: `${p1x2.draw}%`, backgroundColor: OUTCOME_COLORS.draw }} />
             <div style={{ width: `${p1x2.away}%`, backgroundColor: OUTCOME_COLORS.away }} />
           </div>
-          {!model && pred?.advice && <p className="mt-2 text-xs text-muted"><I18nText text="Consejo de API-Football:" /> {pred.advice}</p>}
         </div>
       ) : <Notice tone="warn"><I18nText text="Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada)." /></Notice>}
 
@@ -268,9 +243,7 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
 // ───────────── Goles ─────────────
 async function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfile }) {
-  const ownGoalEstimate = expectedFor(pa, pb, "goals");
-  const pred = ownGoalEstimate ? null : await getPrediction(f.id).catch(() => null);
-  const eg = ownGoalEstimate ? { ...ownGoalEstimate, fromPrediction: false } : goalsExpected(pa, pb, pred);
+  const eg = expectedFor(pa, pb, "goals");
   const h1 = halfExpected(pa, pb, 1), h2 = halfExpected(pa, pb, 2);
   const goalExpected = expectedFor(pa, pb, "goals");
   const model = goalExpected ? poissonModel(goalExpected.home, goalExpected.away) : null;
@@ -309,7 +282,7 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
   const noData = metrics.every((m) => expectedFor(pa, pb, m) === null);
   return (
     <div className="space-y-4">
-      {noData && <Notice tone="warn"><I18nText text="Sin estadísticas suficientes para este partido: la liga puede no tener cobertura de estadísticas de partido, o la cuota de la API está agotada." /></Notice>}
+      {noData && <Notice tone="warn"><I18nText text="ESPN y los CSV no ofrecen estadísticas suficientes para este partido." /></Notice>}
       {metrics.map((m) => {
         const e = expectedFor(pa, pb, m);
         return <TeamPair key={m} title={TITLE[m][0]} totalLabel={TITLE[m][1]} total={e?.total ?? null} home={e?.home ?? null} away={e?.away ?? null} {...tp} />;

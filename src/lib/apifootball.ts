@@ -1,72 +1,34 @@
 import "server-only";
-import { cached, cacheGet, cacheSet } from "./cache";
-import { API_MIN_INTERVAL_MS, FORM_MATCHES, QUOTA_RESERVE, apiEnabled } from "./config";
+import { apiEnabled } from "./config";
 import { getTz } from "./prefs";
-import { getStored, leagueAvgFromStore, saveStored } from "./statsStore";
 import type {
-  Fixture, LeagueAvg, LeagueInfo, MatchStat, Prediction, StoredStats, TeamProfile, TeamRow,
+  Fixture, LeagueAvg, LeagueInfo, StoredStats, TeamProfile,
 } from "./types";
-import { statusGroup } from "./format";
 import { canonicalTeamName, csvTeamId, getCsvFixture, getCsvFixtures, getCsvFixturesByDate } from "./csvFixtures";
 import { getCsvLeagueAverage, getCsvLeagueFixtures, getCsvLeagueSeasons, getCsvLeagueTeams, getCsvStatsForFixture, getCsvTeamMatchSeries, getCsvTeamProfile } from "./csvHistory";
 import { CSV_LEAGUES } from "./csvLeagues";
-
-const BASE = "https://v3.football.api-sports.io";
-const H = 3600, D = 86400;
-
-export class ApiError extends Error {
-  constructor(msg: string, public kind: "quota" | "rate" | "config" | "api" = "api") { super(msg); }
-}
-
-// ── Cuota y throttling ──
-export async function getQuota(): Promise<number | null> {
-  const q = await cacheGet<{ remaining: number }>("meta:quota", true);
-  return q ? q.remaining : null;
-}
-let chain: Promise<unknown> = Promise.resolve();
-let lastCall = 0;
-function throttle<T>(fn: () => Promise<T>): Promise<T> {
-  if (!API_MIN_INTERVAL_MS) return fn();
-  const run = chain.then(async () => {
-    const wait = lastCall + API_MIN_INTERVAL_MS - Date.now();
-    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-    lastCall = Date.now();
-    return fn();
-  });
-  chain = run.catch(() => undefined);
-  return run;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function call(path: string, params: Record<string, string | number>, core = false): Promise<any[]> {
-  if (!apiEnabled) throw new ApiError("API-Football está desactivada o falta API_FOOTBALL_KEY", "config");
-  if (!core) {
-    const q = await getQuota();
-    if (q !== null && q <= QUOTA_RESERVE) throw new ApiError(`Cuota diaria casi agotada (${q} restantes)`, "quota");
-  }
-  const url = new URL(BASE + path);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
-  const res = await throttle(() =>
-    fetch(url, { headers: { "x-apisports-key": process.env.API_FOOTBALL_KEY as string }, cache: "no-store" }),
-  );
-  const rem = res.headers.get("x-ratelimit-requests-remaining");
-  if (rem !== null) await cacheSet("meta:quota", { remaining: Number(rem), at: Date.now() }, 2 * D);
-  if (res.status === 429) throw new ApiError("Límite de solicitudes alcanzado", "rate");
-  if (!res.ok) throw new ApiError(`API-Football respondió ${res.status}`);
-  const j = await res.json();
-  const errs = j.errors;
-  if (errs && (Array.isArray(errs) ? errs.length : Object.keys(errs).length)) {
-    const text = JSON.stringify(errs);
-    throw new ApiError(text, /request|limit|quota/i.test(text) ? "quota" : "api");
-  }
-  return j.response ?? [];
-}
+import {
+  getEspnFixture,
+  getEspnFixtureStats,
+  getEspnFixturesByDate,
+  getEspnLeagueCountry,
+  getEspnLeagueAverage,
+  getEspnLeagueFixtures,
+  getEspnLeagueSeasons,
+  getEspnLeagueTopScorers,
+  getEspnLeagues,
+  getEspnSeasonMatchSeries,
+  getEspnTeams,
+  getEspnTeamFixtures,
+  getEspnTeamProfile,
+  searchEspnTeams,
+} from "./espn";
 
 function teamNameKey(name: string): string {
   return canonicalTeamName(name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-// API-Football publica las imágenes con esta URL y el ID permanente del equipo.
+// ESPN and CSV team IDs differ; these stable image IDs preserve CSV badges.
 // Este mapa permite mostrar escudos a los partidos del CSV también en local,
 // donde puede no estar configurada la clave para consultar /teams.
 const knownTeamIds: Record<string, number> = {
@@ -136,8 +98,7 @@ function logoTeamKey(name: string): string {
 function repositoryTeamLogo(name: string, country: string): string | null {
   const countrySlug = logoCountrySlugs[country.toLowerCase()];
   if (!countrySlug) return null;
-  // Logos are served from the repository's country/team SVG folders; this does
-  // not call the API-Football data endpoints or use its request quota.
+  // Logos are served from the repository's country/team SVG folders.
   const label = logoNameAliases[logoTeamKey(name)] ?? name.trim().replace(/\s+/g, "_");
   const file = `${label}.svg`;
   return `https://raw.githubusercontent.com/JoseArroyave/football-logos/main/logos/${countrySlug}/${encodeURIComponent(file)}`;
@@ -180,6 +141,38 @@ async function addCsvTeamLogos(fixtures: Fixture[]): Promise<Fixture[]> {
   }));
 }
 
+function fixtureKey(fixture: Fixture): string {
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(fixture.timestamp * 1000);
+  return [
+    fixture.leagueId,
+    date,
+    teamNameKey(fixture.home.name),
+    teamNameKey(fixture.away.name),
+  ].join("|");
+}
+
+function mergeFixtureSources(primary: Fixture[], fallback: Fixture[]): Fixture[] {
+  const seenIds = new Set<number>();
+  const seenMatches = new Set<string>();
+  return [...primary, ...fallback]
+    .filter((fixture) => {
+      const key = fixtureKey(fixture);
+      if (seenIds.has(fixture.id) || seenMatches.has(key)) return false;
+      seenIds.add(fixture.id);
+      seenMatches.add(key);
+      return true;
+    })
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function addEspnTeamLogos(fixtures: Fixture[]): Fixture[] {
+  return fixtures.map((fixture) => ({
+    ...fixture,
+    home: { ...fixture.home, logoFallback: getTeamLogoFallbackUrl(fixture.home.name, fixture.country) },
+    away: { ...fixture.away, logoFallback: getTeamLogoFallbackUrl(fixture.away.name, fixture.country) },
+  }));
+}
+
 // In CSV mode, a kickoff time alone is not enough to call a fixture finished.
 // The fixtures CSV supplies the schedule; football-data supplies final scores and statistics.
 async function updateCsvFixtureStates(fixtures: Fixture[]): Promise<Fixture[]> {
@@ -190,7 +183,7 @@ async function updateCsvFixtureStates(fixtures: Fixture[]): Promise<Fixture[]> {
       return { ...fixture, statusShort: "NS", statusLong: "Not Started", elapsed: null, goalsHome: null, goalsAway: null };
     }
     const stats = await getCsvStatsForFixture(fixture);
-    if (stats?.hasData) {
+    if (stats) {
       return {
         ...fixture, statusShort: "FT", statusLong: "Match Finished",
         goalsHome: stats.goalsHome, goalsAway: stats.goalsAway,
@@ -201,229 +194,161 @@ async function updateCsvFixtureStates(fixtures: Fixture[]): Promise<Fixture[]> {
     return {
       ...fixture, statusShort: "NS", statusLong: "Pendiente de actualizar",
       elapsed: null, goalsHome: null, goalsAway: null,
-      redCardsHome: stats?.redHome, redCardsAway: stats?.redAway,
     };
   }));
 }
 
-// ── Normalización ──
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normFixture(r: any): Fixture {
-  return {
-    id: r.fixture.id, timestamp: r.fixture.timestamp,
-    leagueId: r.league.id, leagueName: r.league.name, country: r.league.country,
-    flag: r.league.flag ?? null, leagueLogo: r.league.logo ?? null, season: r.league.season, round: r.league.round ?? "",
-    venue: r.fixture.venue?.name ?? null,
-    statusShort: r.fixture.status.short, statusLong: r.fixture.status.long, elapsed: r.fixture.status.elapsed ?? null,
-    home: { id: r.teams.home.id, name: r.teams.home.name, logo: r.teams.home.logo ?? null },
-    away: { id: r.teams.away.id, name: r.teams.away.name, logo: r.teams.away.logo ?? null },
-    goalsHome: r.goals?.home ?? null, goalsAway: r.goals?.away ?? null,
-    htHome: r.score?.halftime?.home ?? null, htAway: r.score?.halftime?.away ?? null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    events: (r.events ?? []).map((e: any) => ({
-      minute: e.time?.elapsed ?? 0, extra: e.time?.extra ?? null, teamId: e.team?.id,
-      player: e.player?.name ?? "", type: e.type, detail: e.detail,
-    })),
-  };
-}
-
 // ── Partidos ──
 export async function getFixturesByDate(date: string, isToday: boolean): Promise<Fixture[]> {
-  const localFixtures = await getCsvFixturesByDate(date);
-  // Si los CSV ya tienen el calendario de esa fecha, son la fuente para todas
-  // las ligas incluidas, incluso si Vercel conserva USE_API_FOOTBALL=true.
-  // Así no se pierde el resto del calendario ni se mezclan fuentes distintas.
-  if (!apiEnabled || localFixtures.length > 0) {
-    return updateCsvFixtureStates(await addCsvTeamLogos(localFixtures));
-  }
+  void isToday;
+  let localFixtures: Fixture[] = [];
   try {
-    const apiFixtures = await cached(`fixtures:${date}:${getTz()}`, isToday ? 90 : 15 * 60, async () =>
-      (await call("/fixtures", { date, timezone: getTz() }, true)).map(normFixture),
-    );
-    return apiFixtures;
+    localFixtures = await getCsvFixturesByDate(date);
   } catch (error) {
-    if (localFixtures.length) return localFixtures;
-    throw error;
+    console.error(`No se pudo cargar el respaldo CSV para ${date}:`, error);
   }
+  if (apiEnabled) {
+    try {
+      const espnFixtures = await getEspnFixturesByDate(date);
+      const fallbackFixtures = await updateCsvFixtureStates(await addCsvTeamLogos(localFixtures));
+      return mergeFixtureSources(addEspnTeamLogos(espnFixtures), fallbackFixtures);
+    } catch (error) {
+      if (!localFixtures.length) throw error;
+      console.error(`ESPN no disponible para ${date}; se usa el calendario CSV:`, error);
+    }
+  }
+  return updateCsvFixtureStates(await addCsvTeamLogos(localFixtures));
 }
 
-export async function getFixture(id: number): Promise<Fixture | null> {
+export async function getFixture(id: number, leagueId?: number, date?: string): Promise<Fixture | null> {
+  if (apiEnabled && id > 0) {
+    try {
+      const fixture = await getEspnFixture(id, leagueId, date);
+      if (fixture) return fixture;
+    } catch (error) {
+      console.error(`No se pudo cargar el partido ESPN ${id}:`, error);
+      throw error;
+    }
+  }
   const csvFixture = await getCsvFixture(id);
   if (csvFixture) return (await updateCsvFixtureStates(await addCsvTeamLogos([csvFixture])))[0];
-  if (!apiEnabled) return null;
-  return cached<Fixture | null>(
-    `fixture:${id}:${getTz()}`,
-    (f) => {
-      if (!f) return 60;
-      const g = statusGroup(f);
-      return g === "finished" ? 30 * D : g === "live" ? 45 : 10 * 60;
-    },
-    async () => {
-      const r = await call("/fixtures", { id, timezone: getTz() }, true);
-      return r[0] ? normFixture(r[0]) : null;
-    },
-  );
-}
-
-// ── Estadísticas reales por partido (se guardan para siempre) ──
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseStat(arr: any[] | undefined): MatchStat {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const get = (t: string): number | null => {
-    const v = arr?.find((x: any) => x.type === t)?.value;
-    if (v === null || v === undefined) return null;
-    const n = typeof v === "string" ? parseFloat(v) : v;
-    return Number.isFinite(n) ? n : null;
-  };
-  const shots = get("Total Shots");
-  const y = get("Yellow Cards"), r = get("Red Cards");
-  const cards = y === null && r === null ? (shots !== null ? 0 : null) : (y ?? 0) + (r ?? 0);
-  return { shots, shotsOn: get("Shots on Goal"), corners: get("Corner Kicks"), cards };
-}
-
-async function getFixtureStats(f: Fixture): Promise<StoredStats> {
-  if (f.id < 0) {
-    const historical = await getCsvStatsForFixture(f);
-    if (historical) return historical;
-    return {
-      fixtureId: f.id, leagueId: f.leagueId, season: f.season, homeId: f.home.id, awayId: f.away.id,
-      home: { shots: null, shotsOn: null, corners: null, cards: null },
-      away: { shots: null, shotsOn: null, corners: null, cards: null },
-      goalsHome: f.goalsHome ?? 0, goalsAway: f.goalsAway ?? 0, hasData: false,
-    };
-  }
-  const hit = await getStored(f.id);
-  if (hit) return hit;
-  const resp = await call("/fixtures/statistics", { fixture: f.id });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const find = (id: number) => resp.find((x: any) => x.team?.id === id)?.statistics;
-  const home = parseStat(find(f.home.id)), away = parseStat(find(f.away.id));
-  const hasData = resp.length > 0 && (home.shots !== null || home.corners !== null);
-  const s: StoredStats = {
-    fixtureId: f.id, leagueId: f.leagueId, season: f.season, homeId: f.home.id, awayId: f.away.id,
-    home, away, goalsHome: f.goalsHome ?? 0, goalsAway: f.goalsAway ?? 0, hasData,
-  };
-  await saveStored(s);
-  return s;
+  return null;
 }
 
 /** Estadísticas finales de un partido para liquidar mercados históricos. */
 export async function getFixtureStatsFor(f: Fixture): Promise<StoredStats> {
-  return getFixtureStats(f);
-}
-
-const planBlocked = async () => !!(await cacheGet("meta:planblock"));
-
-/** Últimos N partidos terminados. Si el plan no permite `last`, usa la temporada completa y recorta. */
-async function fetchLast(teamId: number, season?: number, leagueId?: number): Promise<Fixture[]> {
-  if (await planBlocked()) throw new ApiError("Free plans do not have access to this season", "api");
-  const league: Record<string, string | number> = leagueId ? { league: leagueId } : {};
-  try {
-    return (await call("/fixtures", { team: teamId, ...league, last: FORM_MATCHES, timezone: getTz() }, true)).map(normFixture);
-  } catch (e) {
-    if (!season || !(e instanceof ApiError) || e.kind !== "api") throw e;
+  let csvStats: Awaited<ReturnType<typeof getCsvStatsForFixture>> = null;
+  let csvStatsLoaded = false;
+  const loadCsvStats = async () => {
+    if (csvStatsLoaded) return csvStats;
+    csvStatsLoaded = true;
     try {
-      const all = (await call("/fixtures", { team: teamId, ...league, season, status: "FT-AET-PEN", timezone: getTz() }, true)).map(normFixture);
-      return all.sort((a, b) => a.timestamp - b.timestamp).slice(-FORM_MATCHES);
-    } catch (e2) {
-      // El plan no permite esta temporada: lo recordamos 6 h para no gastar cuota repitiendo la llamada.
-      if (e2 instanceof ApiError && /Free plans/i.test(e2.message)) await cacheSet("meta:planblock", true, 6 * H);
-      throw e2;
+      csvStats = await getCsvStatsForFixture(f);
+    } catch (error) {
+      console.error(`No se pudieron cargar las estadísticas CSV del partido ${f.id}:`, error);
+    }
+    return csvStats;
+  };
+  if (apiEnabled && f.id > 0) {
+    try {
+      const stats = await getEspnFixtureStats(f);
+      if (stats?.hasData) {
+        csvStats = await loadCsvStats();
+        if (!csvStats) return stats;
+        const merge = (primary: StoredStats["home"], fallback: StoredStats["home"]) => ({
+          shots: primary.shots ?? fallback.shots,
+          shotsOn: primary.shotsOn ?? fallback.shotsOn,
+          corners: primary.corners ?? fallback.corners,
+          cards: primary.cards ?? fallback.cards,
+        });
+        const home = merge(stats.home, csvStats.home), away = merge(stats.away, csvStats.away);
+        return {
+          ...stats, home, away,
+          hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
+        };
+      }
+    } catch (error) {
+      console.error(`No se pudieron cargar las estadísticas ESPN del partido ${f.id}:`, error);
     }
   }
+  csvStats = await loadCsvStats();
+  if (csvStats) return csvStats;
+  return {
+    fixtureId: f.id, leagueId: f.leagueId, season: f.season,
+    homeId: f.home.id, awayId: f.away.id,
+    home: { shots: null, shotsOn: null, corners: null, cards: null },
+    away: { shots: null, shotsOn: null, corners: null, cards: null },
+    goalsHome: f.goalsHome ?? 0, goalsAway: f.goalsAway ?? 0, hasData: false,
+  };
 }
 
 // ── Perfil de un equipo: últimos N partidos (+ estadísticas reales opcionales) ──
 export async function getTeamProfile(teamId: number, withStats = true, season?: number, beforeTimestamp = Infinity, leagueId?: number, teamName?: string): Promise<TeamProfile> {
   if (teamId < 0) return getCsvTeamProfile(teamId, withStats, beforeTimestamp, leagueId);
+  let espnProfile: TeamProfile | null = null;
+  if (apiEnabled) {
+    try {
+      const profile = await getEspnTeamProfile(teamId, withStats, season, beforeTimestamp, leagueId);
+      if (profile.rows.length) {
+        const hasStats = profile.rows.some((row) => row.sFor !== null || row.sAgainst !== null);
+        if (!withStats || hasStats) return profile;
+        espnProfile = profile;
+      }
+    } catch (error) {
+      console.error(`No se pudo cargar el perfil ESPN del equipo ${teamId}:`, error);
+    }
+  }
   const localProfile = teamName
-    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId, season)
+    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId, season).catch((error: unknown) => {
+      console.error(`No se pudo cargar el perfil CSV del equipo ${teamName}:`, error);
+      return null;
+    })
     : null;
-  if (localProfile && localProfile.rows.length >= 3) return { ...localProfile, teamId };
-  if (!apiEnabled) return localProfile ? { ...localProfile, teamId } : { teamId, rows: [] };
-  const cutoffKey = beforeTimestamp < Date.now() / 1000 ? Math.floor(beforeTimestamp / 86400) : "future";
-  const key = `profile:${teamId}:${leagueId ?? "all"}:${cutoffKey}:${FORM_MATCHES}:${withStats ? "s" : "g"}`;
-  return cached<TeamProfile>(
-    key,
-    (p) => (p.rows.some((r) => withStats && !r.sFor) ? 10 * 60 : 6 * H),
-    async () => {
-      const last = await cached<Fixture[]>(`last:${teamId}:${leagueId ?? "all"}:${FORM_MATCHES}:${getTz()}`, 6 * H, () => fetchLast(teamId, season, leagueId));
-      const done = last.filter((f) => f.timestamp < beforeTimestamp && ["FT", "AET", "PEN"].includes(f.statusShort) && f.goalsHome !== null && f.goalsAway !== null);
-      const rows: TeamRow[] = await Promise.all(
-        done.map(async (f) => {
-          const isHome = f.home.id === teamId;
-          const gf = (isHome ? f.goalsHome : f.goalsAway) as number;
-          const ga = (isHome ? f.goalsAway : f.goalsHome) as number;
-          let st: StoredStats | null = null;
-          if (withStats) st = await getFixtureStats(f).catch(() => null);
-          const ok = st?.hasData;
-          return {
-            fixtureId: f.id, ts: f.timestamp, isHome, goalsFor: gf, goalsAgainst: ga,
-            htFor: isHome ? f.htHome : f.htAway, htAgainst: isHome ? f.htAway : f.htHome,
-            result: gf > ga ? "W" : gf === ga ? "D" : "L",
-            sFor: ok ? (isHome ? st!.home : st!.away) : null,
-            sAgainst: ok ? (isHome ? st!.away : st!.home) : null,
-          } as TeamRow;
-        }),
-      );
-      return { teamId, rows: rows.sort((a, b) => a.ts - b.ts) };
-    },
-  );
-}
-
-// ── Predicciones de API-Football (1X2 y consejo) ──
-export async function getPrediction(fixtureId: number): Promise<Prediction | null> {
-  if (fixtureId < 0) return null;
-  if (!apiEnabled) return null;
-  return cached<Prediction | null>(`pred2:${fixtureId}`, 12 * H, async () => {
-    const r = await call("/predictions", { fixture: fixtureId });
-    const p = r[0]?.predictions;
-    if (!p?.percent) return null;
-    const n = (x: string) => parseFloat(String(x).replace("%", ""));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const l5 = (t: any) => {
-      const g = t?.last_5?.goals;
-      const gf = parseFloat(g?.for?.average), ga = parseFloat(g?.against?.average);
-      return Number.isFinite(gf) && Number.isFinite(ga) ? { gf, ga, n: Number(t.last_5.played) || 5 } : null;
-    };
-    const h = l5(r[0]?.teams?.home), a = l5(r[0]?.teams?.away);
-    return { home: n(p.percent.home), draw: n(p.percent.draw), away: n(p.percent.away), advice: p.advice ?? null, last5: h && a ? { home: h, away: a } : null };
-  });
+  if (localProfile?.rows.length && localProfile.rows.some((row) => row.sFor !== null || row.sAgainst !== null)) {
+    return { ...localProfile, teamId };
+  }
+  return espnProfile ?? (localProfile ? { ...localProfile, teamId } : { teamId, rows: [] });
 }
 
 // ── Media de liga ──
 export async function getLeagueAverages(leagueId: number, season: number): Promise<LeagueAvg | null> {
-  const csvAverage = await getCsvLeagueAverage(leagueId, season);
-  if (csvAverage) return csvAverage;
-  if (!apiEnabled) return null;
-  const own = await leagueAvgFromStore(leagueId, season);
-  // Goles por partido: de la clasificación (muestra grande, 1 llamada/día)
-  const goals = (await planBlocked()) ? null : await cached<number | null>(`lgoals:${leagueId}:${season}`, D, async () => {
-    const r = await call("/standings", { league: leagueId, season });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const teams: any[] = (r[0]?.league?.standings ?? []).flat();
-    const played = teams.reduce((a, t) => a + (t.all?.played ?? 0), 0);
-    const gf = teams.reduce((a, t) => a + (t.all?.goals?.for ?? 0), 0);
-    return played >= 10 ? gf / (played / 2) : null;
-  }).catch(() => null);
-  if (!own && goals === null) return null;
-  return {
-    n: own?.n ?? 0, goals: goals ?? own?.goals ?? null,
-    shots: own?.shots ?? null, shotsOn: own?.shotsOn ?? null, corners: own?.corners ?? null, cards: own?.cards ?? null,
-    over15: own?.over15 ?? null, over25: own?.over25 ?? null, btts: own?.btts ?? null,
-  };
+  let average: LeagueAvg | null = null;
+  if (apiEnabled) {
+    try {
+      average = await getEspnLeagueAverage(leagueId, season);
+    } catch (error) {
+      console.error(`No se pudo calcular la media ESPN de la liga ${leagueId}:`, error);
+    }
+  }
+  try {
+    const csvAverage = await getCsvLeagueAverage(leagueId, season);
+    if (!average) return csvAverage;
+    if (!csvAverage) return average;
+    return {
+      ...average,
+      goals: average.goals ?? csvAverage.goals,
+      shots: average.shots ?? csvAverage.shots,
+      shotsOn: average.shotsOn ?? csvAverage.shotsOn,
+      corners: average.corners ?? csvAverage.corners,
+      cards: average.cards ?? csvAverage.cards,
+      over15: average.over15 ?? csvAverage.over15,
+      over25: average.over25 ?? csvAverage.over25,
+      btts: average.btts ?? csvAverage.btts,
+    };
+  } catch (error) {
+    console.error(`No se pudo calcular la media CSV de la liga ${leagueId}:`, error);
+    return average;
+  }
 }
 
 // ── Ligas ──
 export async function getLeagues(): Promise<LeagueInfo[]> {
-  if (!apiEnabled) return CSV_LEAGUES.map((l) => ({ id: l.id, name: l.name, type: "League", logo: `https://media.api-sports.io/football/leagues/${l.id}.png`, country: l.country, flag: l.flag }));
-  return cached<LeagueInfo[]>("leagues:current", D, async () =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (await call("/leagues", { current: "true" }, true)).map((r: any) => ({
-      id: r.league.id, name: r.league.name, type: r.league.type, logo: r.league.logo ?? null,
-      country: r.country?.name ?? "World", flag: r.country?.flag ?? null,
-    })),
-  );
+  if (apiEnabled) return getEspnLeagues();
+  return CSV_LEAGUES.map((league) => ({
+    id: league.id, name: league.name, type: "League",
+    logo: `https://media.api-sports.io/football/leagues/${league.id}.png`,
+    country: league.country, flag: league.flag,
+  }));
 }
 
 // ── Equipos: búsqueda y partidos ──
@@ -432,7 +357,18 @@ export async function searchTeams(q: string): Promise<TeamHit[]> {
   const term = q.trim();
   if (term.length < 2) return [];
   const normalized = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "");
-  if (!apiEnabled || term.length < 3) {
+  if (apiEnabled && term.length >= 3) {
+    try {
+      const currentSeason = new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+      const results = await searchEspnTeams(term, currentSeason);
+      if (results.length) return results.map((team) => ({
+        ...team, logoFallback: getTeamLogoFallbackUrl(team.name, team.country),
+      }));
+    } catch (error) {
+      console.error(`No se pudo buscar "${term}" en ESPN:`, error);
+    }
+  }
+  {
     const found = await Promise.all(CSV_LEAGUES.map(async (league) => (await getCsvLeagueTeams(league.id))
       .filter((team) => team.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").includes(normalized))
       .map((team) => ({ id: team.id, name: team.name, logo: getTeamLogoUrl(team.name, league.country), logoFallback: getTeamLogoFallbackUrl(team.name, league.country), country: league.country, leagueId: league.id }))));
@@ -444,73 +380,81 @@ export async function searchTeams(q: string): Promise<TeamHit[]> {
       })
       .slice(0, 20);
   }
-  return cached<TeamHit[]>(`teams:q:${term.toLowerCase()}`, D, async () =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (await call("/teams", { search: term })).slice(0, 12).map((r: any) => ({
-      id: r.team.id, name: r.team.name, logo: r.team.logo ?? null, logoFallback: getTeamLogoFallbackUrl(r.team.name, r.team.country ?? ""), country: r.team.country ?? "",
-    })),
-  );
 }
 
 export async function getLeagueTeams(leagueId: number, season?: number) {
+  if (apiEnabled && season) {
+    try {
+      const teams = await getEspnTeams(leagueId, season);
+      if (teams.length) {
+        const country = getEspnLeagueCountry(leagueId);
+        return teams.map((team) => ({ ...team, logoFallback: getTeamLogoFallbackUrl(team.name, country) }));
+      }
+    } catch (error) {
+      console.error(`No se pudieron cargar los equipos ESPN de la liga ${leagueId}:`, error);
+    }
+  }
   const local = await getCsvLeagueTeams(leagueId, season);
   const country = CSV_LEAGUES.find((l) => l.id === leagueId)?.country ?? "";
-  if (local.length || !apiEnabled || !season) return local.map((team) => ({ ...team, logo: getTeamLogoUrl(team.name, country) }));
-  return cached(`league-teams:${leagueId}:${season}`, D, async () =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (await call("/teams", { league: leagueId, season }, true)).map((r: any) => ({ id: r.team.id, name: r.team.name, logo: r.team.logo ?? null })),
-  );
+  return local.map((team) => ({
+    ...team, logo: getTeamLogoUrl(team.name, country),
+    logoFallback: getTeamLogoFallbackUrl(team.name, country),
+  }));
 }
 export async function getLeagueSeasons(leagueId: number) {
   const local = await getCsvLeagueSeasons(leagueId);
-  if (local.length || !apiEnabled) return local;
-  return cached<number[]>(`league-seasons:${leagueId}`, D, async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const item = (await call("/leagues", { id: leagueId }, true))[0] as any;
-    return (item?.seasons ?? []).filter((s: any) => s.coverage?.fixtures?.events || s.year).map((s: any) => Number(s.year)).filter(Number.isFinite).sort((a: number, b: number) => b - a);
-  });
+  if (!apiEnabled) return local;
+  try {
+    return [...new Set([...await getEspnLeagueSeasons(leagueId), ...local])].sort((a, b) => b - a);
+  } catch (error) {
+    console.error(`No se pudieron consultar las temporadas ESPN de la liga ${leagueId}:`, error);
+    return local;
+  }
 }
 
 export async function getLeagueFixtures(leagueId: number, season: number): Promise<Fixture[]> {
-  const local = (await getCsvFixtures()).filter((fixture) => fixture.leagueId === leagueId && fixture.season === season);
-  if (local.length) {
-    const withMatchDetails = await Promise.all(local.map(async (fixture) => {
-      const stats = await getCsvStatsForFixture(fixture);
-      return stats
-        ? {
-          ...fixture,
-          goalsHome: stats.goalsHome,
-          goalsAway: stats.goalsAway,
-          htHome: stats.htHome,
-          htAway: stats.htAway,
-          redCardsHome: stats.redHome,
-          redCardsAway: stats.redAway,
-        }
-        : fixture;
-    }));
-    return addCsvTeamLogos(withMatchDetails);
+  let fallback: Fixture[] = [];
+  try {
+    const local = (await getCsvFixtures()).filter((fixture) => fixture.leagueId === leagueId && fixture.season === season);
+    if (local.length) {
+      const withMatchDetails = await Promise.all(local.map(async (fixture) => {
+        const stats = await getCsvStatsForFixture(fixture);
+        return stats
+          ? {
+            ...fixture,
+            goalsHome: stats.goalsHome,
+            goalsAway: stats.goalsAway,
+            htHome: stats.htHome,
+            htAway: stats.htAway,
+            redCardsHome: stats.redHome,
+            redCardsAway: stats.redAway,
+          }
+          : fixture;
+      }));
+      fallback = await addCsvTeamLogos(withMatchDetails);
+    } else {
+      fallback = await addCsvTeamLogos(await getCsvLeagueFixtures(leagueId, season));
+    }
+  } catch (error) {
+    console.error(`No se pudo cargar el calendario CSV de la liga ${leagueId}:`, error);
   }
-  const historical = await getCsvLeagueFixtures(leagueId, season);
-  if (historical.length) return addCsvTeamLogos(historical);
-  if (!apiEnabled) return [];
-  return cached<Fixture[]>(`league-fixtures:${leagueId}:${season}:${getTz()}`, 6 * H, async () =>
-    (await call("/fixtures", { league: leagueId, season, timezone: getTz() }, true)).map(normFixture),
-  );
+  if (apiEnabled) {
+    try {
+      const fixtures = await getEspnLeagueFixtures(leagueId, season);
+      if (fixtures.length) return mergeFixtureSources(addEspnTeamLogos(fixtures), fallback);
+    } catch (error) {
+      console.error(`No se pudo cargar el calendario ESPN de la liga ${leagueId}:`, error);
+    }
+  }
+  return fallback;
 }
 
 export type LeagueStandingsZone = { teamId: number; description: string };
 
 export async function getLeagueStandingsZones(leagueId: number, season: number): Promise<LeagueStandingsZone[]> {
-  if (!apiEnabled) return [];
-  return cached<LeagueStandingsZone[]>(`league-standings-zones:${leagueId}:${season}`, D, async () => {
-    const response = await call("/standings", { league: leagueId, season });
-    const tables = response.flatMap((item) => item.league?.standings ?? []);
-    return tables.flatMap((table: any[]) => table.flatMap((entry: any) => {
-      const teamId = Number(entry.team?.id);
-      const description = typeof entry.description === "string" ? entry.description.trim() : "";
-      return Number.isSafeInteger(teamId) && description ? [{ teamId, description }] : [];
-    }));
-  });
+  void leagueId;
+  void season;
+  return [];
 }
 
 export type LeagueTopScorer = {
@@ -526,48 +470,94 @@ export type LeagueTopScorer = {
 
 export async function getLeagueTopScorers(leagueId: number, season: number): Promise<LeagueTopScorer[]> {
   if (!apiEnabled) return [];
-  return cached<LeagueTopScorer[]>(`league-scorers:${leagueId}:${season}`, 6 * H, async () =>
-    (await call("/players/topscorers", { league: leagueId, season }))
-      .flatMap((row) => {
-        const stats = row.statistics?.[0];
-        if (!row.player || !stats) return [];
-        return [{
-          id: Number(row.player.id),
-          name: String(row.player.name ?? ""),
-          photo: typeof row.player.photo === "string" ? row.player.photo : null,
-          teamName: String(stats.team?.name ?? ""),
-          teamLogo: typeof stats.team?.logo === "string" ? stats.team.logo : null,
-          goals: Number(stats.goals?.total ?? 0),
-          assists: Number(stats.goals?.assists ?? 0),
-          appearances: Number(stats.games?.appearences ?? stats.games?.appearances ?? 0),
-        }];
-      }),
-  );
+  try {
+    return await getEspnLeagueTopScorers(leagueId, season);
+  } catch (error) {
+    console.error(`No se pudieron cargar los goleadores ESPN de la liga ${leagueId}:`, error);
+    return [];
+  }
 }
 
 export async function getTeamSeasonProfile(teamId: number, name: string, leagueId: number, season: number): Promise<TeamProfile> {
-  const local = await getCsvTeamProfile(csvTeamId(name), true, Infinity, leagueId, season, 60);
-  if (local.rows.length || !apiEnabled) return { ...local, teamId };
-  return getTeamProfile(teamId, true, season, Infinity, leagueId, name);
+  let espnProfile: TeamProfile | null = null;
+  if (apiEnabled) {
+    try {
+      const profile = await getEspnTeamProfile(teamId, true, season, Infinity, leagueId, 60);
+      if (profile.rows.length) {
+        if (profile.rows.some((row) => row.sFor !== null || row.sAgainst !== null)) return profile;
+        espnProfile = profile;
+      }
+    } catch (error) {
+      console.error(`No se pudo cargar el perfil de temporada ESPN del equipo ${teamId}:`, error);
+    }
+  }
+  const local = await getCsvTeamProfile(csvTeamId(name), true, Infinity, leagueId, season, 60).catch((error: unknown) => {
+    console.error(`No se pudo cargar el perfil CSV de temporada del equipo ${name}:`, error);
+    return null;
+  });
+  if (!local) return espnProfile ?? { teamId, rows: [] };
+  if (local.rows.length && local.rows.some((row) => row.sFor !== null || row.sAgainst !== null)) return { ...local, teamId };
+  return espnProfile ?? { ...local, teamId };
 }
 export async function getTeamSeasonMatchSeries(name: string, leagueId: number, season: number) {
-  return getCsvTeamMatchSeries(csvTeamId(name), leagueId, season);
+  let espnSeries: Awaited<ReturnType<typeof getEspnSeasonMatchSeries>> = [];
+  if (apiEnabled) {
+    try {
+      const teams = await getLeagueTeams(leagueId, season);
+      const team = teams.find((item) => item.name === name)
+        ?? teams.find((item) => canonicalTeamName(item.name) === canonicalTeamName(name));
+      if (team) {
+        const series = await getEspnSeasonMatchSeries(team.id, leagueId, season);
+        if (series.length) espnSeries = series;
+      }
+    } catch (error) {
+      console.error(`No se pudo cargar la serie ESPN de ${name}:`, error);
+    }
+  }
+  try {
+    const csvSeries = await getCsvTeamMatchSeries(csvTeamId(name), leagueId, season);
+    const statCount = (series: typeof csvSeries) => series.reduce((count, game) =>
+      count + ["shots", "shotsOn", "corners", "cards"].reduce((total, key) =>
+        total + (game.own[key as keyof typeof game.own] !== null ? 1 : 0), 0), 0);
+    return statCount(csvSeries) > statCount(espnSeries) ? csvSeries : espnSeries.length ? espnSeries : csvSeries;
+  } catch (error) {
+    console.error(`No se pudo cargar la serie CSV de ${name}:`, error);
+    return espnSeries;
+  }
 }
-export async function getTeamUpcomingFixtures(teamId: number, n = 15): Promise<Fixture[]> {
+export async function getTeamUpcomingFixtures(teamId: number, n = 15, leagueId?: number, teamName?: string): Promise<Fixture[]> {
+  if (apiEnabled) {
+    try {
+      const fixtures = await getEspnTeamFixtures(teamId, leagueId, n, true);
+      if (fixtures.length) return addEspnTeamLogos(fixtures);
+    } catch (error) {
+      console.error(`No se pudieron cargar los próximos partidos ESPN del equipo ${teamId}:`, error);
+    }
+  }
   const fixtures = await getCsvFixtures();
   const now = Date.now() / 1000;
-  const local = await addCsvTeamLogos(fixtures.filter((f) => f.timestamp >= now && (f.home.id === teamId || f.away.id === teamId)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n));
-  if (local.length || !apiEnabled) return local;
-  return (await getNextFixtures(teamId, n)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n);
+  const csvId = teamName ? csvTeamId(teamName) : teamId;
+  const local = await addCsvTeamLogos(fixtures.filter((f) => f.timestamp >= now && (f.home.id === csvId || f.away.id === csvId) && (!leagueId || f.leagueId === leagueId)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n));
+  return local;
 }
-export async function getTeamRecentFixtures(teamId: number, n = 5): Promise<Fixture[]> {
+export async function getTeamRecentFixtures(teamId: number, n = 5, leagueId?: number, teamName?: string): Promise<Fixture[]> {
+  if (apiEnabled) {
+    try {
+      const fixtures = await getEspnTeamFixtures(teamId, leagueId, n, false);
+      if (fixtures.length) return addEspnTeamLogos(fixtures);
+    } catch (error) {
+      console.error(`No se pudieron cargar los últimos partidos ESPN del equipo ${teamId}:`, error);
+    }
+  }
   const fixtures = await getCsvFixtures();
   const now = Date.now() / 1000;
+  const csvId = teamName ? csvTeamId(teamName) : teamId;
   const local = await addCsvTeamLogos(fixtures.filter((f) =>
     f.timestamp < now &&
     ["FT", "AET", "PEN"].includes(f.statusShort) &&
     f.goalsHome !== null && f.goalsAway !== null &&
-    (f.home.id === teamId || f.away.id === teamId),
+    (f.home.id === csvId || f.away.id === csvId) &&
+    (!leagueId || f.leagueId === leagueId),
   ).sort((a, b) => b.timestamp - a.timestamp).slice(0, n));
   const withRedCards = await Promise.all(local.map(async (fixture) => {
     const stats = await getCsvStatsForFixture(fixture);
@@ -575,24 +565,5 @@ export async function getTeamRecentFixtures(teamId: number, n = 5): Promise<Fixt
       ? { ...fixture, redCardsHome: stats.redHome, redCardsAway: stats.redAway }
       : fixture;
   }));
-  if (withRedCards.length >= n || !apiEnabled || teamId < 0) return withRedCards;
-  return cached<Fixture[]>(`last:${teamId}:${n}:${getTz()}`, 6 * H, async () =>
-    (await call("/fixtures", { team: teamId, last: n, timezone: getTz() }, true))
-      .map(normFixture)
-      .filter((fixture) => ["FT", "AET", "PEN"].includes(fixture.statusShort))
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, n),
-  );
-}
-export async function getLastFixtures(teamId: number): Promise<Fixture[]> {
-  if (!apiEnabled) return [];
-  return cached<Fixture[]>(`last:${teamId}:${FORM_MATCHES}:${getTz()}`, 6 * H, async () =>
-    (await call("/fixtures", { team: teamId, last: FORM_MATCHES, timezone: getTz() }, true)).map(normFixture),
-  );
-}
-export async function getNextFixtures(teamId: number, n = 5): Promise<Fixture[]> {
-  if (!apiEnabled) return [];
-  return cached<Fixture[]>(`next:${teamId}:${n}:${getTz()}`, 3 * H, async () =>
-    (await call("/fixtures", { team: teamId, next: n, timezone: getTz() }, true)).map(normFixture),
-  );
+  return withRedCards;
 }

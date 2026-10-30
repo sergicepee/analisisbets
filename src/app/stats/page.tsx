@@ -88,7 +88,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card2 text-[11px] font-bold sm:h-7 sm:w-7 sm:text-xs ${rank <= 3 ? "text-brand" : "text-muted"}`}>{rank}</span>
                     <div className="flex shrink-0 gap-0.5 sm:gap-1"><Shield src={f.home.logo} fallbackSrc={f.home.logoFallback} alt="" size={24} /><Shield src={f.away.logo} fallbackSrc={f.away.logoFallback} alt="" size={24} /></div>
                     <div className="min-w-0 flex-1">
-                      <Link href={`/match/${f.id}?date=${date}&tab=${tabOf(metric)}`} className="block truncate text-sm font-bold">{f.home.name} <I18nText text="contra" /> {f.away.name}</Link>
+                      <Link href={`/match/${f.id}?date=${date}&league=${f.leagueId}&tab=${tabOf(metric)}`} className="block truncate text-sm font-bold">{f.home.name} <I18nText text="contra" /> {f.away.name}</Link>
                       <Link href={`/liga/${f.leagueId}`} className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted hover:text-brand"><Flag src={f.flag} />{f.leagueName}</Link>
                     </div>
                     <div className="hidden shrink-0 text-right text-xs text-muted sm:block">{date === today ? <I18nText text="Hoy" /> : date}<br />{timeStr(f.timestamp)}</div>

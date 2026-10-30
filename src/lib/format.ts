@@ -1,5 +1,4 @@
 import { getLang, getLocale, getTz } from "./prefs";
-import { apiEnabled } from "./config";
 import { isWithinCsvLiveWindow } from "./fixtureStatus";
 import type { Fixture, StatusGroup } from "./types";
 
@@ -22,12 +21,12 @@ export const fullDateTime = (ts: number) =>
 const LIVE = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"];
 const FIN = ["FT", "AET", "PEN"];
 export function statusGroup(f: Fixture): StatusGroup {
-  if (LIVE.includes(f.statusShort)) return apiEnabled ? "live" : "pending";
+  if (LIVE.includes(f.statusShort)) return "live";
   if (FIN.includes(f.statusShort)) return "finished";
   if (["NS", "TBD"].includes(f.statusShort)) {
     const now = Date.now() / 1000;
     if (now < f.timestamp) return "upcoming";
-    return !apiEnabled && isWithinCsvLiveWindow(f, now) ? "live" : "pending";
+    return f.id < 0 && isWithinCsvLiveWindow(f, now) ? "live" : "pending";
   }
   return "other";
 }
@@ -41,6 +40,7 @@ export const pct = (v: number | null | undefined) => (v === null || v === undefi
 
 export function countryEs(name: string, flag: string | null): string {
   if (name === "World") return getLang() === "en" ? "World" : "Mundo";
+  if (name === "Europe") return getLang() === "en" ? "Europe" : "Europa";
   const code = flag?.match(/\/flags\/([a-z]{2})\.svg/i)?.[1];
   if (code) {
     try {
@@ -52,11 +52,8 @@ export function countryEs(name: string, flag: string | null): string {
 export const leagueType = (type: string) => (type === "Cup" ? (getLang() === "en" ? "Cup" : "Copa") : getLang() === "en" ? "League" : "Liga");
 export const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/** Traduce errores conocidos de API-Football a un texto comprensible. */
+/** Traduce errores conocidos de fuentes de datos a un texto comprensible. */
 export function friendlyApiError(msg: string): string {
-  if (/Free plans/i.test(msg)) {
-    return "Tu plan gratuito de API-Football no da acceso a la temporada actual para estadísticas históricas (solo temporadas 2022–2024). Los promedios de tiros, córners y tarjetas necesitan un plan de pago. Mientras tanto se muestran los goles estimados con los últimos partidos que facilita la predicción de la API.";
-  }
   if (/limit|quota|request/i.test(msg)) return "Se alcanzó el límite de solicitudes de la API. Se reinicia solo; mientras tanto se muestran los datos guardados.";
   return msg;
 }

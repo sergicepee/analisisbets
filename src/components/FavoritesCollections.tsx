@@ -176,7 +176,7 @@ export function FavoritesCollections({
                 </div>
                 {team.nextFixture ? (
                   <Link
-                    href={`/match/${team.nextFixture.id}?date=${encodeURIComponent(team.nextFixtureDateKey ?? "")}`}
+                    href={`/match/${team.nextFixture.id}?date=${encodeURIComponent(team.nextFixtureDateKey ?? "")}&league=${team.nextFixture.leagueId}`}
                     className="mt-3 flex min-h-8 min-w-0 items-center gap-2 rounded-xl bg-card2 px-3 py-1.5 text-xs"
                   >
                     <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
@@ -201,7 +201,7 @@ export function FavoritesCollections({
             {fixtures.map(({ fixture, date, dateKey }) => (
               <article key={fixture.id} className="flex items-center gap-2 border-b border-line px-3 py-3 last:border-b-0">
                 <Shield src={fixture.home.logo} alt="" size={28} />
-                <Link href={`/match/${fixture.id}?date=${encodeURIComponent(dateKey)}`} className="min-w-0 flex-1">
+                <Link href={`/match/${fixture.id}?date=${encodeURIComponent(dateKey)}&league=${fixture.leagueId}`} className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-bold">{fixture.home.name} - {fixture.away.name}</span>
                   <span className="mt-1 block text-xs text-muted">{date}</span>
                 </Link>

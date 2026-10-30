@@ -51,7 +51,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
       {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
-      {!apiEnabled && date === today && fixtures.some((fixture) => shouldRefreshCsvFixture(fixture)) && <AutoRefresh seconds={30} />}
+      {date === today && fixtures.some((fixture) => fixture.id < 0 && shouldRefreshCsvFixture(fixture)) && <AutoRefresh seconds={30} />}
       <div className="card rounded-xl p-2.5 sm:p-3">
         <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
       </div>

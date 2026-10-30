@@ -16,7 +16,6 @@ import { I18nText } from "@/components/I18nProvider";
 import { getTz } from "@/lib/prefs";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds, getLeagueFollowStatus } from "@/lib/favorites";
-import { apiEnabled } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +56,6 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
           <LeagueCompetition
             key={`${id}:${selected}`}
             leagueId={id}
-            apiEnabled={apiEnabled}
             initialTab={initialTab}
             leagueName={league.name}
             leagueLogo={getLeagueLogoUrl(id, leagueLogo)}

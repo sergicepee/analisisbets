@@ -118,8 +118,8 @@ export default async function Page({ params, searchParams }: { params: { id: str
       ? getTeamSeasonProfile(id, name, leagueId, season)
       : getTeamProfile(id, true, season, Infinity, leagueId, name))
       : Promise.resolve(null),
-    getTeamRecentFixtures(id, 15),
-    getTeamUpcomingFixtures(id, 15),
+    getTeamRecentFixtures(id, 15, leagueId, name),
+    getTeamUpcomingFixtures(id, 15, leagueId, name),
     name && leagueId && season ? getTeamSeasonMatchSeries(name, leagueId, season) : Promise.resolve([]),
   ]);
   if (profileResult.status === "fulfilled") profile = profileResult.value;

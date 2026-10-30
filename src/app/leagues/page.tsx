@@ -24,8 +24,8 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
   const sorted = [...by.values()]
     .map((g) => ({ ...g, items: g.items.sort((a, b) => (a.type === b.type ? 0 : a.type === "Liga" ? -1 : 1)) }))
     .sort((a, b) => order(a.country) - order(b.country) || a.country.localeCompare(b.country, "es"));
-  const intl = sorted.find((g) => g.country === "Mundo")?.items ?? [];
-  const groups = sorted.filter((g) => g.country !== "Mundo");
+  const intl = sorted.find((g) => g.country === "Europa")?.items ?? [];
+  const groups = sorted.filter((g) => g.country !== "Europa");
   return (
     <>
       <Header />

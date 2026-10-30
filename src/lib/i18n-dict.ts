@@ -57,6 +57,11 @@ const EN: Record<string, string> = {
   "Ver todas": "See all", "Ver menos": "See less", "Competiciones internacionales": "International competitions", "Sin resultados.": "No results.",
   "Temporada": "Season", "Actual": "Current", "Secciones de liga": "League sections",
   "Calendario": "Calendar", "Clasificación": "Standings", "Goleadores": "Top scorers",
+  "Fase de la competición": "Competition phase", "Fase de liga": "League phase",
+  "Play-offs": "Play-offs", "Octavos de final": "Round of 16", "Cuartos de final": "Quarter-finals",
+  "Semifinales": "Semi-finals", "Fase no identificada": "Unidentified phase",
+  "Global": "Aggregate", "Enfrentamiento": "Tie", "Ida": "First leg", "Vuelta": "Second leg",
+  "Fase finalizada": "Phase complete",
   "Jornada anterior": "Previous matchday", "Jornada siguiente": "Next matchday", "Jornada actual": "Current matchday",
   "Jugado": "Played", "Por jugar": "Upcoming", "partido": "match", "partidos": "matches",
   "Pos": "Pos", "Equipo": "Team", "PJ": "P", "G": "W", "E": "D", "P": "L",
@@ -100,7 +105,8 @@ const EN: Record<string, string> = {
   "Cuenta creada. Te enviamos un email para confirmarla: ábrelo y pulsa el enlace.": "Account created. We sent you an email to confirm it: open it and click the link.",
   "Si el email existe, recibirás un enlace para crear una contraseña nueva.": "If the email exists, you'll receive a link to create a new password.",
   "¿Qué son las probabilidades?": "What are these probabilities?",
-  "Son estimaciones estadísticas calculadas con los últimos partidos de cada equipo y las predicciones de API‑Football. No son garantías ni consejos de apuesta.": "These are statistical estimates based on each team's recent matches and API-Football predictions. They are not guarantees or betting advice.",
+  "Son estimaciones estadísticas calculadas con los últimos partidos de cada equipo. No son garantías ni consejos de apuesta.": "These are statistical estimates based on each team's recent matches. They are not guarantees or betting advice.",
+  "Cuando ESPN y los CSV no tienen estadísticas disponibles o hay pocos partidos, PICKZONE prefiere no mostrar nada antes que inventar una cifra.": "When ESPN and the CSV files have no statistics available or there are too few matches, PICKZONE prefers to show nothing rather than invent a figure.",
   "¿Por qué veo “—” en algunos datos?": "Why do some stats show “—”?",
   "Cuando faltan estadísticas (la liga no tiene cobertura, el plan de la API no las incluye o hay pocos partidos) Pickzone prefiere no mostrar nada antes que inventar una cifra.": "When stats are unavailable (the league is not covered, the API plan does not include them, or there are too few matches), Pickzone would rather show nothing than make up a number.",
   "¿Qué significan los colores?": "What do the colours mean?",
@@ -151,10 +157,8 @@ const EN: Record<string, string> = {
   "Pronóstico Premium": "Premium prediction",
   "Solo para suscriptores": "Subscribers only",
   "Desbloquea todas las estadísticas con Pickzone Premium": "Unlock all stats with Pickzone Premium",
-  "Sin estadísticas suficientes para este partido: la liga puede no tener cobertura de estadísticas de partido, o la cuota de la API está agotada.": "Not enough stats for this match: the league may not provide match-stat coverage, or the API quota may be exhausted.",
+  "ESPN y los CSV no ofrecen estadísticas suficientes para este partido.": "ESPN and the CSV files do not provide enough statistics for this match.",
   "Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada).": "Not enough data to estimate 1X2 (too few recent matches or limited coverage).",
-  "Goles estimados con la media de los últimos {count} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).": "Goals estimated from each team's last {count} matches according to API-Football (no in-house stats are available).",
-  "Consejo de API-Football:": "API-Football advice:",
   "configura tu email de contacto": "configure your contact email",
   "Reintentar": "Retry",
   "No se pudieron cargar los datos. Puede ser un límite de la API o un fallo temporal.": "Could not load the data. This may be an API limit or a temporary issue.",
@@ -254,18 +258,15 @@ const EN: Record<string, string> = {
   "No hay equipos históricos disponibles para esta liga.": "No historical teams are available for this league.",
   "Hay estadísticas resumidas, pero no un historial partido a partido disponible para dibujar la gráfica.": "Summary statistics are available, but no match-by-match history is available to draw the chart.",
   "Liga": "League",
-  "Desactivada (modo CSV)": "Disabled (CSV mode)",
+  "Desactivada (solo CSV)": "Disabled (CSV only)",
   "Conectada": "Connected",
-  "Activada, falta la clave": "Enabled, API key missing",
   "No configurada (caché en memoria)": "Not configured (in-memory cache)",
   "Configurada": "Configured",
   "Falta NEXT_PUBLIC_SUPABASE_*": "NEXT_PUBLIC_SUPABASE_* is missing",
-  "Solicitudes diarias restantes": "Daily requests remaining",
   "Partidos recientes por equipo": "Recent matches per team",
   "Máx. partidos analizados": "Max matches analyzed",
   "Ligas permitidas": "Allowed leagues",
   "Todas": "All",
-  "Pausa entre llamadas": "Delay between requests",
   "Quitar de favoritos": "Remove from favourites",
   "Añadir a favoritos": "Add to favourites",
   "Inicia sesión para añadir a favoritos": "Sign in to add favourites",
@@ -311,7 +312,5 @@ export function translate(lang: LangCode, es: string): string {
   if (es.startsWith("Partidos con gol: ")) return `Matches with a goal: ${es.slice("Partidos con gol: ".length)}`;
   if (es.startsWith("Muestra: ")) return `Sample: ${es.slice("Muestra: ".length)}`;
   if (es.startsWith("Resultado final: ")) return `Final score: ${es.slice("Resultado final: ".length)}`;
-  if (es.startsWith("Consejo de API-Football: ")) return `API-Football advice: ${es.slice("Consejo de API-Football: ".length)}`;
-  if (es.startsWith("Goles estimados con la media de los últimos ")) return es.replace("Goles estimados con la media de los últimos ", "Goals estimated from each team's last ").replace(" partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).", " matches according to API-Football (no in-house stats are available).");
   return EN[es] ?? es;
 }

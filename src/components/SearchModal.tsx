@@ -168,6 +168,7 @@ export function SearchModal() {
 
 function displayCountry(name: string, flag: string | null, lang: "es" | "en") {
   if (name === "World") return lang === "en" ? "World" : "Mundo";
+  if (name === "Europe") return lang === "en" ? "Europe" : "Europa";
   const code = flag?.match(/\/flags\/([a-z]{2})\.svg/i)?.[1];
   if (!code) return name;
   try {

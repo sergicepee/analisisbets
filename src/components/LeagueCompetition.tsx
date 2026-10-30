@@ -25,10 +25,11 @@ type LeagueTopScorer = {
   appearances: number;
 };
 type Tab = "calendar" | "table" | "scorers";
+const UEFA_LEAGUE_IDS = new Set([2, 3, 848, 531]);
+const STAGE_ORDER = ["league", "playoffs", "round-of-16", "quarterfinals", "semifinals", "final", "other"];
 
 export function LeagueCompetition({
   leagueId,
-  apiEnabled,
   initialTab,
   leagueName,
   leagueLogo,
@@ -49,7 +50,6 @@ export function LeagueCompetition({
   scorerError,
 }: {
   leagueId: number;
-  apiEnabled: boolean;
   initialTab: "calendar" | "table";
   leagueName: string;
   leagueLogo: string | null;
@@ -70,12 +70,26 @@ export function LeagueCompetition({
   scorerError?: string | null;
 }) {
   const t = useT();
-  const [tab, setTab] = useState<Tab>(initialTab);
   const lang = useLang();
   const locale = lang === "en" ? "en-GB" : "es-ES";
-  const rounds = useMemo(() => makeRounds(fixtures), [fixtures]);
+  const isEuropeanCompetition = UEFA_LEAGUE_IDS.has(leagueId);
+  const stages = useMemo(() => getStages(fixtures, isEuropeanCompetition), [fixtures, isEuropeanCompetition]);
+  const [selectedStage, setSelectedStage] = useState(() => findCurrentStage(fixtures, isEuropeanCompetition, timeZone));
+  const [tab, setTab] = useState<Tab>(() =>
+    initialTab === "table" && isEuropeanCompetition && findCurrentStage(fixtures, isEuropeanCompetition, timeZone) !== "league"
+      ? "calendar"
+      : initialTab,
+  );
+  const stageFixtures = useMemo(
+    () => fixtures.filter((fixture) => getFixtureStage(fixture, isEuropeanCompetition) === selectedStage).sort((a, b) => a.timestamp - b.timestamp),
+    [fixtures, isEuropeanCompetition, selectedStage],
+  );
+  const isKnockoutPhase = isEuropeanCompetition && isKnockoutStage(selectedStage);
+  const hasMatchdays = !isEuropeanCompetition || selectedStage === "league";
+  const canShowStandings = !isEuropeanCompetition || selectedStage === "league";
+  const rounds = useMemo(() => makeRounds(stageFixtures, timeZone, selectedStage, isKnockoutPhase), [stageFixtures, timeZone, selectedStage, isKnockoutPhase]);
   const currentRoundIndex = findCurrentRoundIndex(rounds, timeZone);
-  const isSeasonFinished = rounds.length > 0 && rounds.every((round) => isRoundFinished(round.fixtures));
+  const isSeasonFinished = stageFixtures.length > 0 && stageFixtures.every(isFixtureFinished);
   const defaultRound = currentRoundIndex >= 0 ? currentRoundIndex : Math.max(0, rounds.length - 1);
   const [roundIndex, setRoundIndex] = useState(() => defaultRound);
   const roundNavRef = useRef<HTMLDivElement>(null);
@@ -86,7 +100,7 @@ export function LeagueCompetition({
   const favorites = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const now = Date.now() / 1000;
   const todayKey = formatDateKey(now, timeZone);
-  const shouldRefreshFixtures = !apiEnabled && fixtures.some((fixture) =>
+  const shouldRefreshFixtures = fixtures.some((fixture) => fixture.id < 0 &&
     formatDateKey(fixture.timestamp, timeZone) === todayKey && shouldRefreshCsvFixture(fixture, now),
   );
 
@@ -143,7 +157,7 @@ export function LeagueCompetition({
         <div role="tablist" aria-label={t("Secciones de liga")} className="flex gap-4 overflow-x-auto border-b border-line px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {([
             ["calendar", CalendarDays, "Calendario"],
-            ["table", ListOrdered, "Clasificación"],
+            ...(canShowStandings ? [["table", ListOrdered, "Clasificación"] as const] : []),
           ] as const).map(([key, Icon, label]) => (
             <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => { setTab(key); if (key === "calendar") setRoundIndex(defaultRound); }} className={`relative flex shrink-0 items-center gap-1.5 py-3 text-xs font-bold sm:text-sm ${tab === key ? "text-brand" : "text-muted"}`}>
               <Icon className="h-4 w-4" />
@@ -153,52 +167,87 @@ export function LeagueCompetition({
           ))}
         </div>
 
+        {isEuropeanCompetition && stages.length > 1 && (
+          <div className="border-b border-line px-3 py-3">
+            <label htmlFor="competition-stage" className="mb-1.5 block text-xs font-semibold text-muted">{t("Fase de la competición")}</label>
+            <select
+              id="competition-stage"
+              value={selectedStage}
+              onChange={(event) => {
+                const nextStage = event.target.value;
+                const nextIsKnockout = isKnockoutStage(nextStage);
+                const nextFixtures = fixtures.filter((fixture) => getFixtureStage(fixture, isEuropeanCompetition) === nextStage);
+                const nextRounds = makeRounds(nextFixtures, timeZone, nextStage, nextIsKnockout);
+                setSelectedStage(nextStage);
+                setRoundIndex(Math.max(0, findCurrentRoundIndex(nextRounds, timeZone)));
+                if (nextStage !== "league") setTab("calendar");
+              }}
+              className="w-full rounded-xl border border-line bg-card2 px-3 py-2.5 text-sm font-bold text-fg sm:w-auto"
+            >
+              {stages.map((stage) => <option key={stage} value={stage}>{t(stageLabel(stage))}</option>)}
+            </select>
+          </div>
+        )}
+
         {tab === "calendar" && (
           <div>
             {rounds.length > 0 ? (
               <>
                 <div className="bg-[#202020] px-3 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <button type="button" aria-label={t("Jornada anterior")} disabled={roundIndex <= 0} onClick={() => setRoundIndex((index) => Math.max(0, index - 1))} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-bg disabled:opacity-40"><ChevronLeft className="h-5 w-5" /></button>
-                    <div className="min-w-0 text-center">
-                      <h2 className="font-display text-2xl font-extrabold uppercase leading-none">{activeRound?.label}</h2>
-                      <p className="mt-1 text-[11px] text-muted">
-                        {roundDateRange(roundFixtures, timeZone, locale)}
-                        {isCurrentRound && <span className="ml-1 rounded-full bg-brand/20 px-2 py-0.5 text-[9px] font-bold uppercase text-brand">{t("Jornada actual")}</span>}
-                        {!isCurrentRound && isFinishedRound && <span className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase text-muted">{t("Finalizada")}</span>}
-                      </p>
+                  {!hasMatchdays ? (
+                    <div className="text-center">
+                      <h2 className="font-display text-2xl font-extrabold uppercase leading-none">{t(isKnockoutPhase ? stageLabel(selectedStage) : "Calendario")}</h2>
+                      <p className="mt-1 text-[11px] text-muted">{roundDateRange(stageFixtures, timeZone, locale)}</p>
                     </div>
-                    <button type="button" aria-label={t("Jornada siguiente")} disabled={roundIndex >= rounds.length - 1} onClick={() => setRoundIndex((index) => Math.min(rounds.length - 1, index + 1))} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-bg disabled:opacity-40"><ChevronRight className="h-5 w-5" /></button>
-                  </div>
-                  <div ref={roundNavRef} className="relative mt-3 flex snap-x snap-mandatory gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    <span aria-hidden="true" className="w-[calc(50%_-_22px)] shrink-0" />
-                    {rounds.map((round, index) => (
-                      <button key={round.key} type="button" aria-pressed={roundIndex === index} onClick={() => setRoundIndex(index)} className={`relative grid h-9 min-w-9 snap-center shrink-0 place-items-center rounded-lg border px-2 text-xs font-bold transition-colors ${roundIndex === index ? "border-brand bg-brand text-black" : index < currentRoundIndex || (isSeasonFinished && index === currentRoundIndex) ? "border-black bg-[#090909] text-muted" : index === currentRoundIndex && !isSeasonFinished ? "border-brand bg-[#202020] text-fg" : "border-[#303030] bg-[#202020] text-muted"}`}>
-                        {round.number ?? index + 1}
-                        {index === currentRoundIndex && !isSeasonFinished && index !== roundIndex && <span aria-hidden="true" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-brand" />}
-                      </button>
-                    ))}
-                    <span aria-hidden="true" className="w-[calc(50%_-_22px)] shrink-0" />
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-muted">
-                    <span><i className="mr-1 inline-block h-2 w-2 rounded-sm bg-[#090909]" />{t("Jugado")}</span>
-                    <span><i className="mr-1 inline-block h-2 w-2 rounded-sm border border-brand bg-[#202020]" />{t("Actual")}</span>
-                    <span><i className="mr-1 inline-block h-2 w-2 rounded-sm border border-[#303030] bg-[#202020]" />{t("Por jugar")}</span>
-                  </div>
-                </div>
-                <div>
-                  {groupFixturesByDate(roundFixtures, timeZone).map(([dateKey, dateFixtures]) => (
-                    <div key={dateKey}>
-                      <div className="flex items-center justify-between border-t border-line bg-card2/70 px-4 py-2 text-[10px] font-bold uppercase text-muted">
-                        <span className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-brand" />{formatFixtureDate(dateFixtures[0].timestamp, timeZone, locale)}</span>
-                        <span>{dateFixtures.length} {t(dateFixtures.length === 1 ? "partido" : "partidos")}</span>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3">
+                      <button type="button" aria-label={t("Jornada anterior")} disabled={roundIndex <= 0} onClick={() => setRoundIndex((index) => Math.max(0, index - 1))} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-bg disabled:opacity-40"><ChevronLeft className="h-5 w-5" /></button>
+                      <div className="min-w-0 text-center">
+                        <h2 className="font-display text-2xl font-extrabold uppercase leading-none">{activeRound?.label}</h2>
+                        <p className="mt-1 text-[11px] text-muted">
+                          {roundDateRange(roundFixtures, timeZone, locale)}
+                          {isCurrentRound && <span className="ml-1 rounded-full bg-brand/20 px-2 py-0.5 text-[9px] font-bold uppercase text-brand">{t("Jornada actual")}</span>}
+                          {!isCurrentRound && isFinishedRound && <span className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase text-muted">{t(isEuropeanCompetition ? "Fase finalizada" : "Finalizada")}</span>}
+                        </p>
                       </div>
-                      {dateFixtures.map((fixture) => (
-                        <LeagueFixtureRow key={fixture.id} fixture={fixture} date={dateKey} timeZone={timeZone} locale={locale} apiEnabled={apiEnabled} isAuthenticated={isAuthenticated} initialFavorite={favorites.has(fixture.id)} />
-                      ))}
+                      <button type="button" aria-label={t("Jornada siguiente")} disabled={roundIndex >= rounds.length - 1} onClick={() => setRoundIndex((index) => Math.min(rounds.length - 1, index + 1))} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-bg disabled:opacity-40"><ChevronRight className="h-5 w-5" /></button>
                     </div>
-                  ))}
+                  )}
+                  {hasMatchdays && (
+                    <div ref={roundNavRef} className="relative mt-3 flex snap-x snap-mandatory gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <span aria-hidden="true" className="w-[calc(50%_-_22px)] shrink-0" />
+                      {rounds.map((round, index) => (
+                        <button key={round.key} type="button" aria-pressed={roundIndex === index} onClick={() => setRoundIndex(index)} className={`relative grid h-9 min-w-9 snap-center shrink-0 place-items-center rounded-lg border px-2 text-xs font-bold transition-colors ${roundIndex === index ? "border-brand bg-brand text-black" : index < currentRoundIndex || (isSeasonFinished && index === currentRoundIndex) ? "border-black bg-[#090909] text-muted" : index === currentRoundIndex && !isSeasonFinished ? "border-brand bg-[#202020] text-fg" : "border-[#303030] bg-[#202020] text-muted"}`}>
+                          {round.number ?? index + 1}
+                          {index === currentRoundIndex && !isSeasonFinished && index !== roundIndex && <span aria-hidden="true" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-brand" />}
+                        </button>
+                      ))}
+                      <span aria-hidden="true" className="w-[calc(50%_-_22px)] shrink-0" />
+                    </div>
+                  )}
+                  {hasMatchdays && (
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-muted">
+                      <span><i className="mr-1 inline-block h-2 w-2 rounded-sm bg-[#090909]" />{t("Jugado")}</span>
+                      <span><i className="mr-1 inline-block h-2 w-2 rounded-sm border border-brand bg-[#202020]" />{t("Actual")}</span>
+                      <span><i className="mr-1 inline-block h-2 w-2 rounded-sm border border-[#303030] bg-[#202020]" />{t("Por jugar")}</span>
+                    </div>
+                  )}
                 </div>
+                {isKnockoutPhase
+                  ? <KnockoutTies fixtures={stageFixtures} timeZone={timeZone} locale={locale} isAuthenticated={isAuthenticated} favorites={favorites} />
+                  : <div>
+                    {groupFixturesByDate(roundFixtures, timeZone).map(([dateKey, dateFixtures]) => (
+                      <div key={dateKey}>
+                        <div className="flex items-center justify-between border-t border-line bg-card2/70 px-4 py-2 text-[10px] font-bold uppercase text-muted">
+                          <span className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-brand" />{formatFixtureDate(dateFixtures[0].timestamp, timeZone, locale)}</span>
+                          <span>{dateFixtures.length} {t(dateFixtures.length === 1 ? "partido" : "partidos")}</span>
+                        </div>
+                        {dateFixtures.map((fixture) => (
+                          <LeagueFixtureRow key={fixture.id} fixture={fixture} date={dateKey} timeZone={timeZone} locale={locale} isAuthenticated={isAuthenticated} initialFavorite={favorites.has(fixture.id)} />
+                        ))}
+                      </div>
+                    ))}
+                  </div>}
               </>
             ) : (
               <p className="px-4 py-10 text-center text-sm text-muted">{t("No hay calendario disponible para esta temporada.")}</p>
@@ -207,7 +256,7 @@ export function LeagueCompetition({
         )}
 
         {tab === "table" && (
-          <LeagueStandingsTable leagueId={leagueId} season={season} teams={teams} fixtures={fixtures} zones={standingsZones} zoneError={standingsZoneError} />
+          <LeagueStandingsTable leagueId={leagueId} season={season} teams={teams} fixtures={isEuropeanCompetition ? stageFixtures : fixtures} zones={standingsZones} zoneError={standingsZoneError} />
         )}
 
         {tab === "scorers" && (
@@ -227,11 +276,98 @@ export function LeagueCompetition({
   );
 }
 
-function makeRounds(fixtures: Fixture[]) {
+type FixtureRound = { key: string; label: string; number: number | null; fixtures: Fixture[] };
+
+function getFixtureStage(fixture: Fixture, isEuropeanCompetition: boolean) {
+  return isEuropeanCompetition ? fixture.stage ?? "other" : "league";
+}
+
+function getStages(fixtures: Fixture[], isEuropeanCompetition: boolean) {
+  if (!isEuropeanCompetition) return [];
+  return [...new Set(fixtures.map((fixture) => getFixtureStage(fixture, isEuropeanCompetition)))]
+    .sort((a, b) => stageOrder(a) - stageOrder(b));
+}
+
+function stageOrder(stage: string) {
+  const index = STAGE_ORDER.indexOf(stage);
+  return index < 0 ? STAGE_ORDER.length : index;
+}
+
+function stageLabel(stage: string) {
+  switch (stage) {
+    case "league": return "Fase de liga";
+    case "playoffs": return "Play-offs";
+    case "round-of-16": return "Octavos de final";
+    case "quarterfinals": return "Cuartos de final";
+    case "semifinals": return "Semifinales";
+    case "final": return "Final";
+    case "other": return "Fase no identificada";
+    default: return "Fase no identificada";
+  }
+}
+
+function isKnockoutStage(stage: string) {
+  return ["playoffs", "round-of-16", "quarterfinals", "semifinals", "final"].includes(stage);
+}
+
+function findCurrentStage(fixtures: Fixture[], isEuropeanCompetition: boolean, timeZone: string) {
+  if (!isEuropeanCompetition || fixtures.length === 0) return "league";
+  const now = Date.now() / 1000;
+  const today = formatDateKey(now, timeZone);
+  const fixtureStage = (fixture: Fixture) => getFixtureStage(fixture, isEuropeanCompetition);
+  const liveFixture = fixtures.find((fixture) => ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(fixture.statusShort));
+  if (liveFixture) return fixtureStage(liveFixture);
+  const todayFixture = fixtures
+    .filter((fixture) => formatDateKey(fixture.timestamp, timeZone) === today && !isFixtureFinished(fixture))
+    .sort((a, b) => a.timestamp - b.timestamp)[0];
+  if (todayFixture) return fixtureStage(todayFixture);
+  const upcomingFixture = fixtures
+    .filter((fixture) => !isFixtureFinished(fixture) && fixture.timestamp >= now)
+    .sort((a, b) => a.timestamp - b.timestamp)[0];
+  if (upcomingFixture) return fixtureStage(upcomingFixture);
+  const latestFixture = [...fixtures].sort((a, b) => b.timestamp - a.timestamp)[0];
+  return latestFixture ? fixtureStage(latestFixture) : "league";
+}
+
+function makeRounds(fixtures: Fixture[], timeZone: string, stage = "league", isKnockoutPhase = false): FixtureRound[] {
   const groups = new Map<string, Fixture[]>();
-  for (const fixture of fixtures) {
-    const key = fixture.round || "Jornada 1";
+  const seenIds = new Set<number>();
+  const seenMatches = new Set<string>();
+  const uniqueFixtures = fixtures.filter((fixture) => {
+    const normalizeTeam = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const key = [
+      fixture.leagueId,
+      formatDateKey(fixture.timestamp, timeZone),
+      normalizeTeam(fixture.home.name),
+      normalizeTeam(fixture.away.name),
+    ].join("|");
+    if (seenIds.has(fixture.id) || seenMatches.has(key)) return false;
+    seenIds.add(fixture.id);
+    seenMatches.add(key);
+    return true;
+  }).sort((a, b) => a.timestamp - b.timestamp);
+  if (isKnockoutPhase) {
+    return uniqueFixtures.length
+      ? [{ key: stage, label: stageLabel(stage), number: null, fixtures: uniqueFixtures }]
+      : [];
+  }
+  if (stage === "other") {
+    return uniqueFixtures.length
+      ? [{ key: "calendar", label: "Calendario", number: null, fixtures: uniqueFixtures }]
+      : [];
+  }
+  const appearances = new Map<number, number>();
+  for (const fixture of uniqueFixtures) {
+    const homePlayed = appearances.get(fixture.home.id) ?? 0;
+    const awayPlayed = appearances.get(fixture.away.id) ?? 0;
+    const inferredNumber = Math.max(homePlayed, awayPlayed) + 1;
+    const explicitNumber = fixture.round.match(/(?:jornada|round|matchday|regular season)\s*[-:]?\s*(\d+)/i)?.[1];
+    const key = explicitNumber
+      ? `Jornada ${Number(explicitNumber)}`
+      : fixture.round || `Jornada ${inferredNumber}`;
     groups.set(key, [...(groups.get(key) ?? []), fixture]);
+    appearances.set(fixture.home.id, homePlayed + 1);
+    appearances.set(fixture.away.id, awayPlayed + 1);
   }
   return [...groups.entries()]
     .map(([key, rows]) => ({ key, label: roundLabel(key), number: Number(key.match(/\d+/)?.[0]) || null, fixtures: rows.sort((a, b) => a.timestamp - b.timestamp) }))
@@ -269,9 +405,75 @@ function isFixtureFinished(fixture: Fixture) {
   return ["FT", "AET", "PEN"].includes(fixture.statusShort);
 }
 
-function LeagueFixtureRow({ fixture, date, timeZone, locale, apiEnabled, isAuthenticated, initialFavorite }: { fixture: Fixture; date: string; timeZone: string; locale: string; apiEnabled: boolean; isAuthenticated: boolean; initialFavorite: boolean }) {
+function KnockoutTies({ fixtures, timeZone, locale, isAuthenticated, favorites }: {
+  fixtures: Fixture[];
+  timeZone: string;
+  locale: string;
+  isAuthenticated: boolean;
+  favorites: Set<number>;
+}) {
   const t = useT();
-  const csvLive = !apiEnabled && isWithinCsvLiveWindow(fixture);
+  const ties = new Map<string, Fixture[]>();
+  for (const fixture of [...fixtures].sort((a, b) => a.timestamp - b.timestamp)) {
+    const pair = [fixture.home.id, fixture.away.id].sort((a, b) => a - b).join("|");
+    ties.set(pair, [...(ties.get(pair) ?? []), fixture]);
+  }
+
+  return (
+    <div>
+      {[...ties.values()].map((tie) => {
+        const [first, second] = tie;
+        const isTwoLeggedTie = tie.length > 1;
+        let homeAggregate = 0;
+        let awayAggregate = 0;
+        let playedMatches = 0;
+        if (isTwoLeggedTie) {
+          for (const fixture of tie) {
+            if (!isFixtureFinished(fixture) || fixture.goalsHome === null || fixture.goalsAway === null) continue;
+            playedMatches += 1;
+            if (fixture.home.id === first.home.id) {
+              homeAggregate += fixture.goalsHome;
+              awayAggregate += fixture.goalsAway;
+            } else {
+              homeAggregate += fixture.goalsAway;
+              awayAggregate += fixture.goalsHome;
+            }
+          }
+        }
+        return (
+          <section key={`${first.home.id}-${first.away.id}`} className="border-t border-line">
+            {isTwoLeggedTie && (
+              <div className="flex items-center justify-between bg-card2/70 px-4 py-2 text-[10px] font-bold uppercase text-muted">
+                <span>{first.home.name} – {first.away.name}</span>
+                <span>
+                  {playedMatches > 0
+                    ? <>{t("Global")} <b className="ml-1 text-sm tabular-nums text-fg">{homeAggregate} - {awayAggregate}</b></>
+                    : t("Enfrentamiento")}
+                </span>
+              </div>
+            )}
+            {tie.map((fixture, index) => {
+              const date = formatDateKey(fixture.timestamp, timeZone);
+              return (
+                <div key={fixture.id}>
+                  <div className="flex items-center justify-between border-t border-line/60 px-4 py-1.5 text-[9px] font-bold uppercase text-muted">
+                    <span>{isTwoLeggedTie ? t(index === 0 ? "Ida" : index === 1 ? "Vuelta" : "Partido") : ""}</span>
+                    <span>{isTwoLeggedTie && index > 1 ? `${index + 1} · ` : ""}{formatFixtureDate(fixture.timestamp, timeZone, locale)}</span>
+                  </div>
+                  <LeagueFixtureRow fixture={fixture} date={date} timeZone={timeZone} locale={locale} isAuthenticated={isAuthenticated} initialFavorite={favorites.has(fixture.id)} />
+                </div>
+              );
+            })}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function LeagueFixtureRow({ fixture, date, timeZone, locale, isAuthenticated, initialFavorite }: { fixture: Fixture; date: string; timeZone: string; locale: string; isAuthenticated: boolean; initialFavorite: boolean }) {
+  const t = useT();
+  const csvLive = fixture.id < 0 && isWithinCsvLiveWindow(fixture);
   const finished = ["FT", "AET", "PEN"].includes(fixture.statusShort);
   const live = csvLive || ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(fixture.statusShort);
   const suspended = fixture.statusShort === "SUSP";
@@ -297,7 +499,7 @@ function LeagueFixtureRow({ fixture, date, timeZone, locale, apiEnabled, isAuthe
   return (
     <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] px-2 sm:px-3 ${csvLive ? "border-l-loss bg-loss/5" : `border-l-transparent ${suspended ? "bg-card text-muted" : "bg-card"}`}`}>
       <FavoriteMatchButton fixtureId={fixture.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
-      <Link href={`/match/${fixture.id}?date=${date}`} aria-label={`${fixture.home.name} contra ${fixture.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
+      <Link href={`/match/${fixture.id}?date=${date}&league=${fixture.leagueId}`} aria-label={`${fixture.home.name} contra ${fixture.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
         <div className={`w-11 shrink-0 text-center text-xs font-bold tabular-nums sm:w-14 ${csvLive ? "text-loss" : live ? "text-chartHit" : "text-muted"}`}>
           {csvLive
             ? <span className="inline-flex animate-pulse items-center justify-center rounded bg-loss px-1.5 py-0.5 text-[10px] font-black leading-none text-black motion-reduce:animate-none">LIVE</span>
