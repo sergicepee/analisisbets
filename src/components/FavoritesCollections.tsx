@@ -96,7 +96,7 @@ export function FavoritesCollections({
           <h2 className="font-display text-xl font-extrabold uppercase leading-none text-brand">{t("Equipos")} ({teams.length})</h2>
           <div className="space-y-2">
             {teams.map((team) => (
-              <article key={team.id} className="rounded-2xl border border-line bg-transparent p-4">
+              <article key={team.id} className="rounded-2xl border border-line bg-transparent p-3">
                 <div className="flex items-center gap-3">
                   <Link href={`/equipo/${team.id}?name=${encodeURIComponent(team.name)}`} className="flex min-w-0 flex-1 items-center gap-3">
                     <Shield src={team.logo} fallbackSrc={team.logoFallback} alt="" size={40} />
@@ -116,7 +116,7 @@ export function FavoritesCollections({
                 {team.nextFixture ? (
                   <Link
                     href={`/match/${team.nextFixture.id}?date=${encodeURIComponent(team.nextFixtureDateKey ?? "")}`}
-                    className="mt-3 flex min-w-0 items-center gap-2 rounded-xl bg-card2 px-3 py-2 text-xs"
+                    className="mt-3 flex min-h-8 min-w-0 items-center gap-2 rounded-xl bg-card2 px-3 py-1.5 text-xs"
                   >
                     <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
                     <span className="min-w-0 flex-1 truncate font-semibold">
