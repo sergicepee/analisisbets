@@ -14,9 +14,11 @@ import type { Fixture, StatusGroup } from "@/lib/types";
 import { I18nText } from "./I18nProvider";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
+import { shouldRefreshCsvFixture } from "@/lib/fixtureStatus";
 
 const FILTERS: [string, string][] = [
-  ["all", "Todos"], ...(apiEnabled ? [["live", "En vivo"] as [string, string]] : []), ["finished", "Finalizados"],
+  ["all", "Todos"], ["live", "En vivo"],
+  ["finished", "Finalizados"],
   ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
 export async function MatchList({ date, filter = "all", leagueId = null, selectedId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number }) {
@@ -42,21 +44,23 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
     ? await getFavoriteFixtureIds(user.id, shown.map((fixture) => fixture.id))
     : { favoriteIds: new Set<number>(), error: false };
 
+  const filters = FILTERS.filter(([key]) => key !== "live" || apiEnabled || counts.live > 0);
   const href = (key: string) => `/?date=${date}${leagueId ? `&league=${leagueId}` : ""}${key !== "all" ? `&f=${key}` : ""}`;
   const banner = SHOW_PREMIUM ? <PremiumBanner /> : null;
 
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
       {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
+      {!apiEnabled && date === today && fixtures.some((fixture) => shouldRefreshCsvFixture(fixture)) && <AutoRefresh seconds={30} />}
       <div className="card rounded-xl p-2.5 sm:p-3">
         <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
       </div>
       <nav aria-label="Filtrar partidos" className="flex min-w-0 gap-1 overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FILTERS.map(([key, label]) => {
+        {filters.map(([key, label]) => {
           const on = filter === key;
           const live = key === "live" && counts.live > 0;
           const Icon = key === "all" ? IconMatches : key === "live" ? IconBall : key === "finished" ? IconTrophy : key === "upcoming" ? IconCalendar : IconInfo;
-          return <Link key={key} href={href(key)} aria-current={on ? "page" : undefined} className={`relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm ${on ? "text-brand" : live ? "text-chartHit" : "text-muted hover:text-fg"}`}>
+          return <Link key={key} href={href(key)} aria-current={on ? "page" : undefined} className={`relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm ${on ? "text-brand" : live ? apiEnabled ? "text-chartHit" : "text-loss" : "text-muted hover:text-fg"}`}>
             <Icon className="h-3.5 w-3.5" /><I18nText text={label} />
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${on ? "bg-brand/15 text-brand" : "bg-card2 text-muted"}`}>{counts[key]}</span>
             {on && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand" />}
@@ -64,7 +68,10 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
         })}
       </nav>
       {leagueId && (
-        <Link href={`/?date=${date}`} className="chip border-brand/50 text-brand"><I18nText text="Liga:" /> {fixtures[0]?.leagueName ?? leagueId} ✕</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/liga/${leagueId}`} className="chip border-brand/50 text-brand"><I18nText text="Liga:" /> {fixtures[0]?.leagueName ?? leagueId}</Link>
+          <Link href={`/?date=${date}`} aria-label="Quitar filtro de liga" className="chip border-brand/50 text-brand">✕</Link>
+        </div>
       )}
       {error && <Notice tone="warn"><I18nText text="No se pudo cargar el listado:" /> {error}</Notice>}
       {favoriteLookup.error && <Notice tone="warn">No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase.</Notice>}
@@ -72,13 +79,13 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
       {ordered.map((g, i) => (
         <div key={g[0].leagueId} className="space-y-3">
           <section className="overflow-hidden rounded-2xl border border-line bg-card">
-            <div className="league-strip flex min-h-11 items-center gap-2.5 px-3 py-2.5 sm:px-4">
+            <Link href={`/liga/${g[0].leagueId}`} className="league-strip flex min-h-11 items-center gap-2.5 px-3 py-2.5 hover:brightness-110 sm:px-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white p-1">
                 <Shield src={getLeagueLogoUrl(g[0].leagueId, g[0].leagueLogo)} alt="" size={23} />
               </span>
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(g[0].country, g[0].flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{g[0].leagueName}</span>
-            </div>
+            </Link>
             {g.map((f) => <MatchRow key={f.id} f={f} date={date} selected={f.id === selectedId} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />)}
           </section>
           {i === 0 && banner}

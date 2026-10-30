@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { Brand } from "./Logo";
 import { DesktopNav } from "./DesktopNav";
 import { UserMenu } from "./UserMenu";
-import { IconSearch } from "./icons";
 import { BackButton } from "./BackButton";
-import { LocalizedSearchInput } from "./LocalizedSearchInput";
+import { SearchLauncher } from "./SearchModal";
 import { createAuthServer, getUser } from "@/lib/auth";
 import { getTz } from "@/lib/prefs";
 
@@ -30,8 +28,7 @@ export async function Header({ back }: { back?: string }) {
       </div>
       <DesktopNav />
       <div className="flex items-center justify-end gap-3 text-slate-300">
-        <LocalizedSearchInput />
-        <Link href="/buscar" aria-label="Buscar" className="lg:hidden"><IconSearch className="h-5 w-5" /></Link>
+        <SearchLauncher className="rounded-lg p-2 text-muted transition hover:bg-card2 hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand" />
         <UserMenu loggedIn={!!user} displayName={profile?.display_name || user?.email || undefined} avatarUrl={profile?.avatar_url || undefined} tz={getTz()} telegramUrl={process.env.NEXT_PUBLIC_TELEGRAM_URL || undefined} />
       </div>
     </header>

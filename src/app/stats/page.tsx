@@ -84,16 +84,16 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
               {chunk.map(({ f, v }, i) => {
                 const rank = ci * 5 + i + 1;
                 return (
-                  <Link key={f.id} href={`/match/${f.id}?date=${date}&tab=${tabOf(metric)}`} className="flex min-w-0 items-center gap-2 p-2.5 sm:gap-3 sm:p-3">
+                  <div key={f.id} className="flex min-w-0 items-center gap-2 p-2.5 sm:gap-3 sm:p-3">
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card2 text-[11px] font-bold sm:h-7 sm:w-7 sm:text-xs ${rank <= 3 ? "text-brand" : "text-muted"}`}>{rank}</span>
                     <div className="flex shrink-0 gap-0.5 sm:gap-1"><Shield src={f.home.logo} fallbackSrc={f.home.logoFallback} alt="" size={24} /><Shield src={f.away.logo} fallbackSrc={f.away.logoFallback} alt="" size={24} /></div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-bold">{f.home.name} <I18nText text="contra" /> {f.away.name}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted"><Flag src={f.flag} />{f.leagueName}</div>
+                      <Link href={`/match/${f.id}?date=${date}&tab=${tabOf(metric)}`} className="block truncate text-sm font-bold">{f.home.name} <I18nText text="contra" /> {f.away.name}</Link>
+                      <Link href={`/liga/${f.leagueId}`} className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted hover:text-brand"><Flag src={f.flag} />{f.leagueName}</Link>
                     </div>
                     <div className="hidden shrink-0 text-right text-xs text-muted sm:block">{date === today ? <I18nText text="Hoy" /> : date}<br />{timeStr(f.timestamp)}</div>
                     <div className="flex h-9 w-12 shrink-0 items-center justify-center rounded-lg bg-brand px-1.5 text-center text-base font-black leading-none text-black sm:h-10 sm:w-auto sm:rounded-xl sm:px-3 sm:text-lg">{num(v, 2)}</div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

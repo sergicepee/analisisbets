@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { MatchRow } from "@/components/MatchRow";
 import { Notice } from "@/components/ui";
@@ -5,6 +6,8 @@ import { Shield, Flag } from "@/components/Shield";
 import { TeamPageTabs } from "@/components/TeamPageTabs";
 import {
   getLeagueSeasons,
+  getLeagueFixtures,
+  getLeagueStandingsZones,
   getLeagueTeams,
   getTeamLogoFallbackUrl,
   getTeamLogoUrl,
@@ -22,9 +25,10 @@ import { I18nText } from "@/components/I18nProvider";
 import { FollowTeamButton } from "@/components/FollowTeamButton";
 import type { Fixture, TeamProfile } from "@/lib/types";
 import { TeamStatsChart, type TeamGamePoint } from "@/components/TeamStatsChart";
+import { SearchLauncher } from "@/components/SearchModal";
 import { csvLeagueById } from "@/lib/csvLeagues";
 import { getTz } from "@/lib/prefs";
-import Link from "next/link";
+import { LeagueStandingsTable } from "@/components/LeagueStandingsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +42,7 @@ function safeReturnPath(value: string | undefined) {
       candidate = decoded;
     } catch { break; }
   }
-  return "/buscar";
+  return "/";
 }
 
 function dateForFixture(timestamp: number) {
@@ -97,7 +101,8 @@ export default async function Page({ params, searchParams }: { params: { id: str
   const leagueId = Number(searchParams.league) || undefined;
   const back = safeReturnPath(searchParams.from);
   const seasons = leagueId ? await getLeagueSeasons(leagueId) : [];
-  const season = seasons[0];
+  const requestedSeason = Number(searchParams.season);
+  const season = seasons.includes(requestedSeason) ? requestedSeason : seasons[0];
   const teams = leagueId ? await getLeagueTeams(leagueId, season) : [];
   const name = searchParams.name || teams.find((team) => team.id === id)?.name;
   let profile: TeamProfile | null = null;
@@ -134,6 +139,43 @@ export default async function Page({ params, searchParams }: { params: { id: str
 
   const teamName = name ?? `Equipo ${id}`;
   const country = csvLeagueById(leagueId ?? 0)?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
+  const standingsLeagueId = leagueId ?? recent[0]?.leagueId ?? upcoming[0]?.leagueId;
+  const standingsSeason = (leagueId ? season : undefined)
+    ?? recent.find((fixture) => fixture.leagueId === standingsLeagueId)?.season
+    ?? upcoming.find((fixture) => fixture.leagueId === standingsLeagueId)?.season;
+  let standingsTeams: Awaited<ReturnType<typeof getLeagueTeams>> = [];
+  let standingsFixtures: Fixture[] = [];
+  let standingsZones: Awaited<ReturnType<typeof getLeagueStandingsZones>> = [];
+  let standingsDataError: string | null = null;
+  let standingsZoneError: string | null = null;
+  if (standingsLeagueId && standingsSeason) {
+    const [teamsResult, fixturesResult, zonesResult] = await Promise.allSettled([
+      leagueId === standingsLeagueId && season === standingsSeason
+        ? Promise.resolve(teams)
+        : getLeagueTeams(standingsLeagueId, standingsSeason),
+      getLeagueFixtures(standingsLeagueId, standingsSeason),
+      getLeagueStandingsZones(standingsLeagueId, standingsSeason),
+    ]);
+    if (teamsResult.status === "fulfilled") standingsTeams = teamsResult.value;
+    else standingsDataError = errMsg(teamsResult.reason);
+    if (fixturesResult.status === "fulfilled") standingsFixtures = fixturesResult.value;
+    else standingsDataError = standingsDataError ? `${standingsDataError}; ${errMsg(fixturesResult.reason)}` : errMsg(fixturesResult.reason);
+    if (zonesResult.status === "fulfilled") standingsZones = zonesResult.value;
+    else standingsZoneError = errMsg(zonesResult.reason);
+  }
+  const standingsCountry = csvLeagueById(standingsLeagueId ?? 0)?.country ?? country;
+  const standings = standingsLeagueId && standingsSeason ? (
+    <LeagueStandingsTable
+      leagueId={standingsLeagueId}
+      season={standingsSeason}
+      teams={standingsTeams.map((team) => ({ ...team, logoFallback: getTeamLogoFallbackUrl(team.name, standingsCountry) }))}
+      fixtures={standingsFixtures}
+      zones={standingsZones}
+      currentTeamId={id}
+      dataError={standingsDataError}
+      zoneError={standingsZoneError}
+    />
+  ) : null;
   const league = leagueId ? csvLeagueById(leagueId) : null;
   const competitionName = league?.name ?? upcoming[0]?.leagueName ?? recent[0]?.leagueName;
   const competitionLogo = upcoming[0]?.leagueLogo ?? recent[0]?.leagueLogo ?? null;
@@ -216,13 +258,14 @@ export default async function Page({ params, searchParams }: { params: { id: str
           {competitions.size > 0 && (
             <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2">
               {[...competitions.entries()].map(([competitionId, item]) => (
-                <span
+                <Link
                   key={competitionId}
+                  href={`/liga/${competitionId}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/50 px-2.5 py-1 text-[10px] font-semibold text-slate-700"
                 >
                   <Shield src={getLeagueLogoUrl(competitionId, item.logo)} alt="" size={16} />
                   <span>{item.name}</span>
-                </span>
+                </Link>
               ))}
             </div>
           )}
@@ -238,9 +281,10 @@ export default async function Page({ params, searchParams }: { params: { id: str
           results={<FixtureGroups fixtures={recent} favoriteIds={favoriteLookup.favoriteIds} isAuthenticated={!!user} />}
           upcoming={<FixtureGroups fixtures={upcoming} favoriteIds={favoriteLookup.favoriteIds} isAuthenticated={!!user} showDate />}
           statistics={statistics}
+          standings={standings}
         />
         {recent.length === 0 && upcoming.length === 0 && !fixtureError && (
-          <div className="text-center text-xs text-muted"><Link href="/buscar" className="text-brand"><I18nText text="Buscar equipos" /></Link></div>
+          <div className="text-center text-xs text-muted"><SearchLauncher className="text-brand"><I18nText text="Buscar equipos" /></SearchLauncher></div>
         )}
       </main>
     </>

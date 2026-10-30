@@ -1,29 +1,31 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { IconCalendar, IconMatches, IconStats } from "./icons";
+import { IconCalendar, IconMatches, IconStats, IconTrophy } from "./icons";
 import { I18nText, useT } from "./I18nProvider";
 
 export function TeamPageTabs({
   results,
   upcoming,
   statistics,
+  standings,
   resultCount,
   upcomingCount,
 }: {
   results: ReactNode;
   upcoming: ReactNode;
   statistics: ReactNode;
+  standings?: ReactNode;
   resultCount: number;
   upcomingCount: number;
 }) {
-  const [section, setSection] = useState<"matches" | "statistics">("matches");
+  const [section, setSection] = useState<"matches" | "statistics" | "standings">("matches");
   const [matchView, setMatchView] = useState<"results" | "upcoming">("results");
   const t = useT();
 
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-card">
-      <div role="tablist" aria-label={t("Secciones del equipo")} className="flex border-b border-line px-3">
+      <div role="tablist" aria-label={t("Secciones del equipo")} className="flex w-full border-b border-line px-1">
         <button
           type="button"
           role="tab"
@@ -31,9 +33,9 @@ export function TeamPageTabs({
           aria-controls="team-matches-panel"
           aria-selected={section === "matches"}
           onClick={() => setSection("matches")}
-          className={`flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-bold ${section === "matches" ? "border-brand text-brand" : "border-transparent text-muted"}`}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap border-b-2 px-1 py-3 text-xs font-bold sm:gap-2 sm:px-2 sm:text-sm ${section === "matches" ? "border-brand text-brand" : "border-transparent text-muted"}`}
         >
-          <IconMatches className="h-4 w-4" />
+          <IconMatches className="h-4 w-4 shrink-0" />
           <I18nText text="Partidos" />
         </button>
         <button
@@ -43,11 +45,25 @@ export function TeamPageTabs({
           aria-controls="team-statistics-panel"
           aria-selected={section === "statistics"}
           onClick={() => setSection("statistics")}
-          className={`flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-bold ${section === "statistics" ? "border-brand text-brand" : "border-transparent text-muted"}`}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap border-b-2 px-1 py-3 text-xs font-bold sm:gap-2 sm:px-2 sm:text-sm ${section === "statistics" ? "border-brand text-brand" : "border-transparent text-muted"}`}
         >
-          <IconStats className="h-4 w-4" />
+          <IconStats className="h-4 w-4 shrink-0" />
           <I18nText text="Estadísticas" />
         </button>
+        {standings && (
+          <button
+            type="button"
+            role="tab"
+            id="team-standings-tab"
+            aria-controls="team-standings-panel"
+            aria-selected={section === "standings"}
+            onClick={() => setSection("standings")}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap border-b-2 px-1 py-3 text-xs font-bold sm:gap-2 sm:px-2 sm:text-sm ${section === "standings" ? "border-brand text-brand" : "border-transparent text-muted"}`}
+          >
+            <IconTrophy className="h-4 w-4 shrink-0" />
+            <I18nText text="Clasificación" />
+          </button>
+        )}
       </div>
 
       {section === "matches" ? (
@@ -76,8 +92,10 @@ export function TeamPageTabs({
           </div>
           {matchView === "results" ? results : upcoming}
         </div>
-      ) : (
+      ) : section === "statistics" ? (
         <div role="tabpanel" id="team-statistics-panel" aria-labelledby="team-statistics-tab" className="space-y-3 p-3 sm:p-4">{statistics}</div>
+      ) : (
+        <div role="tabpanel" id="team-standings-panel" aria-labelledby="team-standings-tab">{standings}</div>
       )}
     </section>
   );

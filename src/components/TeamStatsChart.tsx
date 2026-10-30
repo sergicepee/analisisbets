@@ -123,12 +123,13 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
       </button>
     </div>
     <div className="mt-3 w-full pb-2">
-      {chartValues.length ? <div className="relative w-full px-1">
-        <div className="mx-auto w-full max-w-[360px] translate-x-4">
-          <div className="flex items-start gap-1">
-            <div className="relative flex h-[160px] min-w-0 flex-1 items-end gap-[2px] border-b border-line">
+      {chartValues.length ? <div className="relative mx-auto w-full max-w-[420px] px-5">
+        <div
+          className="relative grid h-[160px] border-b border-line"
+          style={{ gridTemplateColumns: `repeat(${chartValues.length}, minmax(0, 1fr))`, gap: "2px" }}
+        >
           <div
-            className="pointer-events-none absolute left-0 right-0 z-20 -translate-y-1/2 border-t-2 border-dashed border-statOrange"
+            className="pointer-events-none absolute inset-x-0 z-20 -translate-y-1/2 border-t-2 border-dashed border-statOrange"
             style={{ top: `${160 - lineBottom}px` }}
           />
           {chartValues.map((game, index) => {
@@ -136,27 +137,27 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
             const passes = game.value >= adjustedLine;
             const nearLine = !passes && adjustedLine - game.value <= 0.5;
             const color = passes ? "bg-statGreen" : nearLine ? "bg-statOrange" : "bg-statRed";
-            return <div key={`${game.timestamp}-${index}`} className="relative h-full min-w-0 flex-1">
+            return <div key={`${game.timestamp}-${index}`} className="relative h-full min-w-0">
               <span className="absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold" style={{ bottom: `${barHeight + 4}px` }}>{game.value}</span>
               <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`absolute bottom-0 left-1/2 w-[88%] max-w-7 -translate-x-1/2 rounded-md transition-colors duration-300 ease-in-out ${color}`} style={{ height: `${barHeight}px` }} />
             </div>;
           })}
-            </div>
-            <div aria-hidden="true" className="pointer-events-none relative h-[160px] w-10 shrink-0">
-              <div
-                className="absolute left-0 -translate-y-1/2 whitespace-nowrap rounded-md bg-statOrange px-1.5 py-1 text-[10px] font-black leading-none text-black shadow-[0_0_12px_rgba(219,152,56,0.45)]"
-                style={{ top: `${160 - lineBottom}px` }}
-              >
-                {adjustedLine.toFixed(1)}
-              </div>
-            </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[calc(100%-8px)] z-30 -translate-y-1/2 whitespace-nowrap rounded-md bg-statOrange px-1.5 py-1 text-[10px] font-black leading-none text-black shadow-[0_0_12px_rgba(219,152,56,0.45)]"
+            style={{ top: `${160 - lineBottom}px` }}
+          >
+            {adjustedLine.toFixed(1)}
           </div>
-          <div className="mr-11 flex gap-[2px] pt-1">
-            {chartValues.map((game, index) => <div key={`label-${game.timestamp}-${index}`} title={`${game.opponent} · ${game.isHome ? "Local" : "Visitante"} · ${new Date(game.timestamp * 1000).toLocaleDateString()}`} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-              <Shield src={game.opponentLogo} fallbackSrc={game.opponentLogoFallback} alt={game.opponent} size={20} />
-              <span className="text-[9px] text-muted [writing-mode:vertical-rl]">{dateLabel(game.timestamp)}</span>
-            </div>)}
-          </div>
+        </div>
+        <div
+          className="grid pt-1"
+          style={{ gridTemplateColumns: `repeat(${chartValues.length}, minmax(0, 1fr))`, gap: "2px" }}
+        >
+          {chartValues.map((game, index) => <div key={`label-${game.timestamp}-${index}`} title={`${game.opponent} · ${game.isHome ? "Local" : "Visitante"} · ${new Date(game.timestamp * 1000).toLocaleDateString()}`} className="flex min-w-0 flex-col items-center gap-1">
+            <Shield src={game.opponentLogo} fallbackSrc={game.opponentLogoFallback} alt={game.opponent} size={20} />
+            <span className="text-[9px] text-muted [writing-mode:vertical-rl]">{dateLabel(game.timestamp)}</span>
+          </div>)}
         </div>
       </div> : <p className="py-8 text-center text-sm text-muted">No hay datos de esta estadística.</p>}
     </div>

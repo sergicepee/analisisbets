@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import { statusGroup } from "./format";
 import { canonicalTeamName, csvTeamId, getCsvFixture, getCsvFixtures, getCsvFixturesByDate } from "./csvFixtures";
-import { getCsvLeagueAverage, getCsvLeagueSeasons, getCsvLeagueTeams, getCsvStatsForFixture, getCsvTeamMatchSeries, getCsvTeamProfile } from "./csvHistory";
+import { getCsvLeagueAverage, getCsvLeagueFixtures, getCsvLeagueSeasons, getCsvLeagueTeams, getCsvStatsForFixture, getCsvTeamMatchSeries, getCsvTeamProfile } from "./csvHistory";
 import { CSV_LEAGUES } from "./csvLeagues";
 
 const BASE = "https://v3.football.api-sports.io";
@@ -430,13 +430,19 @@ export async function getLeagues(): Promise<LeagueInfo[]> {
 export interface TeamHit { id: number; name: string; logo: string | null; logoFallback?: string | null; country: string; leagueId?: number }
 export async function searchTeams(q: string): Promise<TeamHit[]> {
   const term = q.trim();
-  if (term.length < 3) return [];
-  if (!apiEnabled) {
-    const normalized = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (term.length < 2) return [];
+  const normalized = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "");
+  if (!apiEnabled || term.length < 3) {
     const found = await Promise.all(CSV_LEAGUES.map(async (league) => (await getCsvLeagueTeams(league.id))
-      .filter((team) => team.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalized))
+      .filter((team) => team.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").includes(normalized))
       .map((team) => ({ id: team.id, name: team.name, logo: getTeamLogoUrl(team.name, league.country), logoFallback: getTeamLogoFallbackUrl(team.name, league.country), country: league.country, leagueId: league.id }))));
-    return [...new Map(found.flat().map((team) => [team.id, team])).values()].slice(0, 20);
+    return [...new Map(found.flat().map((team) => [team.id, team])).values()]
+      .sort((a, b) => {
+        const aPrefix = a.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").startsWith(normalized);
+        const bPrefix = b.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").startsWith(normalized);
+        return Number(bPrefix) - Number(aPrefix) || a.name.localeCompare(b.name);
+      })
+      .slice(0, 20);
   }
   return cached<TeamHit[]>(`teams:q:${term.toLowerCase()}`, D, async () =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -464,6 +470,81 @@ export async function getLeagueSeasons(leagueId: number) {
     return (item?.seasons ?? []).filter((s: any) => s.coverage?.fixtures?.events || s.year).map((s: any) => Number(s.year)).filter(Number.isFinite).sort((a: number, b: number) => b - a);
   });
 }
+
+export async function getLeagueFixtures(leagueId: number, season: number): Promise<Fixture[]> {
+  const local = (await getCsvFixtures()).filter((fixture) => fixture.leagueId === leagueId && fixture.season === season);
+  if (local.length) {
+    const withMatchDetails = await Promise.all(local.map(async (fixture) => {
+      const stats = await getCsvStatsForFixture(fixture);
+      return stats
+        ? {
+          ...fixture,
+          goalsHome: stats.goalsHome,
+          goalsAway: stats.goalsAway,
+          htHome: stats.htHome,
+          htAway: stats.htAway,
+          redCardsHome: stats.redHome,
+          redCardsAway: stats.redAway,
+        }
+        : fixture;
+    }));
+    return addCsvTeamLogos(withMatchDetails);
+  }
+  const historical = await getCsvLeagueFixtures(leagueId, season);
+  if (historical.length) return addCsvTeamLogos(historical);
+  if (!apiEnabled) return [];
+  return cached<Fixture[]>(`league-fixtures:${leagueId}:${season}:${getTz()}`, 6 * H, async () =>
+    (await call("/fixtures", { league: leagueId, season, timezone: getTz() }, true)).map(normFixture),
+  );
+}
+
+export type LeagueStandingsZone = { teamId: number; description: string };
+
+export async function getLeagueStandingsZones(leagueId: number, season: number): Promise<LeagueStandingsZone[]> {
+  if (!apiEnabled) return [];
+  return cached<LeagueStandingsZone[]>(`league-standings-zones:${leagueId}:${season}`, D, async () => {
+    const response = await call("/standings", { league: leagueId, season });
+    const tables = response.flatMap((item) => item.league?.standings ?? []);
+    return tables.flatMap((table: any[]) => table.flatMap((entry: any) => {
+      const teamId = Number(entry.team?.id);
+      const description = typeof entry.description === "string" ? entry.description.trim() : "";
+      return Number.isSafeInteger(teamId) && description ? [{ teamId, description }] : [];
+    }));
+  });
+}
+
+export type LeagueTopScorer = {
+  id: number;
+  name: string;
+  photo: string | null;
+  teamName: string;
+  teamLogo: string | null;
+  goals: number;
+  assists: number;
+  appearances: number;
+};
+
+export async function getLeagueTopScorers(leagueId: number, season: number): Promise<LeagueTopScorer[]> {
+  if (!apiEnabled) return [];
+  return cached<LeagueTopScorer[]>(`league-scorers:${leagueId}:${season}`, 6 * H, async () =>
+    (await call("/players/topscorers", { league: leagueId, season }))
+      .flatMap((row) => {
+        const stats = row.statistics?.[0];
+        if (!row.player || !stats) return [];
+        return [{
+          id: Number(row.player.id),
+          name: String(row.player.name ?? ""),
+          photo: typeof row.player.photo === "string" ? row.player.photo : null,
+          teamName: String(stats.team?.name ?? ""),
+          teamLogo: typeof stats.team?.logo === "string" ? stats.team.logo : null,
+          goals: Number(stats.goals?.total ?? 0),
+          assists: Number(stats.goals?.assists ?? 0),
+          appearances: Number(stats.games?.appearences ?? stats.games?.appearances ?? 0),
+        }];
+      }),
+  );
+}
+
 export async function getTeamSeasonProfile(teamId: number, name: string, leagueId: number, season: number): Promise<TeamProfile> {
   const local = await getCsvTeamProfile(csvTeamId(name), true, Infinity, leagueId, season, 60);
   if (local.rows.length || !apiEnabled) return { ...local, teamId };

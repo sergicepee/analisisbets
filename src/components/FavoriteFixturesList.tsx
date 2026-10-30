@@ -1,9 +1,9 @@
-import Link from "next/link";
 import type { Fixture } from "@/lib/types";
 import { MatchRow } from "./MatchRow";
 import { FavoriteFixtureVisibility } from "./FavoriteFixtureVisibility";
 import { I18nText } from "./I18nProvider";
 import { IconSearch } from "./icons";
+import { SearchLauncher } from "./SearchModal";
 
 export function FavoriteFixturesList({
   fixtures,
@@ -22,9 +22,9 @@ export function FavoriteFixturesList({
         <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
           <I18nText text="Todavía no tienes favoritos. Usa el buscador de arriba o pulsa la estrella en cualquier partido." />
         </p>
-        <Link href="/buscar" className="mt-4 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-black">
+        <SearchLauncher className="mt-4 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-black">
           <I18nText text="Buscar partidos" />
-        </Link>
+        </SearchLauncher>
       </div>
     );
   }

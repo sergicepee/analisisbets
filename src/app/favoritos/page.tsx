@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { FavoritesCollections, type FollowedTeamCard, type FavoriteFixtureCard } from "@/components/FavoritesCollections";
 import { I18nText } from "@/components/I18nProvider";
+import { SearchLauncher } from "@/components/SearchModal";
 import { Notice } from "@/components/ui";
 import { getUser, authConfigured } from "@/lib/auth";
 import { getFixture, getTeamLogoFallbackUrl, getTeamLogoUrl, getTeamUpcomingFixtures } from "@/lib/apifootball";
-import { getUserFavoriteFixtureIds, getUserFollowedTeams } from "@/lib/favorites";
+import { getUserFavoriteFixtureIds, getUserFollowedLeagues, getUserFollowedTeams } from "@/lib/favorites";
 import { getTz } from "@/lib/prefs";
 import { Star } from "lucide-react";
 import Link from "next/link";
@@ -47,9 +48,10 @@ export default async function FavoritesPage() {
   const user = await getUser();
   if (!user) redirect("/login?next=%2Ffavoritos");
 
-  const [lookup, teamLookup] = await Promise.all([
+  const [lookup, teamLookup, leagueLookup] = await Promise.all([
     getUserFavoriteFixtureIds(user.id),
     getUserFollowedTeams(user.id),
+    getUserFollowedLeagues(user.id),
   ]);
   const results = await Promise.allSettled(lookup.fixtureIds.map((id) => getFixture(id)));
   results.forEach((result, index) => {
@@ -104,18 +106,20 @@ export default async function FavoritesPage() {
         {teamLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar los equipos seguidos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {!lookup.error && unavailableCount > 0 && <Notice tone="warn"><I18nText text="No se pudieron cargar algunos partidos favoritos." /></Notice>}
         {upcomingErrors > 0 && <Notice tone="warn"><I18nText text="No se pudo cargar el próximo partido de algunos equipos." /></Notice>}
-        {(!lookup.error && !teamLookup.error && teams.length === 0 && fixtureCards.length === 0) && (
+        {leagueLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar las ligas seguidas. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
+        {(!lookup.error && !teamLookup.error && !leagueLookup.error && teams.length === 0 && fixtureCards.length === 0 && leagueLookup.leagues.length === 0) && (
           <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-line bg-card px-6 py-10 text-center">
             <p className="max-w-md text-sm leading-relaxed text-muted">
               <I18nText text="Todavía no tienes favoritos. Usa el buscador de arriba o pulsa la estrella en cualquier partido." />
             </p>
-            <Link href="/buscar" className="mt-4 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-black">
+            <SearchLauncher className="mt-4 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-black">
               <I18nText text="Buscar partidos" />
-            </Link>
+            </SearchLauncher>
           </div>
         )}
-        {(!lookup.error || !teamLookup.error) && (
+        {(!lookup.error || !teamLookup.error || !leagueLookup.error) && (
           <FavoritesCollections
+            leagues={leagueLookup.error ? [] : leagueLookup.leagues}
             teams={teamLookup.error ? [] : teams}
             fixtures={lookup.error ? [] : fixtureCards}
           />

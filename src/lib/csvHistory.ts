@@ -147,6 +147,38 @@ export async function getCsvLeagueTeams(leagueId: number, season?: number): Prom
   return [...teams].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, "es"));
 }
 
+export async function getCsvLeagueFixtures(leagueId: number, season: number): Promise<Fixture[]> {
+  const league = csvLeagueById(leagueId);
+  if (!league) return [];
+  const matches = (await readHistory()).filter((match) => match.leagueId === leagueId && match.season === season);
+  const teamCount = new Set(matches.flatMap((match) => [match.homeId, match.awayId])).size;
+  const gamesPerRound = Math.max(1, Math.floor(teamCount / 2));
+  return matches.map((match, index) => ({
+    id: -Math.abs(match.timestamp * 100 + index + 1),
+    timestamp: match.timestamp,
+    leagueId,
+    leagueName: league.name,
+    country: league.country,
+    flag: league.flag,
+    leagueLogo: null,
+    season,
+    round: `Jornada ${Math.floor(index / gamesPerRound) + 1}`,
+    venue: null,
+    statusShort: "FT",
+    statusLong: "Finalizado",
+    elapsed: null,
+    home: { id: match.homeId, name: match.homeName, logo: null },
+    away: { id: match.awayId, name: match.awayName, logo: null },
+    goalsHome: match.goalsHome,
+    goalsAway: match.goalsAway,
+    htHome: match.htHome,
+    htAway: match.htAway,
+    redCardsHome: match.redHome,
+    redCardsAway: match.redAway,
+    events: [],
+  }));
+}
+
 export async function getCsvTeamMatchSeries(teamId: number, leagueId: number, season: number) {
   return (await readHistory()).filter((match) => match.leagueId === leagueId && match.season === season && (match.homeId === teamId || match.awayId === teamId))
     .map((match) => {

@@ -50,6 +50,7 @@ function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoritePr
       window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
         detail: { fixtureId, favorite: result.favorite },
       }));
+      router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar el favorito.");
     } finally {

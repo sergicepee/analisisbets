@@ -6,9 +6,11 @@ import { IconStats } from "./icons";
 import { FavoriteMatchButton } from "./FollowMatchButton";
 import { I18nText } from "./I18nProvider";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { isWithinCsvLiveWindow } from "@/lib/fixtureStatus";
 
 export function MatchRow({ f, date, displayDate, selected = false, isAuthenticated, initialFavorite, showFavorite = true, showLeagueLogo = false, showDate = false }: { f: Fixture; date: string; displayDate?: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean; showFavorite?: boolean; showLeagueLogo?: boolean; showDate?: boolean }) {
   const g = statusGroup(f);
+  const csvLive = isWithinCsvLiveWindow(f);
   const suspended = f.statusShort === "SUSP";
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const homeWon = g === "finished" && f.goalsHome !== null && f.goalsAway !== null && f.goalsHome > f.goalsAway;
@@ -21,10 +23,10 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
   const homeRedCards = f.redCardsHome ?? eventRedCards(f.home.id);
   const awayRedCards = f.redCardsAway ?? eventRedCards(f.away.id);
   return (
-    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
+    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] px-2 sm:px-3 ${csvLive ? "border-l-loss bg-loss/5" : `border-l-transparent ${selected ? "bg-card2" : "bg-card"}`}`}>
       {showFavorite && <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />}
-      <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
-        <div className={`shrink-0 text-center ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
+      <div className={`shrink-0 text-center ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
+        <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="block">
           {showDate && (
             <div className="mb-0.5 whitespace-nowrap text-[9px] font-semibold leading-tight text-muted">{displayDate}</div>
           )}
@@ -33,7 +35,9 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
           ) : g === "finished" ? (
             <div className="text-xs font-medium text-muted"><I18nText text="Final" /></div>
           ) : g === "live" ? (
-            <>
+            csvLive ? (
+              <span className="inline-flex animate-pulse items-center justify-center rounded bg-loss px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-black motion-reduce:animate-none sm:text-xs">LIVE</span>
+            ) : <>
               <div className="text-sm font-extrabold tabular-nums text-chartHit sm:text-base">{score ?? "—"}</div>
               <div className="mt-0.5 text-[10px] font-semibold text-chartHit">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div>
             </>
@@ -43,8 +47,10 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
               {g === "pending" && <div className="mt-0.5 text-[9px] leading-tight text-muted"><I18nText text="Pendiente de actualizar" /></div>}
             </>
           )}
-          {showLeagueLogo && <span className="mx-auto mt-1 flex h-6 w-6 items-center justify-center rounded bg-white p-0.5"><Shield src={getLeagueLogoUrl(f.leagueId, f.leagueLogo)} alt="" size={20} /></span>}
-        </div>
+        </Link>
+        {showLeagueLogo && <Link href={`/liga/${f.leagueId}`} aria-label={`Ver liga ${f.leagueName}`} className="mx-auto mt-1 flex h-6 w-6 items-center justify-center rounded bg-white p-0.5"><Shield src={getLeagueLogoUrl(f.leagueId, f.leagueLogo)} alt="" size={20} /></Link>}
+      </div>
+      <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
         <div className="min-w-0 flex-1 space-y-1">
           <TeamLine name={f.home.name} logo={f.home.logo} fallback={f.home.logoFallback} winner={homeWon} loser={homeLost} redCard={homeRedCards > 0} suspended={suspended} />
           <TeamLine name={f.away.name} logo={f.away.logo} fallback={f.away.logoFallback} winner={awayWon} loser={awayLost} redCard={awayRedCards > 0} suspended={suspended} />

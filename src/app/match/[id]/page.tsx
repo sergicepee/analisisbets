@@ -22,12 +22,18 @@ import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { getLocale, getTz } from "@/lib/prefs";
+import { isNearCsvLiveWindow, isWithinCsvLiveWindow } from "@/lib/fixtureStatus";
 import {
   LINES, avg2, bttsPct, expectedFor, halfExpected, halfGoalPct, matchOverPct, ownPct, pctTone, poissonModel, pooledBtts, pooledPct, teamAvg, tone, trendPct,
 } from "@/lib/metrics";
 import type { Fixture, LeagueAvg, Metric, TeamProfile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+const OUTCOME_COLORS = {
+  home: "#70dfa0",
+  draw: "#27ad68",
+  away: "#075b38",
+} as const;
 export const maxDuration = 60;
 
 const TABS = [["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget], ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard]] as const;
@@ -101,7 +107,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   return (
     <>
       <Header back={`/?date=${date}`} />
-      {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
+      {(apiEnabled && g === "live") || (!apiEnabled && isNearCsvLiveWindow(f)) ? <AutoRefresh seconds={apiEnabled ? 45 : 30} /> : null}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
@@ -130,6 +136,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 // ───────────── Cabecera ─────────────
 function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initialFavorite }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string; isAuthenticated: boolean; initialFavorite: boolean }) {
   const g = statusGroup(f);
+  const csvLive = isWithinCsvLiveWindow(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const halftimeScore = f.htHome !== null && f.htAway !== null ? `${f.htHome} - ${f.htAway}` : null;
   const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
@@ -148,11 +155,11 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
       </div>
       <div className="relative z-10">
       <div className="flex justify-center">
-        <div className="flex min-w-0 items-center gap-2 rounded-full border border-slate-300/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-700">
+        <Link href={`/liga/${f.leagueId}`} className="flex min-w-0 items-center gap-2 rounded-full border border-slate-300/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-white">
           <Shield src={getLeagueLogoUrl(f.leagueId, f.leagueLogo)} alt="" size={20} />
           <span className="truncate">{f.leagueName}</span>
           <IconNext className="h-3.5 w-3.5 shrink-0" />
-        </div>
+        </Link>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-center text-[11px] text-slate-600 sm:text-xs">
         <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 shrink-0" /><span className="capitalize">{dateLabel}</span></span>
@@ -162,7 +169,7 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
       <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
         <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} p={pa} />
         <div className="relative flex min-h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
-          {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
+          {g === "live" ? (csvLive ? <span className="inline-flex animate-pulse items-center justify-center rounded-md bg-loss px-3 py-1.5 text-sm font-black uppercase leading-none text-black motion-reduce:animate-none">LIVE</span> : <><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
             : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600"><I18nText text="Final" /></div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
             : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600"><I18nText text="Pendiente de actualizar" /></div>}</>)}
         </div>
@@ -228,14 +235,14 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
       {p1x2 ? (
         <div>
           <div className="mb-1.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 text-[11px] font-bold leading-tight sm:text-sm">
-            <span className="min-w-0 truncate text-left">{f.home.name} <span className="text-statGreen">{Math.round(p1x2.home)}%</span></span>
-            <span className="min-w-0 truncate text-center text-statOrange"><I18nText text="Empate" /> {Math.round(p1x2.draw)}%</span>
-            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-statRed">{Math.round(p1x2.away)}%</span></span>
+            <span className="min-w-0 truncate text-left">{f.home.name} <span style={{ color: OUTCOME_COLORS.home }}>{Math.round(p1x2.home)}%</span></span>
+            <span className="min-w-0 truncate text-center" style={{ color: OUTCOME_COLORS.draw }}><I18nText text="Empate" /> {Math.round(p1x2.draw)}%</span>
+            <span className="min-w-0 truncate text-right">{f.away.name} <span style={{ color: OUTCOME_COLORS.away }}>{Math.round(p1x2.away)}%</span></span>
           </div>
-          <div className="flex h-7 overflow-hidden rounded-full">
-            <div className="border-r-2 border-bg bg-statGreen" style={{ width: `${p1x2.home}%` }} />
-            <div className="border-r-2 border-bg bg-statOrange" style={{ width: `${p1x2.draw}%` }} />
-            <div className="bg-statRed" style={{ width: `${p1x2.away}%` }} />
+          <div className="flex h-5 overflow-hidden rounded-full">
+            <div className="border-r-2 border-bg" style={{ width: `${p1x2.home}%`, backgroundColor: OUTCOME_COLORS.home }} />
+            <div className="border-r-2 border-bg" style={{ width: `${p1x2.draw}%`, backgroundColor: OUTCOME_COLORS.draw }} />
+            <div style={{ width: `${p1x2.away}%`, backgroundColor: OUTCOME_COLORS.away }} />
           </div>
           {!model && pred?.advice && <p className="mt-2 text-xs text-muted"><I18nText text="Consejo de API-Football:" /> {pred.advice}</p>}
         </div>

@@ -72,3 +72,43 @@ export async function getTeamFollowStatus(userId: string, teamId: number) {
   }
   return { following: !!data, error: false };
 }
+
+export async function getUserFollowedLeagues(userId: string) {
+  const { data, error } = await createAuthServer()
+    .from("followed_leagues")
+    .select("league_id, league_name, country, logo")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.error("Could not load user followed leagues:", error);
+    return { leagues: [], error: true };
+  }
+  return {
+    leagues: (data ?? [])
+      .map((row) => ({
+        id: Number(row.league_id),
+        name: row.league_name,
+        country: row.country,
+        logo: typeof row.logo === "string" ? row.logo : null,
+      }))
+      .filter((league) => Number.isSafeInteger(league.id) && typeof league.name === "string" && typeof league.country === "string"),
+    error: false,
+  };
+}
+
+export async function getLeagueFollowStatus(userId: string, leagueId: number) {
+  const { data, error } = await createAuthServer()
+    .from("followed_leagues")
+    .select("league_id")
+    .eq("user_id", userId)
+    .eq("league_id", leagueId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Could not load user league follow status:", error);
+    return { following: false, error: true };
+  }
+  return { following: !!data, error: false };
+}

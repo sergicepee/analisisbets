@@ -1,5 +1,6 @@
 import { getLang, getLocale, getTz } from "./prefs";
 import { apiEnabled } from "./config";
+import { isWithinCsvLiveWindow } from "./fixtureStatus";
 import type { Fixture, StatusGroup } from "./types";
 
 export const isDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -24,7 +25,9 @@ export function statusGroup(f: Fixture): StatusGroup {
   if (LIVE.includes(f.statusShort)) return apiEnabled ? "live" : "pending";
   if (FIN.includes(f.statusShort)) return "finished";
   if (["NS", "TBD"].includes(f.statusShort)) {
-    return Date.now() / 1000 >= f.timestamp ? "pending" : "upcoming";
+    const now = Date.now() / 1000;
+    if (now < f.timestamp) return "upcoming";
+    return !apiEnabled && isWithinCsvLiveWindow(f, now) ? "live" : "pending";
   }
   return "other";
 }
