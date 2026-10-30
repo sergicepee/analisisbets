@@ -7,6 +7,10 @@
 
 html, body { background: rgb(var(--bg)); }
 body { color: rgb(var(--fg)); font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+.match-row { transition: background-color 150ms ease; }
+@media (hover: hover) {
+  .match-row:has(> a:hover) { background-color: rgb(var(--card2)); }
+}
 .font-display { font-family: var(--font-display); }
 .team-color-halo { -webkit-mask-image: radial-gradient(ellipse at center, #000 15%, transparent 72%); mask-image: radial-gradient(ellipse at center, #000 15%, transparent 72%); }
 .font-list { font-family: var(--font-list); }
