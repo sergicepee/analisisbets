@@ -108,6 +108,23 @@ function scoreboard(league: EspnLeague, year: number, limit = 1000): Promise<Esp
   });
 }
 
+// Consulta ligera de un solo día (YYYYMMDD) para no descargar temporadas enteras.
+function scoreboardDay(league: EspnLeague, day: string): Promise<EspnScoreboard> {
+  const dayMs = Date.UTC(Number(day.slice(0, 4)), Number(day.slice(4, 6)) - 1, Number(day.slice(6, 8)));
+  const recent = Math.abs(Date.now() - dayMs) < 3 * DAY * 1000;
+  return cached(`espn:scoreboard-day:${league.slug}:${day}`, recent ? 45 : 6 * HOUR, async () => {
+    const data = await requestJson<Partial<EspnScoreboard>>(`${SITE}/${league.slug}/scoreboard?dates=${day}&limit=100`);
+    if (!Array.isArray(data.events)) throw new Error(`ESPN no devolvió eventos para ${league.slug} (${day})`);
+    return data as EspnScoreboard;
+  });
+}
+
+function shiftDay(date: string, offset: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + offset);
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
 function teamLogo(team: EspnTeam | undefined): string | null {
   return team?.logo ?? team?.logos?.find((logo) => logo.href)?.href ?? null;
 }
@@ -297,13 +314,18 @@ function localDate(timestamp: number, timeZone: string): string {
 }
 
 export async function getEspnFixturesByDate(date: string): Promise<Fixture[]> {
-  const year = Number(date.slice(0, 4));
   const timeZone = getTz();
-  const years = new Set([year]);
-  if (date.endsWith("-01-01")) years.add(year - 1);
-  if (date.endsWith("-12-31")) years.add(year + 1);
+  const days = [shiftDay(date, -1), shiftDay(date, 0), shiftDay(date, 1)];
   const results = await Promise.allSettled(ESPN_LEAGUES.flatMap((league) =>
-    [...years].map((calendarYear) => getCalendarEvents(league, calendarYear)),
+    days.map(async (day) => {
+      const data = await scoreboardDay(league, day);
+      const leagueLogo = data.leagues?.[0]?.logos?.find((item) => item.rel?.includes("default"))?.href
+        ?? data.leagues?.[0]?.logos?.[0]?.href ?? null;
+      return data.events.flatMap((event) => {
+        const fixture = normalizeFixture(event, league, leagueLogo);
+        return fixture ? [fixture] : [];
+      });
+    }),
   ));
   const fixtures = results.flatMap((result) => {
     if (result.status === "fulfilled") return result.value;
@@ -311,7 +333,8 @@ export async function getEspnFixturesByDate(date: string): Promise<Fixture[]> {
     return [];
   });
   if (!results.some((result) => result.status === "fulfilled")) throw new Error("No se pudieron cargar los partidos de ESPN");
-  return fixtures.filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
+  const unique = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
+  return [...unique.values()].filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
     .sort((a, b) => a.timestamp - b.timestamp);
 }
 
