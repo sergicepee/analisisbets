@@ -90,9 +90,38 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
         <div className="mt-1 text-[9px] text-muted">por partido</div>
       </div>
     </div>
-    <div className="mt-4 flex items-center justify-between gap-3 text-xs"><label htmlFor="team-stat-line" className="font-semibold">Línea: <span className="text-brand">{adjustedLine.toFixed(1)}</span></label><span className="text-muted">Arrastra para ajustar</span></div>
-    <input id="team-stat-line" type="range" min="0.5" max={maxLine} step="1" value={adjustedLine} onChange={(event) => setLine(Number(event.target.value))} className="mt-2 h-2 w-full cursor-pointer accent-brand" />
-    <div className="mt-1 flex justify-between text-[10px] text-muted"><span>0.5</span><span>{maxLine.toFixed(1)}</span></div>
+    <div className="mt-4 flex h-9 items-center gap-2 rounded-xl bg-card2 px-3">
+      <label htmlFor="team-stat-line" className="shrink-0 text-[10px] font-bold uppercase text-muted">Línea</label>
+      <button
+        type="button"
+        aria-label="Bajar línea"
+        disabled={adjustedLine <= 0.5}
+        onClick={() => setLine(Math.max(0.5, adjustedLine - 1))}
+        className="px-1 text-sm font-bold text-muted disabled:opacity-40"
+      >
+        −
+      </button>
+      <span className="min-w-7 text-center text-sm font-bold">{adjustedLine.toFixed(1)}</span>
+      <input
+        id="team-stat-line"
+        type="range"
+        min="0.5"
+        max={maxLine}
+        step="1"
+        value={adjustedLine}
+        onChange={(event) => setLine(Number(event.target.value))}
+        className="h-1.5 min-w-0 flex-1 cursor-pointer accent-statOrange"
+      />
+      <button
+        type="button"
+        aria-label="Subir línea"
+        disabled={adjustedLine >= maxLine}
+        onClick={() => setLine(Math.min(maxLine, adjustedLine + 1))}
+        className="px-1 text-sm font-bold text-muted disabled:opacity-40"
+      >
+        +
+      </button>
+    </div>
     <div className="mt-3 w-full pb-2">
       {chartValues.length ? <div className="relative w-full px-1">
         <div className="mx-auto w-full max-w-[360px] translate-x-4">
