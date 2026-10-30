@@ -8,18 +8,19 @@ const BAR: Record<Tone, string> = { up: "bg-chartHit", flat: "bg-warn", down: "b
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
 export function StatCard({
-  label, Icon, value, fill = 0, tone = "none", refLabel = "Media liga", refValue,
+  label, Icon, value, fill = 0, tone = "none", refLabel = "Media liga", refValue, variant = "default",
 }: {
-  label: string; Icon?: ComponentType<{ className?: string }>; value: string; fill?: number; tone?: Tone; refLabel?: string; refValue?: string | null;
+  label: string; Icon?: ComponentType<{ className?: string }>; value: string; fill?: number; tone?: Tone; refLabel?: string; refValue?: string | null; variant?: "default" | "tile";
 }) {
   return (
-    <div className="card flex min-w-0 flex-col p-3 sm:p-4">
-      <div className="min-h-8 text-xs leading-4 text-muted sm:min-h-0">{label}</div>
-      <div className="mt-1 flex min-w-0 items-center gap-2 text-xl font-extrabold sm:text-2xl">
-        {Icon && <Icon className="h-4 w-4 shrink-0 text-muted sm:h-5 sm:w-5" />}<span className="truncate">{value}</span>
+    <div className={variant === "tile" ? "flex min-w-0 flex-col rounded-xl bg-[#0f0f0f] p-2.5 sm:p-3" : "card flex min-w-0 flex-col p-3 sm:p-4"}>
+      <div className={`${variant === "tile" ? "min-h-6" : "min-h-8"} text-xs leading-4 text-muted sm:min-h-0`}>{label}</div>
+      <div className={`${variant === "tile" ? "mt-0.5" : "mt-1"} flex min-w-0 items-center gap-2 text-xl font-extrabold sm:text-2xl ${variant === "tile" ? "text-slate-100" : ""}`}>
+        {variant === "tile" ? <span className={`h-2.5 w-2.5 shrink-0 rounded-sm ${BAR[tone]}`} /> : Icon && <Icon className="h-4 w-4 shrink-0 text-muted sm:h-5 sm:w-5" />}
+        <span className="truncate">{value}</span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded bg-line"><div className={`h-full rounded ${BAR[tone]}`} style={{ width: `${clamp(fill)}%` }} /></div>
-      {refValue && <div className="mt-2 text-[11px] text-muted">{t(refLabel)}: <b className="text-brand">{refValue}</b></div>}
+      <div className={`${variant === "tile" ? "mt-1.5" : "mt-2"} h-1.5 overflow-hidden rounded bg-line`}><div className={`h-full rounded ${BAR[tone]}`} style={{ width: `${clamp(fill)}%` }} /></div>
+      {refValue && <div className={`${variant === "tile" ? "mt-1" : "mt-2"} text-[11px] text-muted`}>{t(refLabel)}: <b className="text-brand">{refValue}</b></div>}
     </div>
   );
 }

@@ -187,10 +187,10 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   const L = lavg;
 
   const prob = (label: string, Icon: typeof IconNet, v: number | null, ref: number | null | undefined) => (
-    <StatCard label={label} Icon={Icon} value={pct(v)} fill={v ?? 0} tone={ref != null ? tone(v, ref) : pctTone(v)} refValue={ref != null ? pct(ref) : null} />
+    <StatCard label={label} Icon={Icon} value={pct(v)} fill={v ?? 0} tone={ref != null ? tone(v, ref) : pctTone(v)} refValue={ref != null ? pct(ref) : null} variant="tile" />
   );
   const avgc = (label: string, Icon: typeof IconNet, v: number | null, ref: number | null | undefined, d = 1) => (
-    <StatCard label={label} Icon={Icon} value={num(v, d)} fill={v !== null && ref ? (v / (ref * 2)) * 100 : v !== null ? 40 : 0} tone={tone(v, ref ?? null)} refValue={ref != null ? num(ref, 1) : null} />
+    <StatCard label={label} Icon={Icon} value={num(v, d)} fill={v !== null && ref ? (v / (ref * 2)) * 100 : v !== null ? 40 : 0} tone={tone(v, ref ?? null)} refValue={ref != null ? num(ref, 1) : null} variant="tile" />
   );
 
   return (
@@ -212,18 +212,20 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
         </div>
       ) : <Notice tone="warn">Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada).</Notice>}
 
-      <h2 className="pt-1 font-bold">{t("Probabilidades clave")}</h2>
-      <div className="grid grid-cols-2 gap-3">
-        {prob(t("Más de 2,5 goles"), IconShoe, model?.over25 ?? null, L?.over25)}
-        {prob(t("Más de 1,5 goles"), IconShoe, model?.over15 ?? null, L?.over15)}
-        {prob(t("Ambos marcan"), IconSwap, model?.btts ?? null, L?.btts)}
-        {avgc(t("Promedio de goles"), IconBall, eg?.total ?? null, L?.goals, 2)}
-        {avgc(t("Promedio de tarjetas"), IconCard, ex("cards"), L?.cards)}
-        {avgc(t("Promedio de córners"), IconCorner, ex("corners"), L?.corners)}
-        {avgc(t("Promedio de tiros"), IconTarget, ex("shots"), L?.shots)}
-        {avgc(t("Promedio de TAP"), IconNet, ex("shotsOn"), L?.shotsOn)}
-      </div>
-      <p className="text-[11px] leading-snug text-muted">{t("Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro). ")} {FORM_MATCHES} {t("Partidos")}.</p>
+      <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
+        <h2 className="mb-3 font-bold">{t("Probabilidades clave")}</h2>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          {prob(t("Más de 2,5 goles"), IconShoe, model?.over25 ?? null, L?.over25)}
+          {prob(t("Más de 1,5 goles"), IconShoe, model?.over15 ?? null, L?.over15)}
+          {prob(t("Ambos marcan"), IconSwap, model?.btts ?? null, L?.btts)}
+          {avgc(t("Promedio de goles"), IconBall, eg?.total ?? null, L?.goals, 2)}
+          {avgc(t("Promedio de tarjetas"), IconCard, ex("cards"), L?.cards)}
+          {avgc(t("Promedio de córners"), IconCorner, ex("corners"), L?.corners)}
+          {avgc(t("Promedio de tiros"), IconTarget, ex("shots"), L?.shots)}
+          {avgc(t("Promedio de TAP"), IconNet, ex("shotsOn"), L?.shotsOn)}
+        </div>
+        <p className="mt-3 text-[11px] leading-snug text-muted">{t("Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro). ")} {FORM_MATCHES} {t("Partidos")}.</p>
+      </section>
     </div>
   );
 }
