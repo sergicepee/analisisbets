@@ -14,7 +14,8 @@ import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/
 import { getUser } from "@/lib/auth";
 import { getCsvStatsForFixture, getCsvTeamProfile } from "@/lib/csvHistory";
 import { csvTeamId } from "@/lib/csvFixtures";
-import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { getSubscriberAccess } from "@/lib/subscriptions";
+import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
@@ -46,7 +47,8 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   const tab = TABS.some((t) => t[0] === searchParams.tab) ? (searchParams.tab as string) : "general";
   const date = isDate(searchParams.date) ? (searchParams.date as string) : todayStr();
   const user = await getUser();
-  const isSubscriber = user ? await hasSubscriberAccess(user.id) : false;
+  const subscriptionAccess = user ? await getSubscriberAccess(user.id) : { active: false, error: false };
+  const isSubscriber = subscriptionAccess.active;
   const premiumLocked = tab !== "general" && !isSubscriber;
 
   let f: Fixture | null = null;
@@ -54,6 +56,9 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     return <><Header back={`/?date=${date}`} /><main className="p-4"><Notice tone="warn">No se pudo cargar el partido: {errMsg(e)}</Notice></main></>;
   }
   if (!f) notFound();
+  const favoriteLookup = user
+    ? await getFavoriteFixtureIds(user.id, [f.id])
+    : { favoriteIds: new Set<number>(), error: false };
 
   const needStats = tab !== "goles";
   let profileErr: string | null = null;
@@ -98,7 +103,9 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
-        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}`} />
+        {favoriteLookup.error && <Notice tone="warn">No se pudo cargar tu favorito. Comprueba que la tabla esté configurada en Supabase.</Notice>}
+        {subscriptionAccess.error && <Notice tone="warn">No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión.</Notice>}
+        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
             <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
@@ -120,7 +127,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 }
 
 // ───────────── Cabecera ─────────────
-function MatchHeader({ f, pa, pb, cardCounts, returnTo }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string }) {
+function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initialFavorite }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string; isAuthenticated: boolean; initialFavorite: boolean }) {
   const g = statusGroup(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const halftimeScore = f.htHome !== null && f.htAway !== null ? `${f.htHome} - ${f.htAway}` : null;
@@ -166,7 +173,7 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo }: { f: Fixture; pa: Team
           <div className="space-y-0.5 text-right">{forAway.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
         </div>
       )}
-      <div className="flex justify-center"><FollowMatchButton fixtureId={f.id} /></div>
+      <div className="flex justify-center"><FollowMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} /></div>
       </div>
     </section>
   );

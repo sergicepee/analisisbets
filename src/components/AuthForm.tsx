@@ -14,11 +14,17 @@ const SUB: Record<Mode, string> = {
   recover: "Escribe tu email y te enviaremos un enlace para crear una contraseña nueva.", reset: "Elige una contraseña nueva para tu cuenta.",
 };
 const SUBMIT: Record<Mode, string> = { login: "Entrar", register: "Crear cuenta", recover: "Enviar enlace", reset: "Guardar contraseña" };
+const REGISTER_INFO = "Si podemos completar el registro, recibirás un email. Si ya tienes cuenta, inicia sesión o recupera tu contraseña.";
+
+function isDuplicateEmail(msg: string) {
+  const m = msg.toLowerCase();
+  return m.includes("already registered") || m.includes("already been registered");
+}
 
 function known(msg: string): string {
   const m = msg.toLowerCase();
   if (m.includes("invalid login")) return "Email o contraseña incorrectos.";
-  if (m.includes("already registered") || m.includes("already been registered")) return "Ese email ya tiene una cuenta. Inicia sesión.";
+  if (isDuplicateEmail(msg)) return "No se pudo completar el registro. Si el email ya tiene una cuenta, inicia sesión o recupera la contraseña.";
   if (m.includes("email not confirmed")) return "Confirma tu email antes de entrar (revisa tu bandeja y el spam).";
   if (m.includes("at least") && m.includes("character")) return "La contraseña debe tener al menos 6 caracteres.";
   if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera unos minutos.";
@@ -69,7 +75,7 @@ export function AuthForm({ mode, initialError, initialNext = "/cuenta" }: { mode
         const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(initialNext)}` } });
         if (error) throw error;
         if (data.session) { window.location.href = initialNext; return; }
-        setInfo(t("Cuenta creada. Te enviamos un email para confirmarla: ábrelo y pulsa el enlace."));
+        setInfo(t(REGISTER_INFO));
       }
       if (mode === "recover") {
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${origin()}/auth/callback?next=/restablecer` });
@@ -82,14 +88,20 @@ export function AuthForm({ mode, initialError, initialNext = "/cuenta" }: { mode
         window.location.href = "/cuenta"; return;
       }
     } catch (err) {
-      setError(t(known(err instanceof Error ? err.message : String(err))));
+      const message = err instanceof Error ? err.message : String(err);
+      if (mode === "register" && isDuplicateEmail(message)) setInfo(t(REGISTER_INFO));
+      else setError(t(known(message)));
     } finally { setBusy(false); }
   }
 
   async function google() {
     setError(null);
-    const { error } = await createAuthBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(initialNext)}` } });
-    if (error) setError(t(known(error.message)));
+    try {
+      const { error } = await createAuthBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${origin()}/auth/callback?next=${encodeURIComponent(initialNext)}` } });
+      if (error) throw error;
+    } catch (err) {
+      setError(t(known(err instanceof Error ? err.message : String(err))));
+    }
   }
 
   const input = "w-full rounded-xl border border-line bg-bg px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-brand";

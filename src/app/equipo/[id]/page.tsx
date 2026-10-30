@@ -5,6 +5,8 @@ import { Shield } from "@/components/Shield";
 import { getLeagueSeasons, getLeagueTeams, getTeamLogoFallbackUrl, getTeamLogoUrl, getTeamSeasonMatchSeries, getTeamSeasonProfile, getTeamUpcomingFixtures, getTeamProfile } from "@/lib/apifootball";
 import { countryEs, errMsg, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { getUser } from "@/lib/auth";
+import { getFavoriteFixtureIds } from "@/lib/favorites";
 import type { Fixture, TeamProfile } from "@/lib/types";
 import { TeamStatsChart, type TeamGamePoint } from "@/components/TeamStatsChart";
 import Link from "next/link";
@@ -52,6 +54,10 @@ export default async function Page({ params, searchParams }: { params: { id: str
   const date = todayStr();
   const upcomingGroups = new Map<number, Fixture[]>();
   for (const fixture of next) upcomingGroups.set(fixture.leagueId, [...(upcomingGroups.get(fixture.leagueId) ?? []), fixture]);
+  const user = await getUser();
+  const favoriteLookup = user
+    ? await getFavoriteFixtureIds(user.id, next.map((fixture) => fixture.id))
+    : { favoriteIds: new Set<number>(), error: false };
   return (
     <>
       <Header back={back} />
@@ -64,6 +70,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
         {error && <Notice tone="warn">{error}</Notice>}
         {chartGames.length > 0 && <section className="space-y-2"><h2 className="font-bold">Estadísticas · {season}/{String(season + 1).slice(-2)}</h2><TeamStatsChart games={chartGames} /></section>}
         {profile && chartGames.length === 0 && <Notice>Hay estadísticas resumidas, pero no un historial partido a partido disponible para dibujar la gráfica.</Notice>}
+        {favoriteLookup.error && <Notice tone="warn">No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase.</Notice>}
         {next.length > 0 && <section className="space-y-2"><h2 className="font-bold">Próximos partidos</h2>{[...upcomingGroups.values()].map((fixtures) => {
           const league = fixtures[0];
           return <div key={league.leagueId} className="overflow-hidden rounded-2xl border border-line bg-card">
@@ -74,7 +81,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(league.country, league.flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{league.leagueName}</span>
             </div>
-            {fixtures.map((f) => <MatchRow key={f.id} f={f} date={date} />)}
+            {fixtures.map((f) => <MatchRow key={f.id} f={f} date={date} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />)}
           </div>;
         })}</section>}
         {!profile && !next.length && !error && <Notice>Sin datos disponibles para este equipo y temporada.</Notice>}

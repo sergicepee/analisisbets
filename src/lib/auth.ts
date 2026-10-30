@@ -28,5 +28,13 @@ export async function getUser() {
 }
 
 /** Evita redirecciones abiertas: solo rutas internas. */
-export const safeNext = (n: string | null | undefined, fallback = "/cuenta") =>
-  n && n.startsWith("/") && !n.startsWith("//") ? n : fallback;
+export const safeNext = (n: string | null | undefined, fallback = "/cuenta") => {
+  if (!n || !n.startsWith("/") || n.startsWith("//") || n.includes("\\") || /[\u0000-\u001f]/.test(n)) return fallback;
+  try {
+    const destination = new URL(n, "https://pickzone.invalid");
+    if (destination.origin !== "https://pickzone.invalid") return fallback;
+    return `${destination.pathname}${destination.search}${destination.hash}`;
+  } catch {
+    return fallback;
+  }
+};

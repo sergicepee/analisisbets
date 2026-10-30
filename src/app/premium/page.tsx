@@ -5,7 +5,7 @@ import { SubscribeButton } from "@/components/SubscribeButton";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { IconBars, IconLock, IconMatches, IconTrophy } from "@/components/icons";
 import { getUser } from "@/lib/auth";
-import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { getSubscriberAccess } from "@/lib/subscriptions";
 import { getStripePlanDetails, type BillingPlan, type StripePlanDetails } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,8 @@ const formatAmount = (cents: number, currency = "EUR") => new Intl.NumberFormat(
 
 export default async function Page({ searchParams }: { searchParams: Record<string, string | undefined> }) {
   const user = await getUser();
-  const active = user ? await hasSubscriberAccess(user.id) : false;
+  const subscriptionAccess = user ? await getSubscriberAccess(user.id) : { active: false, error: false };
+  const active = subscriptionAccess.active;
   const [weekly, monthly, annual] = await Promise.all([
     getStripePlanDetails("weekly"), getStripePlanDetails("monthly"), getStripePlanDetails("annual"),
   ]);
@@ -46,6 +47,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
 
       {state === "cancelado" && <Notice>El pago se canceló. No se ha realizado ningún cargo.</Notice>}
       {state === "success" && !active && <Notice>Stripe ha recibido el pago. Estamos confirmando tu suscripción; el acceso se activará en cuanto llegue la confirmación.</Notice>}
+      {subscriptionAccess.error && <Notice tone="warn">No se pudo comprobar el estado de tu suscripción. El checkout permanecerá desactivado para evitar cargos duplicados.</Notice>}
       {active && <Notice>Tu suscripción Premium está activa. Ya puedes consultar la combinada y las pestañas de Goles, Tiros, Esquinas y Tarjetas.</Notice>}
       {active && <ManageSubscriptionButton />}
 
@@ -70,7 +72,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
             </ul>
             <div className="mt-auto">
               {active ? <div className="rounded-full border border-line px-4 py-3 text-center text-sm font-bold text-muted">Incluido en tu suscripción</div>
-                : user ? <SubscribeButton plan={plan.id} disabled={!plan.price} />
+                : user ? <SubscribeButton plan={plan.id} disabled={!plan.price || subscriptionAccess.error} disabledReason={subscriptionAccess.error ? "No se pudo verificar tu suscripción" : undefined} />
                   : <Link href="/login?next=%2Fpremium" className="block rounded-full bg-brand px-5 py-3 text-center text-sm font-extrabold text-black">Inicia sesión para suscribirte</Link>}
               {!plan.price && !active && <p className="mt-2 text-center text-[11px] text-muted">El cobro se activará al conectar este precio en Stripe.</p>}
             </div>

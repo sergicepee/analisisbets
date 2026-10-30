@@ -65,6 +65,23 @@ drop policy if exists "subscriptions_select_own" on public.subscriptions;
 create policy "subscriptions_select_own" on public.subscriptions for select to authenticated using (auth.uid() = user_id);
 revoke insert, update, delete on public.subscriptions from anon, authenticated;
 
+-- Partidos favoritos. El usuario solo puede consultar, añadir y quitar sus propias filas.
+create table if not exists public.favorite_fixtures (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  fixture_id bigint not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, fixture_id)
+);
+alter table public.favorite_fixtures enable row level security;
+drop policy if exists "favorite_fixtures_select_own" on public.favorite_fixtures;
+drop policy if exists "favorite_fixtures_insert_own" on public.favorite_fixtures;
+drop policy if exists "favorite_fixtures_delete_own" on public.favorite_fixtures;
+create policy "favorite_fixtures_select_own" on public.favorite_fixtures for select to authenticated using (auth.uid() = user_id);
+create policy "favorite_fixtures_insert_own" on public.favorite_fixtures for insert to authenticated with check (auth.uid() = user_id);
+create policy "favorite_fixtures_delete_own" on public.favorite_fixtures for delete to authenticated using (auth.uid() = user_id);
+revoke all on public.favorite_fixtures from anon;
+grant select, insert, delete on public.favorite_fixtures to authenticated;
+
 -- Fotos de perfil públicas; cada usuario solo puede escribir en su propia carpeta.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('avatars', 'avatars', true, 5242880, array['image/jpeg', 'image/png'])

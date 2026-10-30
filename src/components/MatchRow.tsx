@@ -6,7 +6,7 @@ import { IconStats } from "./icons";
 import { FavoriteMatchButton } from "./FollowMatchButton";
 import { t } from "@/lib/i18n";
 
-export function MatchRow({ f, date, selected = false }: { f: Fixture; date: string; selected?: boolean }) {
+export function MatchRow({ f, date, selected = false, isAuthenticated, initialFavorite }: { f: Fixture; date: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean }) {
   const g = statusGroup(f);
   const suspended = f.statusShort === "SUSP";
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
@@ -21,7 +21,7 @@ export function MatchRow({ f, date, selected = false }: { f: Fixture; date: stri
   const awayRedCards = f.redCardsAway ?? eventRedCards(f.away.id);
   return (
     <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
-      <FavoriteMatchButton fixtureId={f.id} />
+      <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
       <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
         <div className={`shrink-0 text-left ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
           {suspended ? (

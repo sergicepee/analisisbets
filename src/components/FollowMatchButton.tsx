@@ -2,79 +2,89 @@
 
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const STORAGE_KEY = "pickzone:followed-matches";
+type FavoriteProps = { fixtureId: number; isAuthenticated: boolean; initialFavorite: boolean };
 
-function readFollowedMatches(): number[] {
-  try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]");
-    return Array.isArray(value) ? value.filter((id): id is number => Number.isInteger(id)) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function FollowMatchButton({ fixtureId }: { fixtureId: number }) {
-  const [following, setFollowing] = useState(false);
+function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
+  const router = useRouter();
+  const [favorite, setFavorite] = useState(initialFavorite);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setFollowing(readFollowedMatches().includes(fixtureId));
+    setFavorite(initialFavorite);
+  }, [fixtureId, initialFavorite]);
+
+  useEffect(() => {
+    const syncFavorite = (event: Event) => {
+      const detail = (event as CustomEvent<{ fixtureId: number; favorite: boolean }>).detail;
+      if (detail.fixtureId === fixtureId) setFavorite(detail.favorite);
+    };
+    window.addEventListener("pickzone:favorite-updated", syncFavorite);
+    return () => window.removeEventListener("pickzone:favorite-updated", syncFavorite);
   }, [fixtureId]);
 
-  function toggleFollowing() {
-    const current = readFollowedMatches();
-    const next = current.includes(fixtureId)
-      ? current.filter((id) => id !== fixtureId)
-      : [...current, fixtureId];
+  async function toggle() {
+    if (!isAuthenticated) {
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    if (busy) return;
+    setBusy(true);
+    setError(null);
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setFollowing(next.includes(fixtureId));
-    } catch {
-      setFollowing((value) => !value);
+      const response = await fetch("/api/favorites", {
+        method: favorite ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fixtureId }),
+      });
+      const result = await response.json() as { favorite?: boolean; error?: string };
+      if (!response.ok || typeof result.favorite !== "boolean") {
+        throw new Error(result.error || "No se pudo actualizar el favorito.");
+      }
+      setFavorite(result.favorite);
+      window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
+        detail: { fixtureId, favorite: result.favorite },
+      }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo actualizar el favorito.");
+    } finally {
+      setBusy(false);
     }
   }
+  return { favorite, busy, error, toggle };
+}
 
+export function FollowMatchButton({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
+  const { favorite: following, busy, error, toggle } = useFavorite({ fixtureId, isAuthenticated, initialFavorite });
   return (
-    <button
-      type="button"
-      aria-pressed={following}
-      onClick={toggleFollowing}
-      className={`mx-auto mt-3 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-bold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${following ? "border-brand bg-brand text-slate-900" : "border-slate-300/80 bg-white/75 text-slate-900 hover:bg-white"}`}
-    >
-      <Star className="h-3.5 w-3.5" fill={following ? "currentColor" : "none"} />
-      {following ? "Siguiendo" : "Seguir partido"}
-    </button>
+    <div className="flex flex-col items-center">
+      <button
+        type="button"
+        aria-pressed={following}
+        aria-busy={busy}
+        onClick={toggle}
+        disabled={busy}
+        className={`mx-auto mt-3 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-bold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-60 ${following ? "border-brand bg-brand text-slate-900" : "border-slate-300/80 bg-white/75 text-slate-900 hover:bg-white"}`}
+      >
+        <Star className="h-3.5 w-3.5" fill={following ? "currentColor" : "none"} />
+        {following ? "Siguiendo" : "Seguir partido"}
+      </button>
+      {error && <span role="alert" className="mt-1 text-[10px] text-loss">{error}</span>}
+    </div>
   );
 }
 
-const FAVORITES_KEY = "pickzone:favorite-matches";
-function readFavorites(): number[] {
-  try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) ?? "[]");
-    return Array.isArray(value) ? value.filter((id): id is number => Number.isInteger(id)) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function FavoriteMatchButton({ fixtureId }: { fixtureId: number }) {
-  const [favorite, setFavorite] = useState(false);
-  useEffect(() => { setFavorite(readFavorites().includes(fixtureId)); }, [fixtureId]);
-
-  function toggleFavorite() {
-    const current = readFavorites();
-    const next = current.includes(fixtureId) ? current.filter((id) => id !== fixtureId) : [...current, fixtureId];
-    try {
-      window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
-      setFavorite(next.includes(fixtureId));
-    } catch {
-      setFavorite((value) => !value);
-    }
-  }
-
+export function FavoriteMatchButton({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
+  const { favorite, busy, error, toggle } = useFavorite({ fixtureId, isAuthenticated, initialFavorite });
   return (
-    <button type="button" aria-label={favorite ? "Quitar de favoritos" : "Añadir a favoritos"} aria-pressed={favorite} onClick={toggleFavorite} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${favorite ? "text-brand" : "text-muted hover:text-brand"}`}>
-      <Star className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
-    </button>
+    <div className="relative flex shrink-0 items-center">
+      <button type="button" aria-label={favorite ? "Quitar de favoritos" : "Añadir a favoritos"} title={isAuthenticated ? undefined : "Inicia sesión para añadir a favoritos"} aria-pressed={favorite} aria-busy={busy} onClick={toggle} disabled={busy} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-60 ${favorite ? "text-brand" : "text-muted hover:text-brand"}`}>
+        <Star className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
+      </button>
+      {error && <span role="alert" className="absolute right-9 z-20 w-48 rounded-lg bg-loss px-2 py-1 text-[10px] text-white shadow-lg">{error}</span>}
+    </div>
   );
 }

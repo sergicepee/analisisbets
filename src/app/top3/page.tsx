@@ -12,7 +12,7 @@ import { calibrateCsvPicks } from "@/lib/csvCalibration";
 import type { Fixture, Metric, TeamProfile } from "@/lib/types";
 import { t } from "@/lib/i18n";
 import { getUser } from "@/lib/auth";
-import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { getSubscriberAccess } from "@/lib/subscriptions";
 import { IconLock } from "@/components/icons";
 import { Top3Countdown } from "@/components/Top3Countdown";
 
@@ -138,7 +138,8 @@ function LockedPrediction() {
 
 export default async function Page({ searchParams }: { searchParams: Record<string, string | undefined> }) {
   const user = await getUser();
-  const isSubscriber = user ? await hasSubscriberAccess(user.id) : false;
+  const subscriptionAccess = user ? await getSubscriberAccess(user.id) : { active: false, error: false };
+  const isSubscriber = subscriptionAccess.active;
   const today = todayStr();
   const date = isDate(searchParams.date) ? searchParams.date as string : today;
   const dateIsFuture = date > today;
@@ -186,6 +187,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         <Top3Countdown date={date} />
+        {subscriptionAccess.error && <Notice tone="warn">No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión.</Notice>}
         {!dateIsFuture && error && <Notice tone="warn">{error}</Notice>}
         {!dateIsFuture && !error && picks.length === 0 && <Notice>No hay tres selecciones con suficientes datos para esta fecha.</Notice>}
         {!dateIsFuture && picks.map((k, i) => {

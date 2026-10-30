@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getUser } from "@/lib/auth";
-import { hasSubscriberAccess } from "@/lib/subscriptions";
+import { getSubscriberAccess } from "@/lib/subscriptions";
 import { stripePriceId, stripeSecretKey, type BillingPlan } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Inicia sesión para suscribirte." }, { status: 401 });
-  if (await hasSubscriberAccess(user.id)) return NextResponse.json({ error: "Tu suscripción Premium ya está activa." }, { status: 409 });
+  const subscriptionAccess = await getSubscriberAccess(user.id);
+  if (subscriptionAccess.error) return NextResponse.json({ error: "No se pudo comprobar el estado de tu suscripción. Inténtalo más tarde." }, { status: 503 });
+  if (subscriptionAccess.active) return NextResponse.json({ error: "Tu suscripción Premium ya está activa." }, { status: 409 });
 
   let plan: BillingPlan;
   try {

@@ -1,10 +1,12 @@
 import "server-only";
 import { getSupabase } from "./supabase";
 
-/** Comprueba el acceso Premium en servidor; falla cerrado si no hay configuración o suscripción. */
-export async function hasSubscriberAccess(userId: string): Promise<boolean> {
+export async function getSubscriberAccess(userId: string): Promise<{ active: boolean; error: boolean }> {
   const supabase = getSupabase();
-  if (!supabase) return false;
+  if (!supabase) {
+    console.error("Could not check Premium access: Supabase service role is not configured.");
+    return { active: false, error: true };
+  }
 
   const { data, error } = await supabase
     .from("subscriptions")
@@ -12,18 +14,30 @@ export async function hasSubscriberAccess(userId: string): Promise<boolean> {
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (error || !data || !["active", "trialing"].includes(data.status)) return false;
-  return !data.current_period_end || new Date(data.current_period_end).getTime() > Date.now();
+  if (error) {
+    console.error("Could not check Premium access:", error);
+    return { active: false, error: true };
+  }
+  const active = !!data && ["active", "trialing"].includes(data.status)
+    && (!data.current_period_end || new Date(data.current_period_end).getTime() > Date.now());
+  return { active, error: false };
 }
 
-export async function getStripeCustomerId(userId: string): Promise<string | null> {
+export async function getStripeCustomerId(userId: string): Promise<{ customerId: string | null; error: boolean }> {
   const supabase = getSupabase();
-  if (!supabase) return null;
+  if (!supabase) {
+    console.error("Could not load Stripe customer: Supabase service role is not configured.");
+    return { customerId: null, error: true };
+  }
   const { data, error } = await supabase
     .from("subscriptions")
     .select("provider,provider_customer_id")
     .eq("user_id", userId)
     .maybeSingle();
-  if (error || data?.provider !== "stripe") return null;
-  return data.provider_customer_id ?? null;
+  if (error) {
+    console.error("Could not load Stripe customer:", error);
+    return { customerId: null, error: true };
+  }
+  if (data?.provider !== "stripe") return { customerId: null, error: false };
+  return { customerId: data.provider_customer_id ?? null, error: false };
 }

@@ -12,6 +12,8 @@ import { countryEs, errMsg, statusGroup, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import type { Fixture, StatusGroup } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { getUser } from "@/lib/auth";
+import { getFavoriteFixtureIds } from "@/lib/favorites";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ...(apiEnabled ? [["live", "En vivo"] as [string, string]] : []), ["finished", "Finalizados"],
@@ -35,6 +37,10 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
   const ordered = [...groups.values()]
     .map((g) => g.sort((a, b) => a.timestamp - b.timestamp))
     .sort((a, b) => prio(a[0].leagueId) - prio(b[0].leagueId) || a[0].country.localeCompare(b[0].country) || a[0].leagueName.localeCompare(b[0].leagueName));
+  const user = await getUser();
+  const favoriteLookup = user
+    ? await getFavoriteFixtureIds(user.id, shown.map((fixture) => fixture.id))
+    : { favoriteIds: new Set<number>(), error: false };
 
   const href = (key: string) => `/?date=${date}${leagueId ? `&league=${leagueId}` : ""}${key !== "all" ? `&f=${key}` : ""}`;
   const banner = SHOW_PREMIUM ? <PremiumBanner /> : null;
@@ -61,6 +67,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
         <Link href={`/?date=${date}`} className="chip border-brand/50 text-brand">{t("Liga:")} {fixtures[0]?.leagueName ?? leagueId} ✕</Link>
       )}
       {error && <Notice tone="warn">{t("No se pudo cargar el listado:")} {error}</Notice>}
+      {favoriteLookup.error && <Notice tone="warn">No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase.</Notice>}
       {!error && ordered.length === 0 && <Notice>{t("No hay partidos para este filtro y fecha.")}</Notice>}
       {ordered.map((g, i) => (
         <div key={g[0].leagueId} className="space-y-3">
@@ -72,7 +79,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(g[0].country, g[0].flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{g[0].leagueName}</span>
             </div>
-            {g.map((f) => <MatchRow key={f.id} f={f} date={date} selected={f.id === selectedId} />)}
+            {g.map((f) => <MatchRow key={f.id} f={f} date={date} selected={f.id === selectedId} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />)}
           </section>
           {i === 0 && banner}
         </div>
