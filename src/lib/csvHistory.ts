@@ -15,6 +15,7 @@ export type HistoricalMatch = {
 };
 
 let matchesPromise: Promise<HistoricalMatch[]> | null = null;
+const seasonMatchesPromises = new Map<string, Promise<HistoricalMatch[]>>();
 
 function csvLine(line: string): string[] {
   const values: string[] = [];
@@ -87,6 +88,19 @@ async function readMatchesFrom(code: string, leagueId: number, season: number): 
       away: stat("AS", "AST", "AC", cardsAway, redsAway),
     }];
   }).sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function readSeasonMatches(code: string, leagueId: number, season: number): Promise<HistoricalMatch[]> {
+  const key = `${code}:${season}`;
+  let promise = seasonMatchesPromises.get(key);
+  if (!promise) {
+    promise = readMatchesFrom(code, leagueId, season).catch((error: unknown) => {
+      seasonMatchesPromises.delete(key);
+      throw error;
+    });
+    seasonMatchesPromises.set(key, promise);
+  }
+  return promise;
 }
 
 async function readMatches(): Promise<HistoricalMatch[]> {
@@ -176,14 +190,17 @@ export async function getCsvLeagueAverage(leagueId = 140, season = 2026): Promis
 export async function getCsvStatsForFixture(fixture: Fixture): Promise<(StoredStats & Pick<Fixture, "htHome" | "htAway"> & {
   yellowHome: number; redHome: number; yellowAway: number; redAway: number;
 }) | null> {
-  const timeZone = csvLeagueById(fixture.leagueId)?.timeZone ?? "Europe/Madrid";
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone }).format(fixture.timestamp * 1000);
+  const league = csvLeagueById(fixture.leagueId);
+  const timeZone = league?.timeZone ?? "Europe/Madrid";
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone });
+  const date = dateFormatter.format(fixture.timestamp * 1000);
   const homeId = csvTeamId(canonicalTeamName(fixture.home.name));
   const awayId = csvTeamId(canonicalTeamName(fixture.away.name));
-  const match = (await readHistory()).find((item) => {
-    const matchDate = new Intl.DateTimeFormat("en-CA", { timeZone }).format(item.timestamp * 1000);
-    return item.leagueId === fixture.leagueId && matchDate === date && item.homeId === homeId && item.awayId === awayId;
-  });
+  if (!league) return null;
+  const match = (await readSeasonMatches(league.code, fixture.leagueId, fixture.season)).find((item) =>
+    dateFormatter.format(item.timestamp * 1000) === date &&
+    item.homeId === homeId && item.awayId === awayId,
+  );
   if (!match) return null;
   return {
     fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,

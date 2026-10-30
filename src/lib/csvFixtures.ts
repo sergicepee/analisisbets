@@ -5,6 +5,7 @@ import { CSV_LEAGUES } from "./csvLeagues";
 import type { Fixture } from "./types";
 
 let fixturesPromise: Promise<Fixture[]> | null = null;
+const fixturesByDateByTimeZone = new Map<string, Map<string, Fixture[]>>();
 
 function parseCsvLine(line: string): string[] {
   const values: string[] = [];
@@ -126,19 +127,25 @@ export function getCsvFixtures(): Promise<Fixture[]> {
 }
 
 export async function getCsvFixturesByDate(date: string): Promise<Fixture[]> {
-  return (await getCsvFixtures()).filter((fixture) => {
-    const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(fixture.timestamp * 1000);
-    return localDate === date;
-  });
+  const timeZone = getTz();
+  let byDate = fixturesByDateByTimeZone.get(timeZone);
+  if (!byDate) {
+    const fixtures = await getCsvFixtures();
+    const formatter = new Intl.DateTimeFormat("en-CA", { timeZone });
+    byDate = new Map<string, Fixture[]>();
+    for (const fixture of fixtures) {
+      const localDate = formatter.format(fixture.timestamp * 1000);
+      const datedFixtures = byDate.get(localDate);
+      if (datedFixtures) datedFixtures.push(fixture);
+      else byDate.set(localDate, [fixture]);
+    }
+    if (fixtures.length) fixturesByDateByTimeZone.set(timeZone, byDate);
+  }
+  return byDate.get(date) ?? [];
 }
 
 export async function isCsvSeasonDate(date: string): Promise<boolean> {
-  const fixtures = await getCsvFixtures();
-  if (!fixtures.length) return false;
-  return fixtures.some((fixture) => {
-    const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(fixture.timestamp * 1000);
-    return localDate === date;
-  });
+  return (await getCsvFixturesByDate(date)).length > 0;
 }
 
 export async function getCsvFixture(id: number): Promise<Fixture | null> {
