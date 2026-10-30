@@ -4,9 +4,10 @@ import { statusGroup, timeStr } from "@/lib/format";
 import { Shield } from "./Shield";
 import { IconStats } from "./icons";
 import { FavoriteMatchButton } from "./FollowMatchButton";
-import { t } from "@/lib/i18n";
+import { I18nText } from "./I18nProvider";
+import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 
-export function MatchRow({ f, date, selected = false, isAuthenticated, initialFavorite }: { f: Fixture; date: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean }) {
+export function MatchRow({ f, date, displayDate, selected = false, isAuthenticated, initialFavorite, showFavorite = true, showLeagueLogo = false, showDate = false }: { f: Fixture; date: string; displayDate?: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean; showFavorite?: boolean; showLeagueLogo?: boolean; showDate?: boolean }) {
   const g = statusGroup(f);
   const suspended = f.statusShort === "SUSP";
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
@@ -21,13 +22,16 @@ export function MatchRow({ f, date, selected = false, isAuthenticated, initialFa
   const awayRedCards = f.redCardsAway ?? eventRedCards(f.away.id);
   return (
     <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
-      <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
+      {showFavorite && <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />}
       <Link href={`/match/${f.id}?date=${date}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
-        <div className={`shrink-0 text-left ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
+        <div className={`shrink-0 text-center ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
+          {showDate && (
+            <div className="mb-0.5 whitespace-nowrap text-[9px] font-semibold leading-tight text-muted">{displayDate}</div>
+          )}
           {suspended ? (
             <span className="rounded bg-loss/15 px-1 py-0.5 text-[9px] font-bold text-loss">SUSP.</span>
           ) : g === "finished" ? (
-            <div className="text-xs font-medium text-muted">{t("Final")}</div>
+            <div className="text-xs font-medium text-muted"><I18nText text="Final" /></div>
           ) : g === "live" ? (
             <>
               <div className="text-sm font-extrabold tabular-nums text-chartHit sm:text-base">{score ?? "—"}</div>
@@ -36,9 +40,10 @@ export function MatchRow({ f, date, selected = false, isAuthenticated, initialFa
           ) : (
             <>
               <div className="text-xs font-bold tabular-nums sm:text-sm">{timeStr(f.timestamp)}</div>
-              {g === "pending" && <div className="mt-0.5 text-[9px] leading-tight text-muted">{t("Pendiente de actualizar")}</div>}
+              {g === "pending" && <div className="mt-0.5 text-[9px] leading-tight text-muted"><I18nText text="Pendiente de actualizar" /></div>}
             </>
           )}
+          {showLeagueLogo && <span className="mx-auto mt-1 flex h-6 w-6 items-center justify-center rounded bg-white p-0.5"><Shield src={getLeagueLogoUrl(f.leagueId, f.leagueLogo)} alt="" size={20} /></span>}
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <TeamLine name={f.home.name} logo={f.home.logo} fallback={f.home.logoFallback} winner={homeWon} loser={homeLost} redCard={homeRedCards > 0} suspended={suspended} />

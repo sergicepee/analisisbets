@@ -115,10 +115,6 @@ function readHistory(): Promise<HistoricalMatch[]> {
   return matchesPromise;
 }
 
-export async function getCsvCalibrationMatches(leagueId: number, beforeTimestamp: number): Promise<HistoricalMatch[]> {
-  return (await readHistory()).filter((match) => match.leagueId === leagueId && match.timestamp < beforeTimestamp);
-}
-
 export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number, season?: number, limit = FORM_MATCHES): Promise<TeamProfile> {
   const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (!leagueId || match.leagueId === leagueId) && (!season || match.season === season) && (match.homeId === teamId || match.awayId === teamId));
   const rows: TeamRow[] = matches.slice(-limit).map((match) => {

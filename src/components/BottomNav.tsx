@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconMatches, IconStats, IconTrophy } from "./icons";
+import { Star } from "lucide-react";
+import { IconMatches, IconStats } from "./icons";
 import { useT } from "./I18nProvider";
 
 const ITEMS = [
   { href: "/", label: "Partidos", Icon: IconMatches, match: (p: string) => p === "/" || p.startsWith("/match") },
-  { href: "/top3", label: "La combinada", Icon: IconTrophy, match: (p: string) => p.startsWith("/top3") },
   { href: "/stats", label: "Estadísticas", Icon: IconStats, match: (p: string) => p.startsWith("/stats") },
-  { href: "/leagues", label: "Ligas", Icon: IconTrophy, match: (p: string) => p.startsWith("/leagues") },
+  { href: "/favoritos", label: "Favoritos", Icon: Star, match: (p: string) => p.startsWith("/favoritos") },
 ];
 
 export function BottomNav() {

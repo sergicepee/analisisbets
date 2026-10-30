@@ -472,12 +472,36 @@ export async function getTeamSeasonProfile(teamId: number, name: string, leagueI
 export async function getTeamSeasonMatchSeries(name: string, leagueId: number, season: number) {
   return getCsvTeamMatchSeries(csvTeamId(name), leagueId, season);
 }
-export async function getTeamUpcomingFixtures(teamId: number, n = 8): Promise<Fixture[]> {
+export async function getTeamUpcomingFixtures(teamId: number, n = 15): Promise<Fixture[]> {
   const fixtures = await getCsvFixtures();
   const now = Date.now() / 1000;
   const local = await addCsvTeamLogos(fixtures.filter((f) => f.timestamp >= now && (f.home.id === teamId || f.away.id === teamId)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n));
   if (local.length || !apiEnabled) return local;
-  return getNextFixtures(teamId, n);
+  return (await getNextFixtures(teamId, n)).sort((a, b) => a.timestamp - b.timestamp).slice(0, n);
+}
+export async function getTeamRecentFixtures(teamId: number, n = 5): Promise<Fixture[]> {
+  const fixtures = await getCsvFixtures();
+  const now = Date.now() / 1000;
+  const local = await addCsvTeamLogos(fixtures.filter((f) =>
+    f.timestamp < now &&
+    ["FT", "AET", "PEN"].includes(f.statusShort) &&
+    f.goalsHome !== null && f.goalsAway !== null &&
+    (f.home.id === teamId || f.away.id === teamId),
+  ).sort((a, b) => b.timestamp - a.timestamp).slice(0, n));
+  const withRedCards = await Promise.all(local.map(async (fixture) => {
+    const stats = await getCsvStatsForFixture(fixture);
+    return stats
+      ? { ...fixture, redCardsHome: stats.redHome, redCardsAway: stats.redAway }
+      : fixture;
+  }));
+  if (withRedCards.length >= n || !apiEnabled || teamId < 0) return withRedCards;
+  return cached<Fixture[]>(`last:${teamId}:${n}:${getTz()}`, 6 * H, async () =>
+    (await call("/fixtures", { team: teamId, last: n, timezone: getTz() }, true))
+      .map(normFixture)
+      .filter((fixture) => ["FT", "AET", "PEN"].includes(fixture.statusShort))
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, n),
+  );
 }
 export async function getLastFixtures(teamId: number): Promise<Fixture[]> {
   if (!apiEnabled) return [];

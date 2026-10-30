@@ -14,7 +14,7 @@ export function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2">
       <LogoMark />
-      <span className="text-lg font-extrabold tracking-[0.18em] text-white">{BRAND.name.toUpperCase()}</span>
+      <span className="text-lg font-extrabold tracking-[0.18em] text-fg">{BRAND.name.toUpperCase()}</span>
     </Link>
   );
 }

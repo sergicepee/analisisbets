@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { t } from "@/lib/i18n";
+import { I18nText } from "@/components/I18nProvider";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchList } from "@/components/MatchList";
 import { FollowMatchButton } from "@/components/FollowMatchButton";
@@ -103,17 +104,17 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
-        {favoriteLookup.error && <Notice tone="warn">No se pudo cargar tu favorito. Comprueba que la tabla esté configurada en Supabase.</Notice>}
-        {subscriptionAccess.error && <Notice tone="warn">No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión.</Notice>}
+        {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
+        {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}
         <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
             <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
-              <Icon className="h-4 w-4" />{t(label)}
+              <Icon className="h-4 w-4" /><I18nText text={label} />
             </Link>
           ))}
         </nav>
-        {!premiumLocked && (!pa0 || !pb0) ? <Notice tone="warn">Algunas estadísticas no se pudieron cargar. {profileErr ? friendlyApiError(profileErr) : "Sin datos suficientes."}</Notice> : null}
+        {!premiumLocked && (!pa0 || !pb0) ? <Notice tone="warn"><I18nText text="Algunas estadísticas no se pudieron cargar." /> {profileErr ? friendlyApiError(profileErr) : <I18nText text="Sin datos suficientes." />}</Notice> : null}
         {tab === "general" && <General f={f} pa={pa} pb={pb} />}
         {premiumLocked && <PremiumLockedPreview tab={tab as "goles" | "tiros" | "corners" | "tarjetas"} home={{ name: f.home.name, logo: f.home.logo }} away={{ name: f.away.name, logo: f.away.logo }} />}
         {!premiumLocked && tab === "goles" && <Goals f={f} pa={pa} pb={pb} />}
@@ -138,7 +139,7 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
   const forAway = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.home.id : e.teamId === f.away.id));
   const dateLabel = new Intl.DateTimeFormat(getLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: getTz() }).format(new Date(f.timestamp * 1000));
   const matchday = f.round.match(/(\d+)\s*$/)?.[1];
-  const roundLabel = matchday ? `${t("Jornada")} ${matchday}` : f.round;
+  const roundLabel = matchday ? `Jornada ${matchday}` : f.round;
   return (
     <section className="relative isolate min-w-0 overflow-hidden rounded-2xl border border-slate-300/80 p-3 text-slate-900 shadow-sm sm:p-4" style={{ background: "linear-gradient(110deg, #eef3ee 0%, #f5f5ef 50%, #eef2f0 100%)" }}>
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
@@ -155,15 +156,15 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-center text-[11px] text-slate-600 sm:text-xs">
         <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 shrink-0" /><span className="capitalize">{dateLabel}</span></span>
-        {roundLabel && <span>{roundLabel}</span>}
+        {roundLabel && <span><I18nText text={roundLabel} /></span>}
       </div>
       {f.venue && <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-600 sm:text-xs"><MapPin className="h-3 w-3" />{f.venue}</div>}
       <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
         <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} p={pa} />
         <div className="relative flex min-h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
           {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
-            : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">{t("Final")}</div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
-            : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600">{t("Pendiente de actualizar")}</div>}</>)}
+            : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600"><I18nText text="Final" /></div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
+            : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600"><I18nText text="Pendiente de actualizar" /></div>}</>)}
         </div>
         <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} yellowCards={cardCounts.awayYellow} redCards={cardCounts.awayRed} p={pb} />
       </div>
@@ -194,7 +195,7 @@ function TeamCol({ teamId, leagueId, season, returnTo, name, logo, yellowCards, 
       <div className="hero-serif min-h-[2.4em] max-w-full whitespace-normal break-words text-center text-[13px] font-normal uppercase leading-tight tracking-normal sm:text-sm">{name}</div>
       <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
         {form.map((r, i) => (
-          <span key={i} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${r.result === "W" ? "bg-chartHit" : r.result === "D" ? "bg-warn" : "bg-loss"}`}>{r.result}</span>
+          <span key={i} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${r.result === "W" ? "bg-statGreen" : r.result === "D" ? "bg-statOrange" : "bg-statRed"}`}>{r.result}</span>
         ))}
       </div>
     </div>
@@ -223,36 +224,36 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
   return (
     <div className="min-w-0 space-y-4">
-      {eg?.fromPrediction && <Notice>Goles estimados con la media de los últimos {pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).</Notice>}
+      {eg?.fromPrediction && <Notice><I18nText text={`Goles estimados con la media de los últimos ${pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).`} /></Notice>}
       {p1x2 ? (
         <div>
           <div className="mb-1.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 text-[11px] font-bold leading-tight sm:text-sm">
-            <span className="min-w-0 truncate text-left">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
-            <span className="min-w-0 truncate text-center text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
-            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-loss">{Math.round(p1x2.away)}%</span></span>
+            <span className="min-w-0 truncate text-left">{f.home.name} <span className="text-statGreen">{Math.round(p1x2.home)}%</span></span>
+            <span className="min-w-0 truncate text-center text-statOrange"><I18nText text="Empate" /> {Math.round(p1x2.draw)}%</span>
+            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-statRed">{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
-            <div className="border-r-2 border-bg bg-brand" style={{ width: `${p1x2.home}%` }} />
-            <div className="border-r-2 border-bg bg-drawbar" style={{ width: `${p1x2.draw}%` }} />
-            <div className="bg-loss" style={{ width: `${p1x2.away}%` }} />
+            <div className="border-r-2 border-bg bg-statGreen" style={{ width: `${p1x2.home}%` }} />
+            <div className="border-r-2 border-bg bg-statOrange" style={{ width: `${p1x2.draw}%` }} />
+            <div className="bg-statRed" style={{ width: `${p1x2.away}%` }} />
           </div>
-          {!model && pred?.advice && <p className="mt-2 text-xs text-muted">Consejo de API-Football: {pred.advice}</p>}
+          {!model && pred?.advice && <p className="mt-2 text-xs text-muted"><I18nText text="Consejo de API-Football:" /> {pred.advice}</p>}
         </div>
-      ) : <Notice tone="warn">Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada).</Notice>}
+      ) : <Notice tone="warn"><I18nText text="Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada)." /></Notice>}
 
       <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
-        <h2 className="mb-3 font-bold">{t("Probabilidades clave")}</h2>
+        <h2 className="mb-3 font-bold"><I18nText text="Probabilidades clave" /></h2>
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          {prob(t("Más de 2,5 goles"), IconShoe, model?.over25 ?? null, L?.over25)}
-          {prob(t("Más de 1,5 goles"), IconShoe, model?.over15 ?? null, L?.over15)}
-          {prob(t("Ambos marcan"), IconSwap, model?.btts ?? null, L?.btts)}
-          {avgc(t("Promedio de goles"), IconBall, eg?.total ?? null, L?.goals, 2)}
-          {avgc(t("Promedio de tarjetas"), IconCard, ex("cards"), L?.cards)}
-          {avgc(t("Promedio de córners"), IconCorner, ex("corners"), L?.corners)}
-          {avgc(t("Promedio de tiros"), IconTarget, ex("shots"), L?.shots)}
-          {avgc(t("Promedio de TAP"), IconNet, ex("shotsOn"), L?.shotsOn)}
+          {prob("Más de 2,5 goles", IconShoe, model?.over25 ?? null, L?.over25)}
+          {prob("Más de 1,5 goles", IconShoe, model?.over15 ?? null, L?.over15)}
+          {prob("Ambos marcan", IconSwap, model?.btts ?? null, L?.btts)}
+          {avgc("Promedio de goles", IconBall, eg?.total ?? null, L?.goals, 2)}
+          {avgc("Promedio de tarjetas", IconCard, ex("cards"), L?.cards)}
+          {avgc("Promedio de córners", IconCorner, ex("corners"), L?.corners)}
+          {avgc("Promedio de tiros", IconTarget, ex("shots"), L?.shots)}
+          {avgc("Promedio de TAP", IconNet, ex("shotsOn"), L?.shotsOn)}
         </div>
-        <p className="mt-3 text-[11px] leading-snug text-muted">{t("Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro). ")} {FORM_MATCHES} {t("Partidos")}.</p>
+        <p className="mt-3 text-[11px] leading-snug text-muted"><I18nText text="Rojo intenso: por encima de la media de la liga (±10%). Ámbar: similar. Rojo oscuro: por debajo. Sin media de liga disponible, el color indica solo si el porcentaje es alto (rojo intenso), medio (ámbar) o bajo (rojo oscuro)." /> {FORM_MATCHES} <I18nText text="Partidos" />.</p>
       </section>
     </div>
   );
@@ -267,17 +268,17 @@ async function Goals({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamProfi
   const goalExpected = expectedFor(pa, pb, "goals");
   const model = goalExpected ? poissonModel(goalExpected.home, goalExpected.away) : null;
   const rows: TrendRow[] = [
-    { label: t("Goles esperados"), kind: "num", a: eg?.home ?? null, b: eg?.away ?? null, m: eg?.total ?? null },
-    ...LINES.goals.map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: trendPct(pa, "goals", l), b: trendPct(pb, "goals", l), m: model ? (l === 1.5 ? model.over15 : model.over25) : pooledPct(pa, pb, "goals", l) })),
-    { label: t("Ambos equipos marcan"), kind: "pct", a: bttsPct(pa), b: bttsPct(pb), m: model?.btts ?? pooledBtts(pa, pb) },
+    { label: "Goles esperados", kind: "num", a: eg?.home ?? null, b: eg?.away ?? null, m: eg?.total ?? null },
+    ...LINES.goals.map((l) => ({ label: `Más de ${num(l)}`, kind: "pct" as const, a: trendPct(pa, "goals", l), b: trendPct(pb, "goals", l), m: model ? (l === 1.5 ? model.over15 : model.over25) : pooledPct(pa, pb, "goals", l) })),
+    { label: "Ambos equipos marcan", kind: "pct", a: bttsPct(pa), b: bttsPct(pb), m: model?.btts ?? pooledBtts(pa, pb) },
   ];
   const tp = { homeName: f.home.name, awayName: f.away.name, homeLogo: f.home.logo, awayLogo: f.away.logo, d: 2 };
   return (
     <div className="space-y-4">
-      <TeamPair title={t("Goles esperados")} totalLabel={t("Total esperado")} total={eg?.total ?? null} home={eg?.home ?? null} away={eg?.away ?? null} {...tp} />
-      <TrendTable title={t("Tendencias de goles")} rows={rows} aName={f.home.name} bName={f.away.name} note={t("Las tendencias recientes ponderan más los partidos nuevos. “Partido” usa el modelo de goles del encuentro.")} />
-      <TeamPair title={t("Potencial de gol 1.er tiempo")} totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 1))}`} total={h1?.total ?? null} home={h1?.home ?? null} away={h1?.away ?? null} {...tp} />
-      <TeamPair title={t("Potencial de gol 2.º tiempo")} totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 2))}`} total={h2?.total ?? null} home={h2?.home ?? null} away={h2?.away ?? null} {...tp} />
+      <TeamPair title="Goles esperados" totalLabel="Total esperado" total={eg?.total ?? null} home={eg?.home ?? null} away={eg?.away ?? null} {...tp} />
+      <TrendTable title="Tendencias de goles" rows={rows} aName={f.home.name} bName={f.away.name} note="Las tendencias recientes ponderan más los partidos nuevos. “Partido” usa el modelo de goles del encuentro." />
+      <TeamPair title="Potencial de gol 1.er tiempo" totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 1))}`} total={h1?.total ?? null} home={h1?.home ?? null} away={h1?.away ?? null} {...tp} />
+      <TeamPair title="Potencial de gol 2.º tiempo" totalLabel={`Partidos con gol: ${pct(halfGoalPct(pa, pb, 2))}`} total={h2?.total ?? null} home={h2?.home ?? null} away={h2?.away ?? null} {...tp} />
     </div>
   );
 }
@@ -296,22 +297,22 @@ async function Block({ f, pa, pb, metrics }: { f: Fixture; pa: TeamProfile; pb: 
   const exp = expectedFor(pa, pb, tm);
   const rows: TrendRow[] = [
     { label: `Promedio de ${TITLE[tm][2].toLowerCase()}`, kind: "num", a: teamAvg(pa, tm, "for"), b: teamAvg(pb, tm, "for"), m: exp?.total ?? null },
-    ...LINES[tm].map((l) => ({ label: `${t("Más de")} ${num(l)}`, kind: "pct" as const, a: ownPct(pa, tm, l), b: ownPct(pb, tm, l), m: matchOverPct(pa, pb, tm, l) })),
+    ...LINES[tm].map((l) => ({ label: `Más de ${num(l)}`, kind: "pct" as const, a: ownPct(pa, tm, l), b: ownPct(pb, tm, l), m: matchOverPct(pa, pb, tm, l) })),
   ];
   const noData = metrics.every((m) => expectedFor(pa, pb, m) === null);
   return (
     <div className="space-y-4">
-      {noData && <Notice tone="warn">Sin estadísticas suficientes para este partido: la liga puede no tener cobertura de estadísticas de partido, o la cuota de la API está agotada.</Notice>}
+      {noData && <Notice tone="warn"><I18nText text="Sin estadísticas suficientes para este partido: la liga puede no tener cobertura de estadísticas de partido, o la cuota de la API está agotada." /></Notice>}
       {metrics.map((m) => {
         const e = expectedFor(pa, pb, m);
-        return <TeamPair key={m} title={t(TITLE[m][0])} totalLabel={t(TITLE[m][1])} total={e?.total ?? null} home={e?.home ?? null} away={e?.away ?? null} {...tp} />;
+        return <TeamPair key={m} title={TITLE[m][0]} totalLabel={TITLE[m][1]} total={e?.total ?? null} home={e?.home ?? null} away={e?.away ?? null} {...tp} />;
       })}
-      {lavg && lavg[tm] != null && <Notice>{t("Media de liga")}: <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
+      {lavg && lavg[tm] != null && <Notice><I18nText text="Media de liga" />: <b className="text-brand">{num(lavg[tm], 1)}</b></Notice>}
       {LINES[tm].length > 0 && (
         <TrendTable
-          title={t(`Tendencias de ${tm === "shotsOn" ? "TAP" : TITLE[tm][0].toLowerCase()}`)} rows={rows} aName={f.home.name} bName={f.away.name}
+          title={`Tendencias de ${tm === "shotsOn" ? "TAP" : TITLE[tm][0].toLowerCase()}`} rows={rows} aName={f.home.name} bName={f.away.name}
           sub={`${TITLE[tm][2]} del equipo`} totalHead="Total del partido"
-          note={t("Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival.")}
+          note="Las columnas de equipo ponderan más los partidos recientes. El total del partido se estima con la producción de cada equipo y lo que concede el rival."
         />
       )}
     </div>

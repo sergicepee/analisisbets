@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Header } from "./Header";
 
-export function InfoPage({ title, children }: { title: string; children: ReactNode }) {
+export function InfoPage({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <>
       <Header back="/" />

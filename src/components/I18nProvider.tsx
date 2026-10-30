@@ -14,6 +14,10 @@ export function I18nProvider({ lang, children }: { lang: LangCode; children: Rea
   useEffect(() => setCurrentLang(lang), [lang]);
   return <Ctx.Provider value={{ lang: currentLang, setLang: setCurrentLang, settingsOpen, setSettingsOpen }}>{children}</Ctx.Provider>;
 }
+export function I18nText({ text }: { text: string }) {
+  const translateText = useT();
+  return <>{translateText(text)}</>;
+}
 export const useLang = () => useContext(Ctx).lang;
 export const useSetLang = () => useContext(Ctx).setLang;
 export const useSettingsModal = () => {

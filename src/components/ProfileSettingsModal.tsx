@@ -123,7 +123,7 @@ export function ProfileCard({ userId, email, displayName, avatarUrl, provider, c
   const actionClass = "inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-card2 px-4 py-2.5 text-sm font-bold hover:border-brand disabled:opacity-50";
 
   return <>
-    <section className="relative isolate overflow-hidden rounded-2xl border border-line bg-card text-white">
+    <section className="profile-hero relative isolate overflow-hidden rounded-2xl border border-line bg-card text-white">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(5,15,19,.92),rgba(5,15,19,.54)),url('/images/profile-stadium.jpg')] bg-cover bg-center" />
       <div className="flex min-h-32 items-center gap-4 p-4 sm:min-h-36 sm:gap-5 sm:p-6">
         <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/40 bg-win/20 text-xl font-black text-brand sm:h-20 sm:w-20 sm:text-2xl">{avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}</div>

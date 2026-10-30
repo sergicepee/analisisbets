@@ -82,6 +82,26 @@ create policy "favorite_fixtures_delete_own" on public.favorite_fixtures for del
 revoke all on public.favorite_fixtures from anon;
 grant select, insert, delete on public.favorite_fixtures to authenticated;
 
+-- Equipos seguidos. Separados de los partidos favoritos y sincronizados por cuenta.
+create table if not exists public.followed_teams (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  team_id    bigint not null,
+  team_name  text not null check (char_length(team_name) between 1 and 100),
+  created_at timestamptz not null default now(),
+  primary key (user_id, team_id)
+);
+alter table public.followed_teams enable row level security;
+drop policy if exists "followed_teams_select_own" on public.followed_teams;
+drop policy if exists "followed_teams_insert_own" on public.followed_teams;
+drop policy if exists "followed_teams_update_own" on public.followed_teams;
+drop policy if exists "followed_teams_delete_own" on public.followed_teams;
+create policy "followed_teams_select_own" on public.followed_teams for select to authenticated using (auth.uid() = user_id);
+create policy "followed_teams_insert_own" on public.followed_teams for insert to authenticated with check (auth.uid() = user_id);
+create policy "followed_teams_update_own" on public.followed_teams for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "followed_teams_delete_own" on public.followed_teams for delete to authenticated using (auth.uid() = user_id);
+revoke all on public.followed_teams from anon;
+grant select, insert, update, delete on public.followed_teams to authenticated;
+
 -- Fotos de perfil públicas; cada usuario solo puede escribir en su propia carpeta.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('avatars', 'avatars', true, 5242880, array['image/jpeg', 'image/png'])

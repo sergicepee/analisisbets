@@ -5,6 +5,8 @@ import { Notice } from "@/components/ui";
 import { getLeagues, searchTeams, type TeamHit } from "@/lib/apifootball";
 import { countryEs, errMsg } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { I18nText } from "@/components/I18nProvider";
+import { LocalizedSearchField } from "@/components/LocalizedSearchField";
 import type { LeagueInfo } from "@/lib/types";
 import { IconGo, IconSearch } from "@/components/icons";
 
@@ -25,16 +27,16 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
     <>
       <Header back="/" />
       <main className="space-y-4 px-4 pt-5 lg:mx-auto lg:max-w-3xl">
-        <h1 className="text-3xl font-black">Buscar</h1>
+        <h1 className="text-3xl font-black"><I18nText text="Buscar" /></h1>
         <form className="relative">
           <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input name="q" defaultValue={q} autoFocus placeholder="Buscar equipos, ligas..." className="w-full rounded-xl border border-line bg-card py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-brand" />
+          <LocalizedSearchField defaultValue={q} autoFocus className="w-full rounded-xl border border-line bg-card py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-brand" />
         </form>
-        {q.length > 0 && q.length < 3 && <Notice>Escribe al menos 3 letras para buscar equipos.</Notice>}
+        {q.length > 0 && q.length < 3 && <Notice><I18nText text="Escribe al menos 3 letras para buscar equipos." /></Notice>}
         {errors.length > 0 && <Notice tone="warn">{errors[0]}</Notice>}
         {leagues.length > 0 && (
           <section className="space-y-2">
-            <h2 className="font-bold">Ligas</h2>
+            <h2 className="font-bold"><I18nText text="Ligas" /></h2>
             {leagues.map((l) => (
               <Link key={l.id} href={`/liga/${l.id}`} className="card flex items-center gap-3 px-3 py-2.5">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white p-1">
@@ -48,7 +50,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
         )}
         {teams.length > 0 && (
           <section className="space-y-2">
-            <h2 className="font-bold">Equipos</h2>
+            <h2 className="font-bold"><I18nText text="Equipos" /></h2>
             {teams.map((t) => (
               <Link key={t.id} href={`/equipo/${t.id}?name=${encodeURIComponent(t.name)}${t.leagueId ? `&league=${t.leagueId}` : ""}`} className="card flex items-center gap-3 px-3 py-2.5">
                 <Shield src={t.logo} fallbackSrc={t.logoFallback} alt={t.name} size={28} />

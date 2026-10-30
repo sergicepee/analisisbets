@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Header } from "@/components/Header";
+import { I18nText } from "@/components/I18nProvider";
 import { Notice } from "@/components/ui";
 import { ProfileCard } from "@/components/ProfileSettingsModal";
 import { authConfigured, createAuthServer, getUser } from "@/lib/auth";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   if (!authConfigured()) {
-    return <><Header back="/" /><main className="px-4 pt-6"><Notice tone="warn">La autenticación aún no está configurada (ver README).</Notice></main></>;
+    return <><Header back="/" /><main className="px-4 pt-6"><Notice tone="warn"><I18nText text="La autenticación aún no está configurada (ver README)." /></Notice></main></>;
   }
   const user = await getUser();
   if (!user) redirect("/login");

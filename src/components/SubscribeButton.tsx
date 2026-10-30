@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "./I18nProvider";
 
 export function SubscribeButton({ plan, disabled = false, disabledReason }: { plan: "weekly" | "monthly" | "annual"; disabled?: boolean; disabledReason?: string }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +29,8 @@ export function SubscribeButton({ plan, disabled = false, disabledReason }: { pl
 
   return <div>
     <button type="button" disabled={disabled || busy} onClick={subscribe} className="w-full rounded-full bg-brand px-5 py-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:opacity-50">
-      {busy ? "Conectando con Stripe…" : disabled ? disabledReason ?? "Plan no configurado" : "Suscribirme con Stripe"}
+      {busy ? t("Conectando con Stripe…") : disabled ? t(disabledReason ?? "Plan no configurado") : t("Suscribirme con Stripe")}
     </button>
-    {error && <p role="alert" className="mt-2 text-xs text-loss">{error}</p>}
+    {error && <p role="alert" className="mt-2 text-xs text-loss">{t(error)}</p>}
   </div>;
 }

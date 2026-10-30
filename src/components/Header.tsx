@@ -3,9 +3,9 @@ import { Brand } from "./Logo";
 import { DesktopNav } from "./DesktopNav";
 import { UserMenu } from "./UserMenu";
 import { IconBack, IconSearch } from "./icons";
+import { LocalizedSearchInput } from "./LocalizedSearchInput";
 import { createAuthServer, getUser } from "@/lib/auth";
 import { getTz } from "@/lib/prefs";
-import { t } from "@/lib/i18n";
 
 export async function Header({ back }: { back?: string }) {
   const user = await getUser();
@@ -29,10 +29,7 @@ export async function Header({ back }: { back?: string }) {
       </div>
       <DesktopNav />
       <div className="flex items-center justify-end gap-3 text-slate-300">
-        <form action="/buscar" className="relative hidden lg:block">
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input name="q" placeholder={t("Buscar equipos, ligas...")} className="w-64 rounded-xl border border-line bg-card py-2 pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-brand" />
-        </form>
+        <LocalizedSearchInput />
         <Link href="/buscar" aria-label="Buscar" className="lg:hidden"><IconSearch className="h-5 w-5" /></Link>
         <UserMenu loggedIn={!!user} displayName={profile?.display_name || user?.email || undefined} avatarUrl={profile?.avatar_url || undefined} tz={getTz()} telegramUrl={process.env.NEXT_PUBLIC_TELEGRAM_URL || undefined} />
       </div>

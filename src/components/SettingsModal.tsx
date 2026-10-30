@@ -43,7 +43,12 @@ export function SettingsOptions({ tz }: { tz: string }) {
   }, [tz]);
 
   const chooseLang = (l: "es" | "en") => { setPref("gl_lang", l); setLang(l); document.documentElement.lang = l; router.refresh(); };
-  const chooseTheme = (v: "dark" | "light") => { setPref("gl_theme", v); document.documentElement.dataset.theme = v; setTheme(v); };
+  const chooseTheme = (v: "dark" | "light") => {
+    setPref("gl_theme", v);
+    document.documentElement.dataset.theme = v;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", v === "light" ? "#f4f6f8" : "#0f0f0f");
+    setTheme(v);
+  };
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
 
   return <>

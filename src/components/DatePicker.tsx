@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { IconCalendar } from "./icons";
+import { useT } from "./I18nProvider";
 
 export function DatePicker({ date, base, extra }: { date: string; base: string; extra: string }) {
   const router = useRouter();
+  const t = useT();
 
   function selectDate(value: string) {
     if (value) router.push(`${base}?date=${value}${extra}`);
@@ -18,7 +20,7 @@ export function DatePicker({ date, base, extra }: { date: string; base: string; 
         type="date"
         value={date}
         onChange={(event) => selectDate(event.currentTarget.value)}
-        aria-label="Seleccionar fecha"
+        aria-label={t("Seleccionar fecha")}
         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
       />
     </label>

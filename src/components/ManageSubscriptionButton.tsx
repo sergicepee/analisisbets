@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "./I18nProvider";
 
 export function ManageSubscriptionButton() {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +25,8 @@ export function ManageSubscriptionButton() {
 
   return <div className="text-center">
     <button type="button" onClick={manage} disabled={busy} className="rounded-full border border-line px-5 py-2.5 text-sm font-bold disabled:opacity-60">
-      {busy ? "Abriendo Stripe…" : "Gestionar o cancelar suscripción"}
+      {busy ? t("Abriendo Stripe…") : t("Gestionar o cancelar suscripción")}
     </button>
-    {error && <p role="alert" className="mt-2 text-xs text-loss">{error}</p>}
+    {error && <p role="alert" className="mt-2 text-xs text-loss">{t(error)}</p>}
   </div>;
 }

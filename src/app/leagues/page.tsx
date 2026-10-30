@@ -4,7 +4,7 @@ import { LeagueCatalog } from "@/components/LeagueCatalog";
 import { getLeagues } from "@/lib/apifootball";
 import { countryEs, errMsg, leagueType } from "@/lib/format";
 import type { LeagueInfo } from "@/lib/types";
-import { t } from "@/lib/i18n";
+import { I18nText } from "@/components/I18nProvider";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +31,8 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
       <Header />
       <main className="space-y-4 px-4 pb-8 pt-5 lg:px-8">
         <div>
-          <h1 className="text-3xl font-black">{t("Ligas")}</h1>
-          <p className="mt-1 text-sm text-muted">{t("Explora competiciones y encuentra partidos por liga.")}</p>
+          <h1 className="text-3xl font-black"><I18nText text="Ligas" /></h1>
+          <p className="mt-1 text-sm text-muted"><I18nText text="Explora competiciones y encuentra partidos por liga." /></p>
         </div>
         {error && <Notice tone="warn">{error}</Notice>}
         <LeagueCatalog groups={groups} intl={intl} autoFocus={searchParams.buscar === "1"} />

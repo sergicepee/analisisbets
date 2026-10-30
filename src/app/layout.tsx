@@ -20,7 +20,9 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
 };
-export const viewport: Viewport = { themeColor: "#0f0f0f", width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
+export function generateViewport(): Viewport {
+  return { themeColor: getTheme() === "light" ? "#f4f6f8" : "#0f0f0f", width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = getLang();

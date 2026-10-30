@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useT } from "./I18nProvider";
 
 type FavoriteProps = { fixtureId: number; isAuthenticated: boolean; initialFavorite: boolean };
 
 function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
   const router = useRouter();
+  const t = useT();
   const [favorite, setFavorite] = useState(initialFavorite);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +61,7 @@ function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoritePr
 
 export function FollowMatchButton({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
   const { favorite: following, busy, error, toggle } = useFavorite({ fixtureId, isAuthenticated, initialFavorite });
+  const t = useT();
   return (
     <div className="flex flex-col items-center">
       <button
@@ -70,21 +73,22 @@ export function FollowMatchButton({ fixtureId, isAuthenticated, initialFavorite 
         className={`mx-auto mt-3 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-bold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-60 ${following ? "border-brand bg-brand text-slate-900" : "border-slate-300/80 bg-white/75 text-slate-900 hover:bg-white"}`}
       >
         <Star className="h-3.5 w-3.5" fill={following ? "currentColor" : "none"} />
-        {following ? "Siguiendo" : "Seguir partido"}
+        {t(following ? "Siguiendo" : "Seguir partido")}
       </button>
-      {error && <span role="alert" className="mt-1 text-[10px] text-loss">{error}</span>}
+      {error && <span role="alert" className="mt-1 text-[10px] text-loss">{t(error)}</span>}
     </div>
   );
 }
 
 export function FavoriteMatchButton({ fixtureId, isAuthenticated, initialFavorite }: FavoriteProps) {
   const { favorite, busy, error, toggle } = useFavorite({ fixtureId, isAuthenticated, initialFavorite });
+  const t = useT();
   return (
     <div className="relative flex shrink-0 items-center">
-      <button type="button" aria-label={favorite ? "Quitar de favoritos" : "Añadir a favoritos"} title={isAuthenticated ? undefined : "Inicia sesión para añadir a favoritos"} aria-pressed={favorite} aria-busy={busy} onClick={toggle} disabled={busy} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-60 ${favorite ? "text-brand" : "text-muted hover:text-brand"}`}>
+      <button type="button" aria-label={t(favorite ? "Quitar de favoritos" : "Añadir a favoritos")} title={isAuthenticated ? undefined : t("Inicia sesión para añadir a favoritos")} aria-pressed={favorite} aria-busy={busy} onClick={toggle} disabled={busy} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-60 ${favorite ? "text-brand" : "text-muted hover:text-brand"}`}>
         <Star className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
       </button>
-      {error && <span role="alert" className="absolute right-9 z-20 w-48 rounded-lg bg-loss px-2 py-1 text-[10px] text-white shadow-lg">{error}</span>}
+      {error && <span role="alert" className="absolute right-9 z-20 w-48 rounded-lg bg-loss px-2 py-1 text-[10px] text-white shadow-lg">{t(error)}</span>}
     </div>
   );
 }
