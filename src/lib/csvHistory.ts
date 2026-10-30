@@ -10,6 +10,7 @@ export type HistoricalMatch = {
   timestamp: number; homeId: number; awayId: number;
   homeName: string; awayName: string;
   goalsHome: number; goalsAway: number; htHome: number | null; htAway: number | null;
+  yellowHome: number; redHome: number; yellowAway: number; redAway: number;
   home: MatchStat; away: MatchStat;
 };
 
@@ -80,6 +81,8 @@ async function readMatchesFrom(code: string, leagueId: number, season: number): 
       awayId: csvTeamId(canonicalTeamName(get("AwayTeam"))),
       homeName: get("HomeTeam"), awayName: get("AwayTeam"),
       goalsHome, goalsAway, htHome: number(get("HTHG")), htAway: number(get("HTAG")),
+      yellowHome: number(get("HY")) ?? 0, redHome: number(get("HR")) ?? 0,
+      yellowAway: number(get("AY")) ?? 0, redAway: number(get("AR")) ?? 0,
       home: stat("HS", "HST", "HC", cardsHome, redsHome),
       away: stat("AS", "AST", "AC", cardsAway, redsAway),
     }];
@@ -170,7 +173,9 @@ export async function getCsvLeagueAverage(leagueId = 140, season = 2026): Promis
   };
 }
 
-export async function getCsvStatsForFixture(fixture: Fixture): Promise<StoredStats | null> {
+export async function getCsvStatsForFixture(fixture: Fixture): Promise<(StoredStats & Pick<Fixture, "htHome" | "htAway"> & {
+  yellowHome: number; redHome: number; yellowAway: number; redAway: number;
+}) | null> {
   const timeZone = csvLeagueById(fixture.leagueId)?.timeZone ?? "Europe/Madrid";
   const date = new Intl.DateTimeFormat("en-CA", { timeZone }).format(fixture.timestamp * 1000);
   const homeId = csvTeamId(canonicalTeamName(fixture.home.name));
@@ -184,6 +189,9 @@ export async function getCsvStatsForFixture(fixture: Fixture): Promise<StoredSta
     fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,
     homeId: fixture.home.id, awayId: fixture.away.id, home: match.home, away: match.away,
     goalsHome: match.goalsHome, goalsAway: match.goalsAway,
+    htHome: match.htHome, htAway: match.htAway,
+    yellowHome: match.yellowHome, redHome: match.redHome,
+    yellowAway: match.yellowAway, redAway: match.redAway,
     hasData: [match.home.shots, match.home.corners, match.away.shots, match.away.corners].some((value) => value !== null),
   };
 }

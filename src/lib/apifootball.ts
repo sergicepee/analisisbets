@@ -194,11 +194,14 @@ async function updateCsvFixtureStates(fixtures: Fixture[]): Promise<Fixture[]> {
       return {
         ...fixture, statusShort: "FT", statusLong: "Match Finished",
         goalsHome: stats.goalsHome, goalsAway: stats.goalsAway,
+        htHome: stats.htHome, htAway: stats.htAway,
+        redCardsHome: stats.redHome, redCardsAway: stats.redAway,
       };
     }
     return {
       ...fixture, statusShort: "NS", statusLong: "Pendiente de actualizar",
       elapsed: null, goalsHome: null, goalsAway: null,
+      redCardsHome: stats?.redHome, redCardsAway: stats?.redAway,
     };
   }));
 }

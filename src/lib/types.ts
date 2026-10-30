@@ -15,6 +15,7 @@ export interface Fixture {
   home: TeamRef; away: TeamRef;
   goalsHome: number | null; goalsAway: number | null;
   htHome: number | null; htAway: number | null;
+  redCardsHome?: number; redCardsAway?: number;
   events: FixtureEvent[];
 }
 

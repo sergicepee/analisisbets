@@ -17,7 +17,7 @@ const EN: Record<string, string> = {
   // fechas y filtros
   "Ayer": "Yesterday", "Hoy": "Today", "Mañana": "Tomorrow",
   "Todos": "All", "En vivo": "Live", "Finalizados": "Finished", "Próximos": "Upcoming",
-  "Final": "Finished",
+  "Final": "Finished", "Descanso": "Half-time",
   "Pendientes de actualizar": "Awaiting update", "Pendiente de actualizar": "Awaiting update", "Otros": "Other",
   "Liga:": "League:", "No hay partidos para este filtro y fecha.": "No matches for this filter and date.",
   "No se pudo cargar el listado:": "Could not load the list:",

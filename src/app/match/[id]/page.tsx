@@ -12,7 +12,7 @@ import { IconBall, IconBars, IconCard, IconCorner, IconNet, IconNext, IconShoe, 
 import { Notice, Panel, StatCard, TeamPair, TrendTable, type TrendRow } from "@/components/ui";
 import { getFixture, getLeagueAverages, getPrediction, getTeamProfile } from "@/lib/apifootball";
 import { getUser } from "@/lib/auth";
-import { getCsvTeamProfile } from "@/lib/csvHistory";
+import { getCsvStatsForFixture, getCsvTeamProfile } from "@/lib/csvHistory";
 import { csvTeamId } from "@/lib/csvFixtures";
 import { hasSubscriberAccess } from "@/lib/subscriptions";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
@@ -78,6 +78,19 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   };
   const headerPa = mergeForm(pa, csvHomeForm), headerPb = mergeForm(pb, csvAwayForm);
   const g = statusGroup(f);
+  const csvMatchStats = f.id < 0 ? await getCsvStatsForFixture(f) : null;
+  const cardCounts = csvMatchStats
+    ? {
+        homeYellow: csvMatchStats.yellowHome, homeRed: csvMatchStats.redHome,
+        awayYellow: csvMatchStats.yellowAway, awayRed: csvMatchStats.redAway,
+      }
+    : f.events.reduce((counts, event) => {
+        if (event.type !== "Card") return counts;
+        const home = event.teamId === f.home.id;
+        if (event.detail === "Yellow Card") counts[home ? "homeYellow" : "awayYellow"]++;
+        if (event.detail === "Red Card" || event.detail === "Second Yellow Card") counts[home ? "homeRed" : "awayRed"]++;
+        return counts;
+      }, { homeYellow: 0, homeRed: 0, awayYellow: 0, awayRed: 0 });
 
   return (
     <>
@@ -85,7 +98,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
       {apiEnabled && g === "live" && <AutoRefresh seconds={45} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
-        <MatchHeader f={f} pa={headerPa} pb={headerPb} returnTo={`/match/${f.id}?date=${date}`} />
+        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}`} />
         <nav className="flex border-b border-line">
           {TABS.map(([key, label, Icon]) => (
             <Link key={key} href={`/match/${id}?tab=${key}&date=${date}`} className={`flex flex-1 flex-col items-center gap-1 border-b-2 py-2 text-xs font-semibold ${tab === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
@@ -107,9 +120,10 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 }
 
 // ───────────── Cabecera ─────────────
-function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; returnTo: string }) {
+function MatchHeader({ f, pa, pb, cardCounts, returnTo }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string }) {
   const g = statusGroup(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
+  const halftimeScore = f.htHome !== null && f.htAway !== null ? `${f.htHome} - ${f.htAway}` : null;
   const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
   const scorer = (e: Fixture["events"][number]) =>
     `${e.player} ${e.minute}${e.extra ? `+${e.extra}` : ""}′${e.detail === "Own Goal" ? " (p.p.)" : e.detail === "Penalty" ? " (p)" : ""}`;
@@ -138,13 +152,13 @@ function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb:
       </div>
       {f.venue && <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-600 sm:text-xs"><MapPin className="h-3 w-3" />{f.venue}</div>}
       <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
-        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} p={pa} />
-        <div className="relative flex h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
+        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} p={pa} />
+        <div className="relative flex min-h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
           {g === "live" ? (<><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
-            : g === "finished" ? (<><div className="text-3xl font-black text-slate-900">{score}</div><div className="mt-1 rounded-full border border-slate-300/80 bg-white/50 px-3 py-0.5 text-xs text-slate-600">{f.statusShort}</div></>)
+            : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">{t("Final")}</div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
             : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600">{t("Pendiente de actualizar")}</div>}</>)}
         </div>
-        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} p={pb} />
+        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} yellowCards={cardCounts.awayYellow} redCards={cardCounts.awayRed} p={pb} />
       </div>
       {(forHome.length > 0 || forAway.length > 0) && (
         <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-slate-600">
@@ -157,12 +171,18 @@ function MatchHeader({ f, pa, pb, returnTo }: { f: Fixture; pa: TeamProfile; pb:
     </section>
   );
 }
-function TeamCol({ teamId, leagueId, season, returnTo, name, logo, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; p: TeamProfile }) {
+function TeamCol({ teamId, leagueId, season, returnTo, name, logo, yellowCards, redCards, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; yellowCards: number; redCards: number; p: TeamProfile }) {
   const form = p.rows.slice(-5);
   return (
     <div className="flex min-w-0 flex-col items-center gap-1 text-center">
-      <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="inline-flex rounded-2xl border border-slate-300/80 bg-white/75 p-2 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+      <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="relative inline-flex rounded-2xl border border-slate-300/80 bg-white/75 p-2 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
         <Shield src={logo} alt={name} size={56} />
+        {(yellowCards > 0 || redCards > 0) && (
+          <span className="absolute -right-1 -top-1 flex gap-1">
+            {yellowCards > 0 && <span className="flex h-4 w-3 items-center justify-center rounded-[4px] bg-yellow-400 text-[9px] font-extrabold leading-none text-slate-900">{yellowCards}</span>}
+            {redCards > 0 && <span className="flex h-4 w-3 items-center justify-center rounded-[4px] bg-red-500 text-[9px] font-extrabold leading-none text-white">{redCards}</span>}
+          </span>
+        )}
       </Link>
       <div className="hero-serif min-h-[2.4em] max-w-full whitespace-normal break-words text-center text-[13px] font-normal uppercase leading-tight tracking-normal sm:text-sm">{name}</div>
       <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
