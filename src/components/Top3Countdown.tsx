@@ -42,9 +42,17 @@ export function Top3Countdown({ date }: { date: string }) {
 
   useEffect(() => {
     setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    if (!Number.isFinite(target) || target <= Date.now()) return;
+    const timer = window.setInterval(() => {
+      const current = Date.now();
+      if (current >= target) {
+        window.location.reload();
+        return;
+      }
+      setNow(current);
+    }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [target]);
 
   if (now === null || !Number.isFinite(target) || target <= now) return null;
 
@@ -64,7 +72,7 @@ export function Top3Countdown({ date }: { date: string }) {
           <IconCalendar className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
         <div>
-          <h2 className="text-base font-extrabold sm:text-xl">Cuenta atrás para la jornada</h2>
+          <h2 className="text-base font-extrabold sm:text-xl">Próxima combinada</h2>
           <p className="mt-1 text-xs text-muted sm:text-sm">{madridDateLabel(date)} a las 00:00 · Europe/Madrid</p>
         </div>
       </div>

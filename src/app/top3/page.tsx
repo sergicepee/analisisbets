@@ -141,31 +141,34 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
   const isSubscriber = user ? await hasSubscriberAccess(user.id) : false;
   const today = todayStr();
   const date = isDate(searchParams.date) ? searchParams.date as string : today;
+  const dateIsFuture = date > today;
   let picks: Pick[] = [];
   let error: string | null = null;
   let fixtures: Fixture[] = [];
   try {
-    fixtures = await getFixturesByDate(date, date === today);
-    fixtures = fixtures.filter((f) => ["upcoming", "finished"].includes(statusGroup(f)) && csvLeagueById(f.leagueId));
-    fixtures.sort((a, b) => a.timestamp - b.timestamp);
-    const eligible = fixtures;
-    const candidates = await Promise.all(eligible.map(async (f) => {
-      const [a, b] = await Promise.all([
-        getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId, f.home.name).catch(() => EMPTY(f.home.id)),
-        getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId, f.away.name).catch(() => EMPTY(f.away.id)),
-      ]);
-      const ownGoalEstimate = expectedFor(a, b, "goals");
-      const pred = !ownGoalEstimate && apiEnabled ? await getPrediction(f.id).catch(() => null) : null;
-      return buildPicks(f, a, b, pred);
-    }));
-    const rawPicks = candidates.flat();
-    const cutoff = eligible.length ? Math.min(...eligible.map((fixture) => fixture.timestamp)) - 86400 : Date.now() / 1000;
-    const calibrated = await calibrateCsvPicks(rawPicks, cutoff);
-    // Omite selecciones triviales y conserva las que tienen una muestra sólida.
-    const ranked = calibrated.filter((pick) => pick.p > 60 && pick.p < 80 && pick.sample >= 8)
-      .sort((a, b) => b.p - a.p || b.sample - a.sample);
-    const seen = new Set<number>();
-    picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
+    if (!dateIsFuture) {
+      fixtures = await getFixturesByDate(date, date === today);
+      fixtures = fixtures.filter((f) => ["upcoming", "finished"].includes(statusGroup(f)) && csvLeagueById(f.leagueId));
+      fixtures.sort((a, b) => a.timestamp - b.timestamp);
+      const eligible = fixtures;
+      const candidates = await Promise.all(eligible.map(async (f) => {
+        const [a, b] = await Promise.all([
+          getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId, f.home.name).catch(() => EMPTY(f.home.id)),
+          getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId, f.away.name).catch(() => EMPTY(f.away.id)),
+        ]);
+        const ownGoalEstimate = expectedFor(a, b, "goals");
+        const pred = !ownGoalEstimate && apiEnabled ? await getPrediction(f.id).catch(() => null) : null;
+        return buildPicks(f, a, b, pred);
+      }));
+      const rawPicks = candidates.flat();
+      const cutoff = eligible.length ? Math.min(...eligible.map((fixture) => fixture.timestamp)) - 86400 : Date.now() / 1000;
+      const calibrated = await calibrateCsvPicks(rawPicks, cutoff);
+      // Omite selecciones triviales y conserva las que tienen una muestra sólida.
+      const ranked = calibrated.filter((pick) => pick.p > 60 && pick.p < 80 && pick.sample >= 8)
+        .sort((a, b) => b.p - a.p || b.sample - a.sample);
+      const seen = new Set<number>();
+      picks = ranked.filter((p) => { if (seen.has(p.f.id)) return false; seen.add(p.f.id); return true; }).slice(0, 3);
+    }
   } catch (e) { error = errMsg(e); }
 
   const grades: Result[] = isSubscriber ? await Promise.all(picks.map(async (p) => {
@@ -183,9 +186,9 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
         </div>
         <DateNav date={date} base="/top3" quick={false} />
         <Top3Countdown date={date} />
-        {error && <Notice tone="warn">{error}</Notice>}
-        {!error && picks.length === 0 && <Notice>No hay tres selecciones con suficientes datos para esta fecha.</Notice>}
-        {picks.map((k, i) => {
+        {!dateIsFuture && error && <Notice tone="warn">{error}</Notice>}
+        {!dateIsFuture && !error && picks.length === 0 && <Notice>No hay tres selecciones con suficientes datos para esta fecha.</Notice>}
+        {!dateIsFuture && picks.map((k, i) => {
           const result = grades[i];
           const score = k.f.goalsHome !== null && k.f.goalsAway !== null ? `${k.f.goalsHome} - ${k.f.goalsAway}` : null;
           return (

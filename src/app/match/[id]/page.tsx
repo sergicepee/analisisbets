@@ -164,10 +164,10 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
       {eg?.fromPrediction && <Notice>Goles estimados con la media de los últimos {pred?.last5?.home.n ?? 5} partidos de cada equipo según API-Football (no hay estadísticas propias disponibles).</Notice>}
       {p1x2 ? (
         <div>
-          <div className="mb-1.5 grid min-w-0 grid-cols-3 gap-1 text-center text-[11px] font-bold leading-tight sm:text-sm">
-            <span className="min-w-0 truncate">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
-            <span className="min-w-0 truncate text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
-            <span className="min-w-0 truncate">{f.away.name} <span className="text-chartHit">{Math.round(p1x2.away)}%</span></span>
+          <div className="mb-1.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 text-[11px] font-bold leading-tight sm:text-sm">
+            <span className="min-w-0 truncate text-left">{f.home.name} <span className="text-brand">{Math.round(p1x2.home)}%</span></span>
+            <span className="min-w-0 truncate text-center text-muted">{t("Empate")} {Math.round(p1x2.draw)}%</span>
+            <span className="min-w-0 truncate text-right">{f.away.name} <span className="text-chartHit">{Math.round(p1x2.away)}%</span></span>
           </div>
           <div className="flex h-7 overflow-hidden rounded-full">
             <div className="border-r-2 border-bg bg-brand" style={{ width: `${p1x2.home}%` }} />
