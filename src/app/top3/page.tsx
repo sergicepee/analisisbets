@@ -192,7 +192,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
           const result = grades[i];
           const score = k.f.goalsHome !== null && k.f.goalsAway !== null ? `${k.f.goalsHome} - ${k.f.goalsAway}` : null;
           return (
-            <article key={k.f.id} className={`card p-4 ${isSubscriber ? result === "miss" ? "border-loss/50" : "border-win/40" : "border-line"}`}>
+            <article key={k.f.id} className={`card p-4 ${isSubscriber && result === "hit" ? "border-chartHit/40 bg-chartHit/[0.06]" : isSubscriber && result === "miss" ? "border-loss/40 bg-loss/[0.06]" : "border-line"}`}>
               <Link href={`/match/${k.f.id}?date=${date}`} className="block">
               <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-300">
                 <span className="flex min-w-0 items-center gap-1.5"><Flag src={k.f.flag} />{countryEs(k.f.country, k.f.flag)} · {k.f.leagueName}</span>
