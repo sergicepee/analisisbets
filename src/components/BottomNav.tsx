@@ -14,7 +14,7 @@ const ITEMS = [
 export function BottomNav() {
   const path = usePathname();
   const t = useT();
-  if (["/login", "/registro", "/recuperar", "/restablecer"].includes(path)) return null;
+  if (["/login", "/registro", "/recuperar", "/restablecer", "/favoritos"].includes(path)) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 lg:hidden border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="mx-auto flex max-w-3xl">
