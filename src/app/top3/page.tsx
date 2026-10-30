@@ -219,7 +219,7 @@ export default async function Page({ searchParams }: { searchParams: Record<stri
             </article>
           );
         })}
-        <Notice>La combinada es una estimación estadística, no una garantía.</Notice>
+        <Notice>Nuestro motor inteligente analiza las estadísticas y tendencias disponibles para seleccionar las combinadas con las señales de mayor valor. Sus pronósticos son estimaciones estadísticas y no garantizan resultados.</Notice>
       </main>
     </>
   );
