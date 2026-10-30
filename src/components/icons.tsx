@@ -7,5 +7,5 @@ export {
   Info as IconInfo, TrendingUp as IconMax, TrendingDown as IconMin, Circle as IconBall, Square as IconCard,
   BarChart3 as IconBars, Settings as IconSettings, Camera as IconCamera, Pencil as IconEdit, LockKeyhole as IconLock, Send as IconSend, HelpCircle as IconHelp,
   Handshake as IconHandshake, LogOut as IconLogOut, Eye as IconEye, EyeOff as IconEyeOff, Globe as IconGlobe,
-  Moon as IconMoon, Sun as IconSun, X as IconClose,
+  Moon as IconMoon, Sun as IconSun, Monitor as IconMonitor, X as IconClose,
 } from "lucide-react";

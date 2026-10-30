@@ -22,7 +22,14 @@ export const metadata: Metadata = {
   },
 };
 export function generateViewport(): Viewport {
-  return { themeColor: getTheme() === "light" ? "#f4f6f8" : "#0f0f0f", width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
+  const theme = getTheme();
+  const themeColor = theme === "system"
+    ? [
+      { media: "(prefers-color-scheme: light)", color: "#f4f6f8" },
+      { media: "(prefers-color-scheme: dark)", color: "#0f0f0f" },
+    ]
+    : theme === "light" ? "#f4f6f8" : "#0f0f0f";
+  return { themeColor, width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

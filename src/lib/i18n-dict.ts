@@ -15,7 +15,7 @@ const EN: Record<string, string> = {
   "Canal de Telegram": "Telegram channel", "Ayuda y soporte": "Help & Support", "Colaboración": "Cooperation",
   // ajustes
   "Idioma": "Language", "Elige tu idioma preferido": "Choose your preferred language",
-  "Tema": "Theme", "Elige cómo se ve la web": "Choose how the site looks", "Oscuro": "Dark", "Claro": "Light",
+  "Tema": "Theme", "Elige cómo se ve la web": "Choose how the site looks", "Oscuro": "Dark", "Claro": "Light", "Sistema": "System",
   "Zona horaria": "Time zone", "Elige la hora local de los partidos": "Choose the local time for matches",
   "Usar la zona horaria del dispositivo": "Use device time zone", "Cerrar": "Close",
   // fechas y filtros

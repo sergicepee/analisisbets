@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLang, useSetLang, useT } from "./I18nProvider";
 import { setPref } from "./prefs-client";
-import { IconCalendar, IconClose, IconGlobe, IconMoon, IconSettings, IconSun } from "./icons";
+import { applyThemePreference, getThemePreference } from "./theme-client";
+import type { ThemePreference } from "@/lib/theme";
+import { IconCalendar, IconClose, IconGlobe, IconMonitor, IconMoon, IconSettings, IconSun } from "./icons";
 
 const FALLBACK_ZONES = ["Europe/Madrid", "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Lisbon", "America/Mexico_City", "America/Bogota", "America/Lima", "America/Santiago", "America/Argentina/Buenos_Aires", "America/New_York", "America/Los_Angeles", "Atlantic/Canary", "UTC"];
 
@@ -32,10 +34,10 @@ export function SettingsOptions({ tz }: { tz: string }) {
   const lang = useLang();
   const setLang = useSetLang();
   const router = useRouter();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<ThemePreference>("dark");
   const [zone, setZone] = useState(tz);
 
-  useEffect(() => setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark"), []);
+  useEffect(() => setTheme(getThemePreference()), []);
   const zones = useMemo(() => {
     let list = FALLBACK_ZONES;
     try { const all = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf?.("timeZone"); if (all?.length) list = all; } catch { /* mantiene zonas habituales */ }
@@ -43,10 +45,8 @@ export function SettingsOptions({ tz }: { tz: string }) {
   }, [tz]);
 
   const chooseLang = (l: "es" | "en") => { setPref("gl_lang", l); setLang(l); document.documentElement.lang = l; router.refresh(); };
-  const chooseTheme = (v: "dark" | "light") => {
-    setPref("gl_theme", v);
-    document.documentElement.dataset.theme = v;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", v === "light" ? "#f4f6f8" : "#0f0f0f");
+  const chooseTheme = (v: ThemePreference) => {
+    applyThemePreference(v);
     setTheme(v);
   };
   const chooseZone = (z: string) => { setZone(z); setPref("gl_tz", z); router.refresh(); };
@@ -60,6 +60,7 @@ export function SettingsOptions({ tz }: { tz: string }) {
       <Block Icon={IconSettings} title={t("Tema")} sub={t("Elige cómo se ve la web")}>
         <Option on={theme === "dark"} onClick={() => chooseTheme("dark")}><IconMoon className="h-4 w-4" />{t("Oscuro")}</Option>
         <Option on={theme === "light"} onClick={() => chooseTheme("light")}><IconSun className="h-4 w-4" />{t("Claro")}</Option>
+        <Option on={theme === "system"} onClick={() => chooseTheme("system")}><IconMonitor className="h-4 w-4" />{t("Sistema")}</Option>
       </Block>
     </div>
     <div className="mt-3 sm:mt-4"><Block Icon={IconCalendar} title={t("Zona horaria")} sub={t("Elige la hora local de los partidos")}>
