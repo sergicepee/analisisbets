@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Brand } from "./Logo";
 import { DesktopNav } from "./DesktopNav";
 import { UserMenu } from "./UserMenu";
-import { IconBack, IconSearch } from "./icons";
+import { IconSearch } from "./icons";
+import { BackButton } from "./BackButton";
 import { LocalizedSearchInput } from "./LocalizedSearchInput";
 import { createAuthServer, getUser } from "@/lib/auth";
 import { getTz } from "@/lib/prefs";
@@ -23,7 +24,7 @@ export async function Header({ back }: { back?: string }) {
     <header className="sticky top-0 z-[80] flex items-center justify-between border-b border-line bg-bg/90 px-4 py-3 backdrop-blur lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8">
       <div className="flex items-center gap-3">
         {back && (
-          <Link href={back} aria-label="Volver" className="text-slate-200 lg:hidden"><IconBack className="h-5 w-5" /></Link>
+          <span className="text-slate-200 lg:hidden"><BackButton fallback={back} /></span>
         )}
         <Brand />
       </div>

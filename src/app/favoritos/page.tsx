@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BackButton } from "@/components/BackButton";
 import { FavoritesCollections, type FollowedTeamCard, type FavoriteFixtureCard } from "@/components/FavoritesCollections";
 import { I18nText } from "@/components/I18nProvider";
 import { Notice } from "@/components/ui";
@@ -6,7 +7,7 @@ import { getUser, authConfigured } from "@/lib/auth";
 import { getFixture, getTeamLogoFallbackUrl, getTeamLogoUrl, getTeamUpcomingFixtures } from "@/lib/apifootball";
 import { getUserFavoriteFixtureIds, getUserFollowedTeams } from "@/lib/favorites";
 import { getTz } from "@/lib/prefs";
-import { ArrowLeft, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +34,7 @@ export default async function FavoritesPage() {
   if (!authConfigured()) {
     return (
       <main className="flex min-h-screen flex-col px-4 pb-8 pt-6 lg:mx-auto lg:max-w-3xl">
-        <Link href="/" className="mb-6 inline-flex w-fit items-center gap-2 text-sm font-bold text-muted">
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-          <I18nText text="Volver" />
-        </Link>
+        <div className="mb-6"><BackButton /></div>
         <div className="space-y-4">
           <h1 className="flex items-center gap-2 font-display text-4xl font-extrabold uppercase leading-none"><Star aria-hidden="true" className="h-6 w-6 shrink-0 fill-brand text-brand" /><I18nText text="Mis favoritos" /></h1>
           <Notice tone="warn"><I18nText text="La autenticación aún no está configurada (ver README)." /></Notice>
@@ -95,10 +93,7 @@ export default async function FavoritesPage() {
 
   return (
     <main className="flex min-h-screen flex-col px-4 pb-8 pt-6 lg:mx-auto lg:max-w-3xl">
-      <Link href="/" className="mb-6 inline-flex w-fit items-center gap-2 text-sm font-bold text-muted">
-        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-        <I18nText text="Volver" />
-      </Link>
+      <div className="mb-6"><BackButton /></div>
       <div className="mb-6">
         <h1 className="flex items-center gap-2 font-display text-4xl font-extrabold uppercase leading-none"><Star aria-hidden="true" className="h-6 w-6 shrink-0 fill-brand text-brand" /><I18nText text="Mis favoritos" /></h1>
         <p className="mt-2 text-sm leading-relaxed text-muted"><I18nText text="Recibirás avisos de goles, inicio y final de tus equipos y partidos seguidos." /></p>

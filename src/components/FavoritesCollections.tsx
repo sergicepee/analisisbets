@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, Trash2 } from "lucide-react";
 import type { Fixture } from "@/lib/types";
 import { useT } from "./I18nProvider";
@@ -34,6 +35,7 @@ export function FavoritesCollections({
   const [fixtures, setFixtures] = useState(initialFixtures);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const t = useT();
 
   async function removeTeam(team: FollowedTeamCard) {
@@ -81,6 +83,7 @@ export function FavoritesCollections({
       window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
         detail: { fixtureId, favorite: false },
       }));
+      router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo quitar el favorito.");
     } finally {

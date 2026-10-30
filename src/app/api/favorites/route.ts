@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createAuthServer, getUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     console.error("Could not save user favorite fixture:", error);
     return NextResponse.json({ error: "No se pudo guardar el favorito. Comprueba la configuración de la base de datos." }, { status: 500 });
   }
+  revalidatePath("/", "layout");
   return NextResponse.json({ favorite: true });
 }
 
@@ -53,5 +55,6 @@ export async function DELETE(request: NextRequest) {
     console.error("Could not remove user favorite fixture:", error);
     return NextResponse.json({ error: "No se pudo quitar el favorito. Comprueba la configuración de la base de datos." }, { status: 500 });
   }
+  revalidatePath("/", "layout");
   return NextResponse.json({ favorite: false });
 }
