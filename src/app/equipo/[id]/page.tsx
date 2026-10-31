@@ -9,6 +9,7 @@ import {
   getLeagueFixtures,
   getLeagueStandingsZones,
   getLeagueTeams,
+  getLeagueById,
   getTeamLogoFallbackUrl,
   getTeamLogoUrl,
   getTeamRecentFixtures,
@@ -26,7 +27,6 @@ import { FollowTeamButton } from "@/components/FollowTeamButton";
 import type { Fixture, TeamProfile } from "@/lib/types";
 import { TeamStatsChart, type TeamGamePoint } from "@/components/TeamStatsChart";
 import { SearchLauncher } from "@/components/SearchModal";
-import { csvLeagueById } from "@/lib/csvLeagues";
 import { getTz } from "@/lib/prefs";
 import { LeagueStandingsTable } from "@/components/LeagueStandingsTable";
 
@@ -101,10 +101,21 @@ export default async function Page({ params, searchParams }: { params: { id: str
   const leagueId = Number(searchParams.league) || undefined;
   const back = safeReturnPath(searchParams.from);
   const userPromise = getUser();
-  const seasons = leagueId ? await getLeagueSeasons(leagueId) : [];
+  const [leagueInfo, seasons] = await Promise.all([
+    leagueId ? getLeagueById(leagueId) : Promise.resolve(null),
+    leagueId ? getLeagueSeasons(leagueId) : Promise.resolve([]),
+  ]);
   const requestedSeason = Number(searchParams.season);
   const season = seasons.includes(requestedSeason) ? requestedSeason : seasons[0];
-  const teams = leagueId ? await getLeagueTeams(leagueId, season) : [];
+  let teams: Awaited<ReturnType<typeof getLeagueTeams>> = [];
+  let teamListError: string | null = null;
+  if (leagueId && season) {
+    try {
+      teams = await getLeagueTeams(leagueId, season);
+    } catch (error) {
+      teamListError = errMsg(error);
+    }
+  }
   const name = searchParams.name || teams.find((team) => team.id === id)?.name;
   let profile: TeamProfile | null = null;
   let recent: Fixture[] = [];
@@ -116,11 +127,11 @@ export default async function Page({ params, searchParams }: { params: { id: str
 
   const [profileResult, recentResult, upcomingResult, seriesResult] = await Promise.allSettled([
     name ? (leagueId && season
-      ? getTeamSeasonProfile(id, name, leagueId, season)
-      : getTeamProfile(id, true, season, Infinity, leagueId, name))
+      ? getTeamSeasonProfile(id, leagueId, season)
+      : getTeamProfile(id, true, season, Infinity, leagueId))
       : Promise.resolve(null),
-    getTeamRecentFixtures(id, 15, leagueId, name),
-    getTeamUpcomingFixtures(id, 15, leagueId, name),
+    getTeamRecentFixtures(id, 15, leagueId),
+    getTeamUpcomingFixtures(id, 15, leagueId),
     name && leagueId && season ? getTeamSeasonMatchSeries(id, name, leagueId, season, teams) : Promise.resolve([]),
   ]);
   if (profileResult.status === "fulfilled") profile = profileResult.value;
@@ -130,7 +141,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
   if (upcomingResult.status === "fulfilled") upcoming = upcomingResult.value;
   else fixtureError = fixtureError ? `${fixtureError}; ${errMsg(upcomingResult.reason)}` : errMsg(upcomingResult.reason);
   if (seriesResult.status === "fulfilled") {
-    const country = csvLeagueById(leagueId ?? 0)?.country ?? "";
+    const country = leagueInfo?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
     chartGames = seriesResult.value.map((game) => ({
       ...game,
       opponentLogo: getTeamLogoUrl(game.opponent, country),
@@ -139,7 +150,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
   } else seriesError = errMsg(seriesResult.reason);
 
   const teamName = name ?? `Equipo ${id}`;
-  const country = csvLeagueById(leagueId ?? 0)?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
+  const country = leagueInfo?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
   const standingsLeagueId = leagueId ?? recent[0]?.leagueId ?? upcoming[0]?.leagueId;
   const standingsSeason = (leagueId ? season : undefined)
     ?? recent.find((fixture) => fixture.leagueId === standingsLeagueId)?.season
@@ -164,7 +175,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
     if (zonesResult.status === "fulfilled") standingsZones = zonesResult.value;
     else standingsZoneError = errMsg(zonesResult.reason);
   }
-  const standingsCountry = csvLeagueById(standingsLeagueId ?? 0)?.country ?? country;
+  const standingsCountry = country;
   const standings = standingsLeagueId && standingsSeason ? (
     <LeagueStandingsTable
       leagueId={standingsLeagueId}
@@ -177,7 +188,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
       zoneError={standingsZoneError}
     />
   ) : null;
-  const league = leagueId ? csvLeagueById(leagueId) : null;
+  const league = leagueInfo;
   const competitionName = league?.name ?? upcoming[0]?.leagueName ?? recent[0]?.leagueName;
   const competitionLogo = upcoming[0]?.leagueLogo ?? recent[0]?.leagueLogo ?? null;
   const logo = getTeamLogoUrl(teamName, country);
@@ -273,6 +284,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
         </section>
 
         {profileError && <Notice tone="warn">{profileError}</Notice>}
+        {teamListError && <Notice tone="warn">{teamListError}</Notice>}
         {fixtureError && <Notice tone="warn">{fixtureError}</Notice>}
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {followLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar los equipos seguidos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}

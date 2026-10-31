@@ -14,7 +14,6 @@ import type { Fixture, StatusGroup } from "@/lib/types";
 import { I18nText } from "./I18nProvider";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
-import { shouldRefreshCsvFixture } from "@/lib/fixtureStatus";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ["live", "En vivo"],
@@ -51,7 +50,6 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
       {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
-      {date === today && fixtures.some((fixture) => fixture.id < 0 && shouldRefreshCsvFixture(fixture)) && <AutoRefresh seconds={30} />}
       <div className="card rounded-xl p-2.5 sm:p-3">
         <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
       </div>

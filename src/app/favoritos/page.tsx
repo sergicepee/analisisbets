@@ -65,7 +65,7 @@ export default async function FavoritesPage() {
     dateKey: dateForFixture(fixture.timestamp),
   }));
   const teamResults = await Promise.allSettled(teamLookup.teams.map(async (team): Promise<FollowedTeamCard> => {
-    const [nextFixture] = await getTeamUpcomingFixtures(team.id, 1, undefined, team.name);
+    const [nextFixture] = await getTeamUpcomingFixtures(team.id, 1);
     return {
       ...team,
       logo: getTeamLogoUrl(team.name, ""),

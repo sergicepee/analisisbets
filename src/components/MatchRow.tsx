@@ -6,11 +6,9 @@ import { IconStats } from "./icons";
 import { FavoriteMatchButton } from "./FollowMatchButton";
 import { I18nText } from "./I18nProvider";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
-import { isWithinCsvLiveWindow } from "@/lib/fixtureStatus";
 
 export function MatchRow({ f, date, displayDate, selected = false, isAuthenticated, initialFavorite, showFavorite = true, showLeagueLogo = false, showDate = false }: { f: Fixture; date: string; displayDate?: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean; showFavorite?: boolean; showLeagueLogo?: boolean; showDate?: boolean }) {
   const g = statusGroup(f);
-  const csvLive = f.id < 0 && isWithinCsvLiveWindow(f);
   const suspended = f.statusShort === "SUSP";
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const homeWon = g === "finished" && f.goalsHome !== null && f.goalsAway !== null && f.goalsHome > f.goalsAway;
@@ -23,7 +21,7 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
   const homeRedCards = f.redCardsHome ?? eventRedCards(f.home.id);
   const awayRedCards = f.redCardsAway ?? eventRedCards(f.away.id);
   return (
-    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] px-2 sm:px-3 ${csvLive ? "border-l-loss bg-loss/5" : `border-l-transparent ${selected ? "bg-card2" : "bg-card"}`}`}>
+    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] border-l-transparent px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
       {showFavorite && <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />}
       <div className={`shrink-0 text-center ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
         <Link href={`/match/${f.id}?date=${date}&league=${f.leagueId}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="block">
@@ -35,9 +33,7 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
           ) : g === "finished" ? (
             <div className="text-xs font-medium text-muted"><I18nText text="Final" /></div>
           ) : g === "live" ? (
-            csvLive ? (
-              <span className="inline-flex animate-pulse items-center justify-center rounded bg-loss px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-black motion-reduce:animate-none sm:text-xs">LIVE</span>
-            ) : <>
+            <>
               <div className="text-sm font-extrabold tabular-nums text-chartHit sm:text-base">{score ?? "—"}</div>
               <div className="mt-0.5 text-[10px] font-semibold text-chartHit">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div>
             </>

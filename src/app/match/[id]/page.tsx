@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin } from "lucide-react";
@@ -17,7 +18,6 @@ import { IconAssist, IconBall, IconBars, IconCard, IconCorner, IconNet, IconNext
 import { Notice, Panel, StatCard } from "@/components/ui";
 import { getFixture, getFixtureLineups, getFixtureStatsFor, getLeagueAverages, getLeagueCardLeaders, getTeamProfile } from "@/lib/apifootball";
 import { getUser } from "@/lib/auth";
-import { getCsvStatsForFixture } from "@/lib/csvHistory";
 import { getSubscriberAccess } from "@/lib/subscriptions";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
@@ -25,7 +25,6 @@ import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { getLocale, getTz } from "@/lib/prefs";
-import { isNearCsvLiveWindow, isWithinCsvLiveWindow } from "@/lib/fixtureStatus";
 import {
   avg2, expectedFor, pctTone, poissonModel, tone,
 } from "@/lib/metrics";
@@ -68,65 +67,24 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     user ? getFavoriteFixtureIds(user.id, [f.id]) : Promise.resolve({ favoriteIds: new Set<number>(), error: false }),
   ]);
   const isSubscriber = subscriptionAccess.active;
-  const premiumLocked = section === "analysis" && analysisTab !== "general" && analysisTab !== "goles" && !isSubscriber;
-
-  const needStats = section === "analysis" && analysisTab !== "goles";
-  const includeGoalProfiles = section === "analysis" && analysisTab === "goles" && !premiumLocked;
-  let profileErr: string | null = null;
-  let lineupsError: string | null = null;
-  const grab = (p: Promise<TeamProfile>) => p.catch((e) => { profileErr = profileErr ?? errMsg(e); return null; });
-  const includeStats = !premiumLocked && needStats;
-  const actualStatsPromise = section === "statistics" ? getFixtureStatsFor(f) : Promise.resolve(null);
-  const goalHomeProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, f.home.name, { venue: "home" }))
-    : Promise.resolve(null);
-  const goalAwayProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, f.away.name, { venue: "away" }))
-    : Promise.resolve(null);
-  const lineupsPromise = section === "lineups"
-    ? getFixtureLineups(f).catch((error: unknown) => { lineupsError = errMsg(error); return []; })
-    : Promise.resolve([]);
-  const [pa0, pb0, actualStats, lineups, goalPa0, goalPb0] = await Promise.all([
-    grab(getTeamProfile(f.home.id, includeStats, f.season, f.timestamp, f.leagueId, f.home.name)),
-    grab(getTeamProfile(f.away.id, includeStats, f.season, f.timestamp, f.leagueId, f.away.name)),
-    actualStatsPromise,
-    lineupsPromise,
-    goalHomeProfilePromise,
-    goalAwayProfilePromise,
-  ]);
-  const pa = pa0 ?? EMPTY(f.home.id), pb = pb0 ?? EMPTY(f.away.id);
-  const goalPa = goalPa0 ?? EMPTY(f.home.id), goalPb = goalPb0 ?? EMPTY(f.away.id);
-  const goalRowsForViewer = (rows: typeof goalPa.rows) => isSubscriber
-    ? rows
-    : rows.map((row) => ({ ...row, htFor: null, htAgainst: null }));
-  const analysisProfileMissing = analysisTab === "goles"
-    ? !goalPa0 || !goalPb0
-    : !pa0 || !pb0;
-  const headerPa = pa, headerPb = pb;
   const g = statusGroup(f);
-  const csvMatchStats = f.id < 0 ? await getCsvStatsForFixture(f) : null;
-  const cardCounts = csvMatchStats
-    ? {
-        homeYellow: csvMatchStats.yellowHome, homeRed: csvMatchStats.redHome,
-        awayYellow: csvMatchStats.yellowAway, awayRed: csvMatchStats.redAway,
-      }
-    : f.events.reduce((counts, event) => {
-        if (event.type !== "Card") return counts;
-        const home = event.teamId === f.home.id;
-        if (event.detail === "Yellow Card") counts[home ? "homeYellow" : "awayYellow"]++;
-        if (event.detail === "Red Card" || event.detail === "Second Yellow Card") counts[home ? "homeRed" : "awayRed"]++;
-        return counts;
-      }, { homeYellow: 0, homeRed: 0, awayYellow: 0, awayRed: 0 });
+  const cardCounts = f.events.reduce((counts, event) => {
+    if (event.type !== "Card") return counts;
+    const home = event.teamId === f.home.id;
+    if (event.detail === "Yellow Card") counts[home ? "homeYellow" : "awayYellow"]++;
+    if (event.detail === "Red Card" || event.detail === "Second Yellow Card") counts[home ? "homeRed" : "awayRed"]++;
+    return counts;
+  }, { homeYellow: 0, homeRed: 0, awayYellow: 0, awayRed: 0 });
 
   return (
     <>
       <Header back={`/?date=${date}`} />
-      {(apiEnabled && g === "live") || (!apiEnabled && isNearCsvLiveWindow(f)) ? <AutoRefresh seconds={apiEnabled ? 45 : 30} /> : null}
+      {apiEnabled && g === "live" ? <AutoRefresh seconds={45} /> : null}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}
-        <MatchHeader f={f} pa={headerPa} pb={headerPb} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}&league=${f.leagueId}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
+        <MatchHeader f={f} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}&league=${f.leagueId}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
         <nav role="tablist" aria-label={t("Secciones del partido")} className="grid grid-cols-3 border-b border-line">
           {MATCH_SECTIONS.map(([key, label, Icon]) => (
             <Link key={key} role="tab" aria-selected={section === key} href={`/match/${id}?section=${key}&tab=${analysisTab}&date=${date}&league=${f.leagueId}`} className={`flex flex-col items-center gap-1 border-b-2 py-2.5 text-xs font-semibold sm:text-sm ${section === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
@@ -143,21 +101,98 @@ export default async function MatchPage({ params, searchParams }: { params: { id
                 </Link>
               ))}
             </nav>
-            {!premiumLocked && analysisProfileMissing ? <Notice tone="warn"><I18nText text="Algunas estadísticas no se pudieron cargar." /> {profileErr ? friendlyApiError(profileErr) : <I18nText text="Sin datos suficientes." />}</Notice> : null}
-            {analysisTab === "general" && <General f={f} pa={pa} pb={pb} />}
-            {premiumLocked && <PremiumLockedPreview tab={analysisTab as "tiros" | "corners" | "tarjetas"} home={{ name: f.home.name, logo: f.home.logo }} away={{ name: f.away.name, logo: f.away.logo }} locale={getLocale()} />}
-            {analysisTab === "goles" && <GoalsAnalysis home={f.home} away={f.away} homeRows={goalRowsForViewer(goalPa.rows)} awayRows={goalRowsForViewer(goalPb.rows)} sampleSize={FORM_MATCHES} locale={getLocale()} isSubscriber={isSubscriber} />}
-            {!premiumLocked && analysisTab === "tiros" && <Block f={f} pa={pa} pb={pb} tab="tiros" />}
-            {!premiumLocked && analysisTab === "corners" && <Block f={f} pa={pa} pb={pb} tab="corners" />}
-            {!premiumLocked && analysisTab === "tarjetas" && <Block f={f} pa={pa} pb={pb} tab="tarjetas" />}
           </>
         )}
-        {section === "statistics" && <MatchStatistics fixture={f} stats={actualStats} />}
-        {section === "lineups" && <MatchLineups fixture={f} lineups={lineups} error={lineupsError} />}
+        <Suspense fallback={<MatchContentFallback section={section} />}>
+          <MatchData f={f} section={section} analysisTab={analysisTab} isSubscriber={isSubscriber} />
+        </Suspense>
       </main>
-      </Workspace>
+    </Workspace>
     </>
   );
+}
+
+async function MatchData({
+  f, section, analysisTab, isSubscriber,
+}: {
+  f: Fixture;
+  section: typeof MATCH_SECTIONS[number][0];
+  analysisTab: string;
+  isSubscriber: boolean;
+}) {
+  const premiumLocked = section === "analysis" && analysisTab !== "general" && analysisTab !== "goles" && !isSubscriber;
+  const includeGoalProfiles = section === "analysis" && analysisTab === "goles";
+  const includeStats = section === "analysis" && !premiumLocked && analysisTab !== "goles";
+  let profileErr: string | null = null;
+  let lineupsError: string | null = null;
+  const grab = (p: Promise<TeamProfile>) => p.catch((error: unknown) => {
+    profileErr = profileErr ?? errMsg(error);
+    return null;
+  });
+  const homeProfilePromise = includeStats
+    ? grab(getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId))
+    : Promise.resolve(null);
+  const awayProfilePromise = includeStats
+    ? grab(getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId))
+    : Promise.resolve(null);
+  const goalHomeProfilePromise = includeGoalProfiles
+    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, { venue: "home" }))
+    : Promise.resolve(null);
+  const goalAwayProfilePromise = includeGoalProfiles
+    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away" }))
+    : Promise.resolve(null);
+  const actualStatsPromise = section === "statistics" ? getFixtureStatsFor(f) : Promise.resolve(null);
+  const lineupsPromise = section === "lineups"
+    ? getFixtureLineups(f).catch((error: unknown) => {
+      lineupsError = errMsg(error);
+      return [];
+    })
+    : Promise.resolve([]);
+  const [pa0, pb0, actualStats, lineups, goalPa0, goalPb0] = await Promise.all([
+    homeProfilePromise,
+    awayProfilePromise,
+    actualStatsPromise,
+    lineupsPromise,
+    goalHomeProfilePromise,
+    goalAwayProfilePromise,
+  ]);
+  const pa = pa0 ?? EMPTY(f.home.id);
+  const pb = pb0 ?? EMPTY(f.away.id);
+  const goalPa = goalPa0 ?? EMPTY(f.home.id);
+  const goalPb = goalPb0 ?? EMPTY(f.away.id);
+  const goalRowsForViewer = (rows: typeof goalPa.rows) => isSubscriber
+    ? rows
+    : rows.map((row) => ({ ...row, htFor: null, htAgainst: null }));
+  const analysisProfileMissing = analysisTab === "goles"
+    ? !goalPa0 || !goalPb0
+    : !pa0 || !pb0;
+
+  return (
+    <>
+      {section === "analysis" && (
+        <>
+          {!premiumLocked && analysisProfileMissing ? <Notice tone="warn"><I18nText text="Algunas estadísticas no se pudieron cargar." /> {profileErr ? friendlyApiError(profileErr) : <I18nText text="Sin datos suficientes." />}</Notice> : null}
+          {analysisTab === "general" && <General f={f} pa={pa} pb={pb} />}
+          {premiumLocked && <PremiumLockedPreview tab={analysisTab as "tiros" | "corners" | "tarjetas"} home={{ name: f.home.name, logo: f.home.logo }} away={{ name: f.away.name, logo: f.away.logo }} locale={getLocale()} />}
+          {analysisTab === "goles" && <GoalsAnalysis home={f.home} away={f.away} homeRows={goalRowsForViewer(goalPa.rows)} awayRows={goalRowsForViewer(goalPb.rows)} sampleSize={FORM_MATCHES} locale={getLocale()} isSubscriber={isSubscriber} />}
+          {!premiumLocked && analysisTab === "tiros" && <Block f={f} pa={pa} pb={pb} tab="tiros" />}
+          {!premiumLocked && analysisTab === "corners" && <Block f={f} pa={pa} pb={pb} tab="corners" />}
+          {!premiumLocked && analysisTab === "tarjetas" && <Block f={f} pa={pa} pb={pb} tab="tarjetas" />}
+        </>
+      )}
+      {section === "statistics" && <MatchStatistics fixture={f} stats={actualStats} />}
+      {section === "lineups" && <MatchLineups fixture={f} lineups={lineups} error={lineupsError} />}
+    </>
+  );
+}
+
+function MatchContentFallback({ section }: { section: typeof MATCH_SECTIONS[number][0] }) {
+  const label = section === "analysis"
+    ? "Cargando análisis..."
+    : section === "statistics"
+      ? "Cargando estadísticas..."
+      : "Cargando alineaciones...";
+  return <div role="status" aria-live="polite" className="card flex min-h-28 animate-pulse items-center justify-center p-4 text-sm text-muted"><I18nText text={label} /></div>;
 }
 
 function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredStats | null }) {
@@ -452,9 +487,8 @@ function lineupPlayerShortName(name: string) {
 }
 
 // ───────────── Cabecera ─────────────
-function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initialFavorite }: { f: Fixture; pa: TeamProfile; pb: TeamProfile; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string; isAuthenticated: boolean; initialFavorite: boolean }) {
+function MatchHeader({ f, cardCounts, returnTo, isAuthenticated, initialFavorite }: { f: Fixture; cardCounts: { homeYellow: number; homeRed: number; awayYellow: number; awayRed: number }; returnTo: string; isAuthenticated: boolean; initialFavorite: boolean }) {
   const g = statusGroup(f);
-  const csvLive = f.id < 0 && isWithinCsvLiveWindow(f);
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
   const halftimeScore = f.htHome !== null && f.htAway !== null ? `${f.htHome} - ${f.htAway}` : null;
   const goals = f.events.filter((e) => e.type === "Goal" && e.detail !== "Missed Penalty");
@@ -485,13 +519,13 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
       </div>
       {f.venue && <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-600 sm:text-xs"><MapPin className="h-3 w-3" />{f.venue}</div>}
       <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
-        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} p={pa} />
+        <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} timestamp={f.timestamp} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} />
         <div className="relative flex min-h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
-          {g === "live" ? (csvLive ? <span className="inline-flex animate-pulse items-center justify-center rounded-md bg-loss px-3 py-1.5 text-sm font-black uppercase leading-none text-black motion-reduce:animate-none">LIVE</span> : <><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>)
+          {g === "live" ? <><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>
             : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600"><I18nText text="Final" /></div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
             : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600"><I18nText text="Pendiente de actualizar" /></div>}</>)}
         </div>
-        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} returnTo={returnTo} name={f.away.name} logo={f.away.logo} yellowCards={cardCounts.awayYellow} redCards={cardCounts.awayRed} p={pb} />
+        <TeamCol teamId={f.away.id} leagueId={f.leagueId} season={f.season} timestamp={f.timestamp} returnTo={returnTo} name={f.away.name} logo={f.away.logo} yellowCards={cardCounts.awayYellow} redCards={cardCounts.awayRed} />
       </div>
       {(forHome.length > 0 || forAway.length > 0) && (
         <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-slate-600">
@@ -504,8 +538,26 @@ function MatchHeader({ f, pa, pb, cardCounts, returnTo, isAuthenticated, initial
     </section>
   );
 }
-function TeamCol({ teamId, leagueId, season, returnTo, name, logo, yellowCards, redCards, p }: { teamId: number; leagueId: number; season: number; returnTo: string; name: string; logo: string | null; yellowCards: number; redCards: number; p: TeamProfile }) {
-  const form = p.rows.slice(-5);
+type TeamColProps = {
+  teamId: number;
+  leagueId: number;
+  season: number;
+  timestamp: number;
+  returnTo: string;
+  name: string;
+  logo: string | null;
+  yellowCards: number;
+  redCards: number;
+};
+async function TeamColForm({ teamId, leagueId, season, timestamp }: Pick<TeamColProps, "teamId" | "leagueId" | "season" | "timestamp">) {
+  try {
+    const profile = await getTeamProfile(teamId, false, season, timestamp, leagueId, { limit: 5 });
+    return <TeamFormRows rows={profile.rows.slice(-5)} />;
+  } catch (error: unknown) {
+    return <span role="alert" className="text-center text-[9px] text-muted"><I18nText text="No se pudo cargar la forma reciente." /> {friendlyApiError(errMsg(error))}</span>;
+  }
+}
+function TeamCol({ teamId, leagueId, season, timestamp, returnTo, name, logo, yellowCards, redCards }: TeamColProps) {
   return (
     <div className="flex min-w-0 flex-col items-center gap-1 text-center">
       <Link href={`/equipo/${teamId}?league=${leagueId}&season=${season}&name=${encodeURIComponent(name)}&from=${encodeURIComponent(returnTo)}`} aria-label={`Ver estadísticas de ${name}`} title={`Ver estadísticas de ${name}`} className="relative inline-flex rounded-2xl border border-slate-300/80 bg-white/75 p-2 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
@@ -518,11 +570,18 @@ function TeamCol({ teamId, leagueId, season, returnTo, name, logo, yellowCards, 
         )}
       </Link>
       <div className="hero-serif min-h-[2.4em] max-w-full whitespace-normal break-words text-center text-[13px] font-normal uppercase leading-tight tracking-normal sm:text-sm">{name}</div>
-      <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
-        {form.map((r, i) => (
-          <span key={i} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${r.result === "W" ? "bg-statGreen" : r.result === "D" ? "bg-statOrange" : "bg-statRed"}`}>{r.result}</span>
-        ))}
-      </div>
+      <Suspense fallback={<div aria-hidden="true" className="mt-1 h-5" />}>
+        <TeamColForm teamId={teamId} leagueId={leagueId} season={season} timestamp={timestamp} />
+      </Suspense>
+    </div>
+  );
+}
+function TeamFormRows({ rows }: { rows: TeamProfile["rows"] }) {
+  return (
+    <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
+      {rows.map((row, index) => (
+        <span key={index} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${row.result === "W" ? "bg-statGreen" : row.result === "D" ? "bg-statOrange" : "bg-statRed"}`}>{row.result}</span>
+      ))}
     </div>
   );
 }

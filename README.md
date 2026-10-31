@@ -1,7 +1,7 @@
 # PICKZONE · Análisis de fútbol
 
 Web móvil‑first (Next.js 14 + Tailwind) para estudiar partidos: probabilidades estimadas, tendencias de goles, tiros, córners y tarjetas, Top 3 del día, ranking por métricas y catálogo de ligas.
-Datos de fútbol de **ESPN** (sin clave) con respaldo en los CSV locales y caché en **Supabase**. Si ESPN no responde, la web conserva el acceso a los datos CSV disponibles.
+Datos de fútbol de **ESPN** (sin clave) y caché en **Supabase**. Los CSV del repositorio se conservan, pero la aplicación ya no los carga como fuente ni como respaldo.
 
 ## Pantallas
 Móvil: una columna con barra inferior. Escritorio (≥1024 px): menú superior, buscador de equipos y ligas, y dos columnas (lista de partidos + ficha) con scroll independiente.
@@ -19,7 +19,7 @@ npm run dev        # http://localhost:3000
 1. **Supabase**: crea un proyecto → *SQL Editor* → pega y ejecuta `supabase/schema.sql`. En *Project Settings → API* copia la **URL** y la **service_role key**.
 2. **GitHub**: sube esta carpeta a un repositorio.
 3. **Vercel**: *Add New → Project* → importa el repo. En *Environment Variables* añade `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL` (la misma URL) y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la clave *anon / publishable* de Supabase), además de los opcionales de `.env.example`. ESPN funciona sin clave.
-4. Abre `/estado` para comprobar la fuente ESPN y la configuración de Supabase. Para desactivar ESPN y usar solo los CSV, configura `USE_ESPN=false`.
+4. Abre `/estado` para comprobar la fuente ESPN y la configuración de Supabase. `USE_ESPN=false` desactiva ESPN; como los CSV ya no se cargan, no habrá datos de partidos mientras ESPN esté desactivado.
 
 > Las claves solo se usan en servidor; nunca uses prefijo `NEXT_PUBLIC_`.
 
@@ -54,10 +54,10 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - **No incluido**: “Continuar con Telegram”. Supabase no lo trae de serie; requeriría crear un bot en @BotFather y un servicio propio de verificación.
 
 ## Fuente y cobertura
-- ESPN es la fuente principal para las nueve competiciones configuradas en `src/lib/espn.ts`: La Liga, Premier League, Serie A, Bundesliga, Ligue 1, Champions League, Europa League, Conference League y Supercopa de la UEFA. Los CSV se conservan como respaldo y se pueden usar solos con `USE_ESPN=false`.
+- ESPN es la única fuente de datos de fútbol para las nueve competiciones configuradas en `src/lib/espn.ts`: La Liga, Premier League, Serie A, Bundesliga, Ligue 1, Champions League, Europa League, Conference League y Supercopa de la UEFA. Los CSV se conservan en el repositorio, pero no se cargan en tiempo de ejecución.
 - ESPN no requiere clave, pero las rutas públicas utilizadas no tienen un contrato de disponibilidad garantizado y podrían cambiar.
 - En las competiciones UEFA, el calendario separa fase de liga y eliminatorias; las eliminatorias agrupan los partidos por enfrentamiento y muestran el global cuando hay ida y vuelta. La clasificación solo aparece en fase de liga. Si ESPN no identifica una fase, los partidos se agrupan por fecha sin inferir jornadas o rondas.
-- Cuando ESPN no ofrece estadísticas de partido, se intenta completar con los CSV. Si no existen datos suficientes, se muestran guiones o avisos, no cifras inventadas.
+- Si ESPN no ofrece estadísticas de partido o no hay datos suficientes, se muestran guiones o avisos, no cifras inventadas.
 - La clasificación se calcula con los resultados de la temporada. Las zonas oficiales de clasificación no se obtienen actualmente de ESPN.
 - `FORM_MATCHES` (10 por defecto), `LEAGUE_IDS` y `MAX_ANALYSIS_FIXTURES` permiten ajustar el tamaño del análisis y las ligas consideradas.
 
@@ -65,7 +65,7 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - **Esperado por equipo** = media(lo que produce, lo que el rival concede) en sus últimos N partidos; total = suma.
 - **Probabilidades** de más de 1,5/2,5, ambos marcan y 1X2: modelo de Poisson calculado a partir de los partidos disponibles.
 - **Tendencias**: % de los últimos N partidos de cada equipo en que el total superó la línea; “Partido” promedia ambos.
-- **Media de liga**: se calcula con los partidos disponibles de ESPN o, si faltan, con los CSV.
+- **Media de liga**: se calcula con los partidos disponibles de ESPN.
 - **Los 3 mejores**: mayor probabilidad 1X2 entre los próximos partidos analizados. Estimación, no pick seguro.
 - Sin datos suficientes se muestra “—” o un aviso.
 
@@ -73,7 +73,7 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - Marca: `src/lib/config.ts` y `src/components/Logo.tsx`.
 - Iconos: `src/components/icons.tsx` (un único archivo).
 - Colores: `tailwind.config.ts`.
-- Datos: `src/lib/espn.ts`, `src/lib/apifootball.ts` (fachada con respaldo CSV) y `src/lib/metrics.ts`.
+- Datos: `src/lib/espn.ts`, `src/lib/apifootball.ts` (fachada de datos ESPN) y `src/lib/metrics.ts`.
 
 ## Pendiente / decisiones tuyas
 Estadísticas en vivo más allá del marcador y revisar las condiciones de uso de los datos de ESPN si publicas la web.

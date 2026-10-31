@@ -20,7 +20,7 @@ export default async function Page() {
         <h1 className="text-2xl font-black"><I18nText text="Cuenta y estado" /></h1>
         <Notice><I18nText text="Comprobación de la configuración de" /> {BRAND.name}. <I18nText text="Tu cuenta está en" /> <a href="/cuenta" className="text-brand"><I18nText text="Mi cuenta" /></a>.</Notice>
         <Panel title="Conexiones">
-          <Row k="ESPN" v={ESPN_ENABLED ? "Fuente principal (CSV de respaldo)" : "Desactivada (solo CSV)"} ok={ESPN_ENABLED} />
+          <Row k="ESPN" v={ESPN_ENABLED ? "Activa (sin CSV)" : "Desactivada"} ok={ESPN_ENABLED} />
           <Row k="Supabase (caché)" v={hasSupabase() ? "Conectada" : "No configurada (caché en memoria)"} ok={hasSupabase()} />
           <Row k="Autenticación (Supabase Auth)" v={authConfigured() ? "Configurada" : "Falta NEXT_PUBLIC_SUPABASE_*"} ok={authConfigured()} />
         </Panel>

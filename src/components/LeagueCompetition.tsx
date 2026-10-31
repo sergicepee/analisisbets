@@ -11,8 +11,6 @@ import { Flag, Shield } from "./Shield";
 import { useLang, useT } from "./I18nProvider";
 import { LeagueStandingsTable } from "./LeagueStandingsTable";
 import type { LeagueStandingTeam, LeagueStandingsZone } from "@/lib/leagueStandings";
-import { AutoRefresh } from "./AutoRefresh";
-import { isWithinCsvLiveWindow, shouldRefreshCsvFixture } from "@/lib/fixtureStatus";
 
 type LeagueTopScorer = {
   id: number;
@@ -98,11 +96,6 @@ export function LeagueCompetition({
   const isCurrentRound = !isSeasonFinished && roundIndex === currentRoundIndex;
   const isFinishedRound = !!activeRound && isRoundFinished(activeRound.fixtures);
   const favorites = useMemo(() => new Set(favoriteIds), [favoriteIds]);
-  const now = Date.now() / 1000;
-  const todayKey = formatDateKey(now, timeZone);
-  const shouldRefreshFixtures = fixtures.some((fixture) => fixture.id < 0 &&
-    formatDateKey(fixture.timestamp, timeZone) === todayKey && shouldRefreshCsvFixture(fixture, now),
-  );
 
   useEffect(() => {
     const container = roundNavRef.current;
@@ -121,7 +114,6 @@ export function LeagueCompetition({
 
   return (
     <div className="space-y-4">
-      {shouldRefreshFixtures && <AutoRefresh seconds={30} />}
       <section className="relative isolate overflow-hidden rounded-3xl border border-slate-300/80 p-5 text-slate-900 shadow-sm sm:p-6" style={{ background: "#f1f3f0" }}>
         <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-32 z-0 flex h-96 w-96 items-center justify-center opacity-35 blur-[64px]">
           <Shield src={leagueLogo} fallbackSrc={null} alt="" size={300} />
@@ -473,17 +465,16 @@ function KnockoutTies({ fixtures, timeZone, locale, isAuthenticated, favorites }
 
 function LeagueFixtureRow({ fixture, date, timeZone, locale, isAuthenticated, initialFavorite }: { fixture: Fixture; date: string; timeZone: string; locale: string; isAuthenticated: boolean; initialFavorite: boolean }) {
   const t = useT();
-  const csvLive = fixture.id < 0 && isWithinCsvLiveWindow(fixture);
   const finished = ["FT", "AET", "PEN"].includes(fixture.statusShort);
-  const live = csvLive || ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(fixture.statusShort);
+  const live = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(fixture.statusShort);
   const suspended = fixture.statusShort === "SUSP";
-  const score = !csvLive && fixture.goalsHome !== null && fixture.goalsAway !== null ? `${fixture.goalsHome} - ${fixture.goalsAway}` : null;
+  const score = fixture.goalsHome !== null && fixture.goalsAway !== null ? `${fixture.goalsHome} - ${fixture.goalsAway}` : null;
   const time = suspended
     ? "SUSP."
     : finished
       ? t("Final")
       : live
-        ? csvLive ? "LIVE" : fixture.statusShort === "HT" ? "HT" : `${fixture.elapsed ?? ""}′`
+        ? fixture.statusShort === "HT" ? "HT" : `${fixture.elapsed ?? ""}′`
         : new Intl.DateTimeFormat(locale, { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(fixture.timestamp * 1000);
   const redCards = (teamId: number) => fixture.redCardsHome !== undefined && teamId === fixture.home.id
     ? fixture.redCardsHome
@@ -497,13 +488,11 @@ function LeagueFixtureRow({ fixture, date, timeZone, locale, isAuthenticated, in
   const homeLost = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsHome < fixture.goalsAway;
   const awayLost = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsAway < fixture.goalsHome;
   return (
-    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] px-2 sm:px-3 ${csvLive ? "border-l-loss bg-loss/5" : `border-l-transparent ${suspended ? "bg-card text-muted" : "bg-card"}`}`}>
+    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] border-l-transparent px-2 sm:px-3 ${suspended ? "bg-card text-muted" : "bg-card"}`}>
       <FavoriteMatchButton fixtureId={fixture.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
       <Link href={`/match/${fixture.id}?date=${date}&league=${fixture.leagueId}`} aria-label={`${fixture.home.name} contra ${fixture.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
-        <div className={`w-11 shrink-0 text-center text-xs font-bold tabular-nums sm:w-14 ${csvLive ? "text-loss" : live ? "text-chartHit" : "text-muted"}`}>
-          {csvLive
-            ? <span className="inline-flex animate-pulse items-center justify-center rounded bg-loss px-1.5 py-0.5 text-[10px] font-black leading-none text-black motion-reduce:animate-none">LIVE</span>
-            : live && score ? <><span className="block text-sm font-extrabold">{score}</span><span className="text-[10px]">{time}</span></> : time}
+        <div className={`w-11 shrink-0 text-center text-xs font-bold tabular-nums sm:w-14 ${live ? "text-chartHit" : "text-muted"}`}>
+          {live && score ? <><span className="block text-sm font-extrabold">{score}</span><span className="text-[10px]">{time}</span></> : time}
           {!live && !finished && !suspended && fixture.timestamp < Date.now() / 1000 && <span className="mt-0.5 block text-[9px] leading-tight">{t("Pendiente de actualizar")}</span>}
         </div>
         <div className="min-w-0 flex-1 space-y-1">

@@ -31,8 +31,8 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
   const initialTab = searchParams.tab === "table" ? "table" : "calendar";
   const requestedSeason = Number(searchParams.season);
   const selected = availableSeasons.includes(requestedSeason) ? requestedSeason : availableSeasons[0];
-  const [teams, fixturesResult, scorersResult, zonesResult, user] = await Promise.all([
-    getLeagueTeams(id, selected),
+  const [teamsResult, fixturesResult, scorersResult, zonesResult, user] = await Promise.all([
+    getLeagueTeams(id, selected).then((teams) => ({ teams, error: null as string | null }), (error: unknown) => ({ teams: [], error: message(error) })),
     getLeagueFixtures(id, selected).then((fixtures) => ({ fixtures, error: null as string | null }), (error: unknown) => ({ fixtures: [], error: message(error) })),
     getLeagueTopScorers(id, selected).then((scorers) => ({ scorers, error: null as string | null }), (error: unknown) => ({ scorers: [], error: message(error) })),
     getLeagueStandingsZones(id, selected).then((zones) => ({ zones, error: null as string | null }), (error: unknown) => ({ zones: [], error: message(error) })),
@@ -48,6 +48,7 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
       <Header back="/leagues" />
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:mx-auto lg:max-w-3xl">
         {fixturesResult.error && <Notice tone="warn"><I18nText text="No se pudo cargar el calendario:" /> {fixturesResult.error}</Notice>}
+        {teamsResult.error && <Notice tone="warn"><I18nText text="No se pudieron cargar los equipos:" /> {teamsResult.error}</Notice>}
         {favorites.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {followLookup.error && <Notice tone="warn"><I18nText text="No se pudo comprobar si sigues esta liga. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {league ? (
@@ -63,7 +64,7 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
             flag={league.flag}
             season={selected}
             seasons={availableSeasons}
-            teams={teams.map((team) => ({ ...team, logoFallback: getTeamLogoFallbackUrl(team.name, league.country) }))}
+            teams={teamsResult.teams.map((team) => ({ ...team, logoFallback: getTeamLogoFallbackUrl(team.name, league.country) }))}
             fixtures={fixturesResult.fixtures}
             standingsZones={zonesResult.zones}
             standingsZoneError={zonesResult.error}
