@@ -58,10 +58,10 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
           const on = filter === key;
           const live = key === "live" && counts.live > 0;
           const Icon = key === "all" ? IconMatches : key === "live" ? IconBall : key === "finished" ? IconTrophy : key === "upcoming" ? IconCalendar : IconInfo;
-          return <Link key={key} href={href(key)} aria-current={on ? "page" : undefined} className={`relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm ${on ? "text-brand" : live ? apiEnabled ? "text-chartHit" : "text-loss" : "text-muted hover:text-fg"}`}>
+          return <Link key={key} href={href(key)} aria-current={on ? "page" : undefined} className={`relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm ${live ? "text-loss" : on ? "text-brand" : "text-muted hover:text-fg"}`}>
             <Icon className="h-3.5 w-3.5" /><I18nText text={label} />
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${on ? "bg-brand/15 text-brand" : "bg-card2 text-muted"}`}>{counts[key]}</span>
-            {on && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand" />}
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${live ? "bg-loss/15 text-loss" : on ? "bg-brand/15 text-brand" : "bg-card2 text-muted"}`}>{counts[key]}</span>
+            {on && <span className={`absolute inset-x-2 bottom-0 h-0.5 rounded-full ${live ? "bg-loss" : "bg-brand"}`} />}
           </Link>;
         })}
       </nav>

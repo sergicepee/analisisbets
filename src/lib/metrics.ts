@@ -1,4 +1,4 @@
-import type { Metric, TeamProfile, TeamRow } from "./types";
+import type { MatchPeriod, Metric, TeamProfile, TeamRow } from "./types";
 
 export const MIN_SAMPLES = 3;
 export const METRIC_LABEL: Record<Metric, string> = {
@@ -38,6 +38,19 @@ export function rowVal(r: TeamRow, m: Metric, side: "for" | "against"): number |
   if (m === "goals") return side === "for" ? r.goalsFor : r.goalsAgainst;
   const s = side === "for" ? r.sFor : r.sAgainst;
   return s ? s[m] : null;
+}
+
+export function profileForPeriod(profile: TeamProfile, period: MatchPeriod): TeamProfile {
+  if (period === "full") return profile;
+  const key = period;
+  return {
+    ...profile,
+    rows: profile.rows.map((row) => ({
+      ...row,
+      sFor: row.sFor?.halves?.[key] ?? null,
+      sAgainst: row.sAgainst?.halves?.[key] ?? null,
+    })),
+  };
 }
 
 /** Media de un equipo (a favor o en contra) en sus últimos partidos. null si hay pocos datos. */

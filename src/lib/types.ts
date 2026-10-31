@@ -5,6 +5,7 @@ export interface TeamRef { id: number; name: string; logo: string | null; logoFa
 export interface FixtureEvent {
   minute: number; extra: number | null; teamId: number;
   player: string; type: string; detail: string;
+  secondaryPlayer?: string;
   playerId?: number; playerPhoto?: string | null; ownGoal?: boolean; yellowCard?: boolean; redCard?: boolean;
 }
 export interface Fixture {
@@ -14,6 +15,7 @@ export interface Fixture {
   stage?: string;
   venue: string | null;
   statusShort: string; statusLong: string; elapsed: number | null;
+  elapsedSeconds?: number | null; elapsedDisplay?: string | null;
   home: TeamRef; away: TeamRef;
   goalsHome: number | null; goalsAway: number | null;
   htHome: number | null; htAway: number | null;
@@ -23,9 +25,14 @@ export interface Fixture {
 }
 
 /** Estadísticas reales de un equipo en un partido. null = no disponible. */
-export interface MatchStat {
+export type MatchPeriod = "full" | "first" | "second";
+export interface MatchPeriodStats {
   shots: number | null; shotsOn: number | null; corners: number | null; cards: number | null;
   yellowCards?: number | null; redCards?: number | null;
+}
+export interface MatchStat extends MatchPeriodStats {
+  details?: Record<string, number>;
+  halves?: { first: MatchPeriodStats; second: MatchPeriodStats };
 }
 export interface FixtureLineupPlayer {
   id: number | null;
@@ -45,6 +52,8 @@ export interface FixtureLineup {
   teamId: number;
   teamName: string;
   teamLogo: string | null;
+  teamColor?: string | null;
+  teamAlternateColor?: string | null;
   formation: string | null;
   starters: FixtureLineupPlayer[];
   substitutes: FixtureLineupPlayer[];

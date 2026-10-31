@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
 import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconTarget } from "@/components/icons";
-import { expectedFor, MIN_SAMPLES } from "@/lib/metrics";
-import type { Fixture, LeagueAvg, TeamProfile, TeamRef, TeamRow } from "@/lib/types";
+import { PeriodTabs } from "@/components/PeriodTabs";
+import { expectedFor, MIN_SAMPLES, profileForPeriod } from "@/lib/metrics";
+import type { Fixture, LeagueAvg, MatchPeriod, TeamProfile, TeamRef, TeamRow } from "@/lib/types";
 
 type ShotMetric = "shots" | "shotsOn";
 type Scope = "match" | "team";
@@ -225,9 +226,13 @@ export function ShotsAnalysis({
   locale: string;
 }) {
   const [scope, setScope] = useState<Scope>("match");
+  const [period, setPeriod] = useState<MatchPeriod>("full");
+  const activeHomeProfile = profileForPeriod(homeProfile, period);
+  const activeAwayProfile = profileForPeriod(awayProfile, period);
   return (
     <div className="min-w-0 space-y-3">
-      <ShotSummary fixture={fixture} homeProfile={homeProfile} awayProfile={awayProfile} locale={locale} />
+      <PeriodTabs value={period} onChange={setPeriod} label="Periodo de tiros" />
+      <ShotSummary fixture={fixture} homeProfile={activeHomeProfile} awayProfile={activeAwayProfile} locale={locale} />
       <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <h2 className="text-sm font-extrabold"><I18nText text="Tendencias de tiros" /></h2>
@@ -251,7 +256,7 @@ export function ShotsAnalysis({
             <div key={metric.key} className="space-y-2">
               <h3 className="text-xs font-bold sm:text-sm"><I18nText text={scope === "match" ? metric.matchTitle : metric.teamTitle} /></h3>
               <ShotTable
-                rows={metricRows(metric.key, scope, homeProfile, awayProfile, sampleSize, locale)}
+                rows={metricRows(metric.key, scope, activeHomeProfile, activeAwayProfile, sampleSize, locale)}
                 home={fixture.home}
                 away={fixture.away}
                 locale={locale}
@@ -259,7 +264,7 @@ export function ShotsAnalysis({
             </div>
           ))}
         </div>
-        {scope === "match" && <LeagueAverage leagueAverage={leagueAverage} locale={locale} />}
+        {scope === "match" && period === "full" && <LeagueAverage leagueAverage={leagueAverage} locale={locale} />}
         <p className="mt-3 text-[10px] leading-relaxed text-muted">
           <I18nText text="Las tasas se calculan sobre los últimos" /> {sampleSize} <I18nText text="partidos con estadísticas disponibles y requieren al menos" /> {MIN_SAMPLES}.
         </p>

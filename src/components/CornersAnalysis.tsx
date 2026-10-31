@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
 import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconCorner } from "@/components/icons";
-import { expectedFor, MIN_SAMPLES } from "@/lib/metrics";
-import type { Fixture, TeamProfile, TeamRow, TeamRef } from "@/lib/types";
+import { PeriodTabs } from "@/components/PeriodTabs";
+import { expectedFor, MIN_SAMPLES, profileForPeriod } from "@/lib/metrics";
+import type { Fixture, MatchPeriod, TeamProfile, TeamRow, TeamRef } from "@/lib/types";
 
 type CornerRow = {
   key: string;
@@ -214,11 +215,15 @@ export function CornersAnalysis({
   sampleSize: number; leagueAverage: number | null; locale: string;
 }) {
   const [view, setView] = useState<"match" | "team">("match");
-  const firstTableRows = matchRows(homeProfile, awayProfile, sampleSize);
-  const rows = view === "match" ? firstTableRows : teamRows(homeProfile, awayProfile, sampleSize, locale);
+  const [period, setPeriod] = useState<MatchPeriod>("full");
+  const activeHomeProfile = profileForPeriod(homeProfile, period);
+  const activeAwayProfile = profileForPeriod(awayProfile, period);
+  const firstTableRows = matchRows(activeHomeProfile, activeAwayProfile, sampleSize);
+  const rows = view === "match" ? firstTableRows : teamRows(activeHomeProfile, activeAwayProfile, sampleSize, locale);
   return (
     <div className="min-w-0 space-y-3">
-      <CornerSummary home={fixture.home} away={fixture.away} homeProfile={homeProfile} awayProfile={awayProfile} sampleSize={sampleSize} locale={locale} />
+      <PeriodTabs value={period} onChange={setPeriod} label="Periodo de córners" />
+      <CornerSummary home={fixture.home} away={fixture.away} homeProfile={activeHomeProfile} awayProfile={activeAwayProfile} sampleSize={sampleSize} locale={locale} />
       <section className="rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div role="group" aria-label="Desglose de córners" className="mb-3 flex gap-1 rounded-full border border-line bg-bg/70 p-1">
           {(["match", "team"] as const).map((option) => (

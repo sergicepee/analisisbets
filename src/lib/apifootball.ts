@@ -187,7 +187,7 @@ export async function getFixtureLineups(fixture: Fixture): Promise<FixtureLineup
 }
 
 // ── Perfil de un equipo: últimos N partidos (+ estadísticas reales opcionales) ──
-type TeamProfileOptions = { limit?: number; venue?: "home" | "away" };
+type TeamProfileOptions = { limit?: number; venue?: "home" | "away"; withHalfTime?: boolean };
 export async function getTeamProfile(
   teamId: number,
   withStats = true,
@@ -199,7 +199,7 @@ export async function getTeamProfile(
   const limit = options?.limit ?? FORM_MATCHES;
   if (!apiEnabled || teamId < 0) return { teamId, rows: [] };
   try {
-    return await getEspnTeamProfile(teamId, withStats, season, beforeTimestamp, leagueId, limit, options?.venue);
+    return await getEspnTeamProfile(teamId, withStats, season, beforeTimestamp, leagueId, limit, options?.venue, options?.withHalfTime);
   } catch (error) {
     console.error(`No se pudo cargar el perfil ESPN del equipo ${teamId}:`, error);
     throw error;

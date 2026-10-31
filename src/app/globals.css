@@ -15,7 +15,20 @@
 
 html, body { background: rgb(var(--bg)); transition: background-color 120ms ease, color 120ms ease; }
 body { color: rgb(var(--fg)); font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
-.match-row { transition: background-color 150ms ease; }
+.match-row { transition: background-color 150ms ease, box-shadow 150ms ease; }
+.match-row-live {
+  --match-row-background: var(--card);
+  position: relative;
+  background: linear-gradient(90deg, rgba(227, 75, 87, .18), rgba(227, 75, 87, .07) 18%, rgb(var(--match-row-background)) 52%);
+  box-shadow: inset 18px 0 28px -22px #e34b57;
+}
+.match-row-live::before { content: ""; position: absolute; inset-block: 0; left: -1px; width: 3px; background: #e34b57; pointer-events: none; }
+.match-row-live.bg-card2 { --match-row-background: var(--card2); }
+.live-match-indicator { animation: live-match-pulse 1s ease-in-out infinite; }
+@keyframes live-match-pulse { 50% { opacity: .2; } }
+.live-match-minute { animation: live-match-minute-blink 2s ease-in-out infinite; }
+@keyframes live-match-minute-blink { 50% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .live-match-indicator, .live-match-minute { animation: none; } }
 @media (hover: hover) {
   .match-row:hover:not(:has(> button:hover)) { background-color: rgb(var(--card2)); }
 }

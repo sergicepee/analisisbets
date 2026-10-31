@@ -21,9 +21,9 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
   const homeRedCards = f.redCardsHome ?? eventRedCards(f.home.id);
   const awayRedCards = f.redCardsAway ?? eventRedCards(f.away.id);
   return (
-    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] border-l-transparent px-2 sm:px-3 ${selected ? "bg-card2" : "bg-card"}`}>
+    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] border-l-transparent px-2 sm:px-3 ${g === "live" ? "match-row-live" : ""} ${selected ? "bg-card2" : "bg-card"}`}>
       {showFavorite && <FavoriteMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />}
-      <div className={`shrink-0 text-center ${g === "finished" ? "w-10" : "w-11 sm:w-14"}`}>
+      <div className={`shrink-0 text-center ${g === "finished" || g === "live" ? "w-10" : "w-11 sm:w-14"}`}>
         <Link href={`/match/${f.id}?date=${date}&league=${f.leagueId}`} aria-label={`${f.home.name} contra ${f.away.name}`} className="block">
           {showDate && (
             <div className="mb-0.5 whitespace-nowrap text-[9px] font-semibold leading-tight text-muted">{displayDate}</div>
@@ -33,10 +33,9 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
           ) : g === "finished" ? (
             <div className="text-xs font-medium text-muted"><I18nText text="Final" /></div>
           ) : g === "live" ? (
-            <>
-              <div className="text-sm font-extrabold tabular-nums text-chartHit sm:text-base">{score ?? "—"}</div>
-              <div className="mt-0.5 text-[10px] font-semibold text-chartHit">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div>
-            </>
+            <span className="inline-flex items-center whitespace-nowrap text-xs font-bold text-loss sm:text-sm">
+              {f.statusShort === "HT" ? <span className="live-match-minute">DES</span> : <>{f.elapsed ?? "—"}′<span aria-hidden="true" className="live-match-indicator ml-1 inline-block h-1.5 w-1.5 rounded-full bg-loss align-middle" /></>}
+            </span>
           ) : (
             <>
               <div className="text-xs font-bold tabular-nums sm:text-sm">{timeStr(f.timestamp)}</div>
@@ -51,8 +50,8 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
           <TeamLine name={f.home.name} logo={f.home.logo} fallback={f.home.logoFallback} winner={homeWon} loser={homeLost} redCard={homeRedCards > 0} suspended={suspended} />
           <TeamLine name={f.away.name} logo={f.away.logo} fallback={f.away.logoFallback} winner={awayWon} loser={awayLost} redCard={awayRedCards > 0} suspended={suspended} />
         </div>
-        {g === "finished" && (
-          <div className="flex w-4 shrink-0 flex-col items-center text-xs font-bold leading-5 tabular-nums sm:text-sm">
+        {(g === "finished" || g === "live") && (
+          <div className={`flex w-4 shrink-0 flex-col items-center text-xs font-bold leading-5 tabular-nums sm:text-sm ${g === "live" ? "text-loss" : ""}`}>
             <span>{f.goalsHome ?? "—"}</span>
             <span>{f.goalsAway ?? "—"}</span>
           </div>

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, ChevronDown, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { t } from "@/lib/i18n";
 import { I18nText } from "@/components/I18nProvider";
@@ -11,6 +11,8 @@ import { GoalsAnalysis } from "@/components/GoalsAnalysis";
 import { CornersAnalysis } from "@/components/CornersAnalysis";
 import { CardsAnalysis } from "@/components/CardsAnalysis";
 import { ShotsAnalysis } from "@/components/ShotsAnalysis";
+import { LiveMatchClock } from "@/components/LiveMatchClock";
+import { MatchTimeline } from "@/components/MatchTimeline";
 import { FollowMatchButton } from "@/components/FollowMatchButton";
 import { Workspace } from "@/components/Workspace";
 import { Shield } from "@/components/Shield";
@@ -28,7 +30,7 @@ import { getLocale, getTz } from "@/lib/prefs";
 import {
   avg2, expectedFor, pctTone, poissonModel, tone,
 } from "@/lib/metrics";
-import type { Fixture, FixtureLineup, FixtureLineupEvent, Metric, StoredStats, TeamProfile } from "@/lib/types";
+import type { Fixture, FixtureLineup, FixtureLineupEvent, MatchStat, Metric, StoredStats, TeamProfile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 const OUTCOME_COLORS = {
@@ -42,7 +44,7 @@ const TABS = [
   ["general", "General", IconBars], ["goles", "Goles", IconBall], ["tiros", "Tiros", IconTarget],
   ["corners", "Esquinas", IconCorner], ["tarjetas", "Tarjetas", IconCard],
 ] as const;
-const MATCH_SECTIONS = [["analysis", "Análisis", IconBars], ["statistics", "Estadísticas", IconTarget], ["lineups", "Alineaciones", IconSwap]] as const;
+const MATCH_SECTIONS = [["analysis", "Análisis"], ["statistics", "Estadísticas"], ["timeline", "Cronología"], ["lineups", "Alineaciones"]] as const;
 const EMPTY = (id: number): TeamProfile => ({ teamId: id, rows: [] });
 
 export default async function MatchPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
@@ -85,10 +87,10 @@ export default async function MatchPage({ params, searchParams }: { params: { id
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}
         <MatchHeader f={f} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}&league=${f.leagueId}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
-        <nav role="tablist" aria-label={t("Secciones del partido")} className="grid grid-cols-3 border-b border-line">
-          {MATCH_SECTIONS.map(([key, label, Icon]) => (
+        <nav role="tablist" aria-label={t("Secciones del partido")} className="grid grid-cols-4 border-b border-line">
+          {MATCH_SECTIONS.map(([key, label]) => (
             <Link key={key} role="tab" aria-selected={section === key} href={`/match/${id}?section=${key}&tab=${analysisTab}&date=${date}&league=${f.leagueId}`} className={`flex flex-col items-center gap-1 border-b-2 py-2.5 text-xs font-semibold sm:text-sm ${section === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
-              <Icon className="h-4 w-4" /><I18nText text={label} />
+              <I18nText text={label} />
             </Link>
           ))}
         </nav>
@@ -136,10 +138,10 @@ async function MatchData({
     ? grab(getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId))
     : Promise.resolve(null);
   const goalHomeProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, { venue: "home" }))
+    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, { venue: "home", withHalfTime: true }))
     : Promise.resolve(null);
   const goalAwayProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away" }))
+    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away", withHalfTime: true }))
     : Promise.resolve(null);
   const actualStatsPromise = section === "statistics" ? getFixtureStatsFor(f) : Promise.resolve(null);
   const lineupsPromise = section === "lineups"
@@ -181,6 +183,7 @@ async function MatchData({
         </>
       )}
       {section === "statistics" && <MatchStatistics fixture={f} stats={actualStats} />}
+      {section === "timeline" && <MatchTimeline fixture={f} />}
       {section === "lineups" && <MatchLineups fixture={f} lineups={lineups} error={lineupsError} />}
     </>
   );
@@ -191,19 +194,47 @@ function MatchContentFallback({ section }: { section: typeof MATCH_SECTIONS[numb
     ? "Cargando análisis..."
     : section === "statistics"
       ? "Cargando estadísticas..."
+      : section === "timeline"
+        ? "Cargando cronología..."
       : "Cargando alineaciones...";
   return <div role="status" aria-live="polite" className="card flex min-h-28 animate-pulse items-center justify-center p-4 text-sm text-muted"><I18nText text={label} /></div>;
 }
 
 function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredStats | null }) {
-  const rows = [
-    ["Tiros", stats?.home.shots ?? null, stats?.away.shots ?? null],
-    ["Tiros a puerta", stats?.home.shotsOn ?? null, stats?.away.shotsOn ?? null],
-    ["Córners", stats?.home.corners ?? null, stats?.away.corners ?? null],
-    ["Tarjetas", stats?.home.cards ?? null, stats?.away.cards ?? null],
-    ["Amarillas", stats?.home.yellowCards ?? null, stats?.away.yellowCards ?? null],
-    ["Rojas", stats?.home.redCards ?? null, stats?.away.redCards ?? null],
-  ] as const;
+  const groups: Array<{ title: string; rows: Array<{ label: string; key: string; percent?: boolean }> }> = [
+    { title: "Resumen", rows: [
+      { label: "Posesión", key: "possessionPct", percent: true },
+      { label: "Tiros totales", key: "totalShots" },
+      { label: "Tiros a puerta", key: "shotsOnTarget" },
+      { label: "Córners", key: "wonCorners" },
+      { label: "Faltas", key: "foulsCommitted" },
+      { label: "Fuera de juego", key: "offsides" },
+      { label: "Paradas", key: "saves" },
+      { label: "Tarjetas", key: "cards" },
+    ] },
+    { title: "Remates", rows: [
+      { label: "Tiros fuera", key: "shotsOffTarget" },
+      { label: "Tiros bloqueados", key: "blockedShots" },
+      { label: "Intentos de gol", key: "totalShots" },
+    ] },
+    { title: "Ataque", rows: [
+      { label: "Centros", key: "totalCrosses" },
+      { label: "Centros precisos", key: "accurateCrosses" },
+    ] },
+    { title: "Pases", rows: [
+      { label: "Pases", key: "totalPasses" },
+      { label: "Pases completados", key: "accuratePasses" },
+      { label: "Precisión de pase", key: "passPct", percent: true },
+      { label: "Pases largos", key: "totalLongBalls" },
+      { label: "Pases largos completados", key: "accurateLongBalls" },
+      { label: "Precisión en pase largo", key: "longballPct", percent: true },
+    ] },
+    { title: "Defensa", rows: [
+      { label: "Entradas", key: "totalTackles" },
+      { label: "Entradas ganadas", key: "effectiveTackles" },
+      { label: "Intercepciones", key: "interceptions" },
+    ] },
+  ];
   const hasData = !!stats?.hasData;
   const waitingForStart = !hasData && ["upcoming", "pending"].includes(statusGroup(fixture));
 
@@ -234,31 +265,155 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
   }
 
   return (
-    <Panel title="Estadísticas del partido">
+    <section className="min-w-0 space-y-3">
+      <div className="flex justify-center">
+        <span className="rounded-full border border-line bg-card2 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+          <I18nText text="Partido completo" />
+        </span>
+      </div>
       {hasData ? (
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2">
-          <div />
-          <div className="flex min-w-0 flex-col items-center gap-1 text-center text-[10px] font-semibold sm:text-xs">
-            <Shield src={fixture.home.logo} alt="" size={28} />
-            <span className="w-full truncate">{fixture.home.name}</span>
-          </div>
-          <div className="flex min-w-0 flex-col items-center gap-1 text-center text-[10px] font-semibold sm:text-xs">
-            <Shield src={fixture.away.logo} alt="" size={28} />
-            <span className="w-full truncate">{fixture.away.name}</span>
-          </div>
-          {rows.map(([label, home, away]) => (
-            <div key={label} className="contents">
-              <div className="border-t border-line py-3 text-xs font-medium text-muted sm:text-sm"><I18nText text={label} /></div>
-              <div className="border-t border-line py-3 text-center text-base font-extrabold tabular-nums sm:text-lg">{home ?? "—"}</div>
-              <div className="border-t border-line py-3 text-center text-base font-extrabold tabular-nums sm:text-lg">{away ?? "—"}</div>
-            </div>
+        <div className="space-y-2">
+          {groups.map((group) => (
+            <details key={group.title} open className="group overflow-hidden rounded-xl border border-line bg-card">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-3 [&::-webkit-details-marker]:hidden">
+                <span className="text-xs font-black uppercase tracking-wide"><I18nText text={group.title} /></span>
+                <span className="rounded-full bg-card2 px-2 py-0.5 text-[10px] font-bold text-muted">{group.rows.length}</span>
+                <ChevronDown aria-hidden="true" className="ml-auto h-4 w-4 text-muted transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="space-y-2 border-t border-line px-2.5 py-2">
+                {group.rows.map((row) => {
+                  const getValue = (team: MatchStat) => {
+                    if (row.key === "cards") {
+                      const yellow = team.details?.yellowCards ?? team.yellowCards ?? null;
+                      const red = team.details?.redCards ?? team.redCards ?? null;
+                      return team.cards ?? (yellow !== null && red !== null ? yellow + red : null);
+                    }
+                    if (row.key === "shotsOffTarget") {
+                      const total = team.details?.totalShots ?? team.shots;
+                      const onTarget = team.details?.shotsOnTarget ?? team.shotsOn;
+                      const blocked = team.details?.blockedShots;
+                      return total !== null && total !== undefined
+                        && onTarget !== null && onTarget !== undefined
+                        && blocked !== undefined
+                        ? Math.max(0, total - onTarget - blocked)
+                        : team.details?.shotsOffTarget ?? null;
+                    }
+                    return team.details?.[row.key]
+                      ?? (row.key === "totalShots" ? team.shots
+                        : row.key === "shotsOnTarget" ? team.shotsOn
+                          : row.key === "wonCorners" ? team.corners
+                            : null);
+                  };
+                  const home = getValue(stats.home);
+                  const away = getValue(stats.away);
+                  const max = Math.max(home ?? 0, away ?? 0);
+                  const homeWidth = max > 0 ? Math.max(0, (home ?? 0) / max * 100) : 0;
+                  const awayWidth = max > 0 ? Math.max(0, (away ?? 0) / max * 100) : 0;
+                  const formatValue = (value: number | null) => {
+                    if (value === null) return "—";
+                    if (row.percent) return `${Math.round(value <= 1 ? value * 100 : value)}%`;
+                    return num(value, 0);
+                  };
+                  const homeLeads = home !== null && away !== null && home > away;
+                  const awayLeads = home !== null && away !== null && away > home;
+                  const barColor = (value: number | null, leads: boolean) =>
+                    value === null || max === 0 ? "bg-transparent"
+                      : leads ? "bg-white"
+                        : home === away ? "bg-white/70" : "bg-white/35";
+                  return (
+                    <div key={row.key} className="space-y-1">
+                      <div className="grid grid-cols-[minmax(2.5rem,1fr)_minmax(0,2fr)_minmax(2.5rem,1fr)] items-center gap-2">
+                        <span className={`justify-self-start rounded-md px-2 py-1 text-xs font-bold tabular-nums ${homeLeads ? "bg-white text-slate-950" : "text-muted"}`}>
+                          {formatValue(home)}
+                        </span>
+                        <span className="min-w-0 text-center text-[10px] font-semibold leading-tight text-muted sm:text-xs"><I18nText text={row.label} /></span>
+                        <span className={`justify-self-end rounded-md px-2 py-1 text-xs font-bold tabular-nums ${awayLeads ? "bg-white text-slate-950" : "text-muted"}`}>
+                          {formatValue(away)}
+                        </span>
+                      </div>
+                      <div aria-hidden="true" className="grid h-1.5 grid-cols-2 gap-1">
+                        <div className="flex items-center justify-end overflow-hidden rounded-full bg-line">
+                          <span className={`h-full rounded-full ${barColor(home, homeLeads)}`} style={{ width: `${homeWidth}%` }} />
+                        </div>
+                        <div className="flex items-center overflow-hidden rounded-full bg-line">
+                          <span className={`h-full rounded-full ${barColor(away, awayLeads)}`} style={{ width: `${awayWidth}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
           ))}
         </div>
       ) : (
         <Notice><I18nText text="ESPN todavía no ofrece estadísticas reales para este partido." /></Notice>
       )}
-    </Panel>
+    </section>
   );
+}
+
+function normalizedTeamColor(color: string | null | undefined) {
+  const value = color?.replace(/^#/, "");
+  return value && /^[\da-f]{6}$/i.test(value) ? value.toUpperCase() : null;
+}
+
+function teamColorOptions(lineup: FixtureLineup | undefined) {
+  return [...new Set([
+    normalizedTeamColor(lineup?.teamColor),
+    normalizedTeamColor(lineup?.teamAlternateColor),
+  ].filter((color): color is string => color !== null))];
+}
+
+function colorDistance(left: string, right: string) {
+  const channels = [0, 2, 4].map((offset) =>
+    Number.parseInt(left.slice(offset, offset + 2), 16) - Number.parseInt(right.slice(offset, offset + 2), 16),
+  );
+  return Math.sqrt(channels.reduce((sum, channel) => sum + channel ** 2, 0));
+}
+
+function distinctLineupColors(homeLineup: FixtureLineup | undefined, awayLineup: FixtureLineup | undefined) {
+  const homeOptions = teamColorOptions(homeLineup);
+  const awayOptions = teamColorOptions(awayLineup);
+  if (!homeOptions.length || !awayOptions.length) {
+    return {
+      home: homeOptions[0] ?? null,
+      away: awayOptions[0] ?? null,
+      needsBorder: true,
+    };
+  }
+
+  const pairs = homeOptions.flatMap((home, homeIndex) => awayOptions.map((away, awayIndex) => ({
+    home,
+    away,
+    distance: colorDistance(home, away),
+    changes: homeIndex + awayIndex,
+  })));
+  const primaryPair = pairs[0];
+  if (primaryPair.distance >= 100) {
+    return { home: primaryPair.home, away: primaryPair.away, needsBorder: false };
+  }
+
+  const distinctPairs = pairs
+    .filter((pair) => pair.distance >= 100)
+    .sort((left, right) => left.changes - right.changes || right.distance - left.distance);
+  const selected = distinctPairs[0] ?? [...pairs].sort((left, right) => right.distance - left.distance || left.changes - right.changes)[0];
+  return { home: selected.home, away: selected.away, needsBorder: selected.distance < 100 };
+}
+
+function jerseyStyle(color: string | null | undefined, borderColor?: string) {
+  const normalizedColor = normalizedTeamColor(color);
+  const style: { backgroundColor?: string; color?: string; borderColor?: string } = {};
+  if (normalizedColor) {
+    const red = Number.parseInt(normalizedColor.slice(0, 2), 16);
+    const green = Number.parseInt(normalizedColor.slice(2, 4), 16);
+    const blue = Number.parseInt(normalizedColor.slice(4, 6), 16);
+    const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+    style.backgroundColor = `#${normalizedColor}`;
+    style.color = brightness > 155 ? "#111827" : "#fff";
+  }
+  if (borderColor) style.borderColor = borderColor;
+  return Object.keys(style).length ? style : undefined;
 }
 
 function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: FixtureLineup[]; error: string | null }) {
@@ -266,11 +421,13 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
   const awayLineup = lineups.find((lineup) => lineup.teamId === fixture.away.id && lineup.starters.length >= 11);
   const hasConfirmedLineups = !!homeLineup && !!awayLineup;
   const confirmedLineups = hasConfirmedLineups ? [homeLineup, awayLineup] : [];
+  const displayColors = distinctLineupColors(homeLineup, awayLineup);
+  const homeBorderColor = displayColors.needsBorder ? "#FFFFFF" : undefined;
+  const awayBorderColor = displayColors.needsBorder ? "#FACC15" : undefined;
   const teams = [
-    { id: fixture.home.id, name: homeLineup?.teamName ?? fixture.home.name, logo: homeLineup?.teamLogo ?? fixture.home.logo },
-    { id: fixture.away.id, name: awayLineup?.teamName ?? fixture.away.name, logo: awayLineup?.teamLogo ?? fixture.away.logo },
+    { id: fixture.home.id, name: homeLineup?.teamName ?? fixture.home.name, logo: homeLineup?.teamLogo ?? fixture.home.logo, formation: homeLineup?.formation },
+    { id: fixture.away.id, name: awayLineup?.teamName ?? fixture.away.name, logo: awayLineup?.teamLogo ?? fixture.away.logo, formation: awayLineup?.formation },
   ];
-
   return (
     <div className="space-y-4">
       {error && <Notice tone="warn"><I18nText text="No se pudieron cargar las alineaciones." /> {friendlyApiError(error)}</Notice>}
@@ -289,6 +446,7 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
               <Shield src={team.logo} alt={team.name} size={24} />
               <div className="min-w-0">
                 <p className="truncate text-xs font-bold">{team.name}</p>
+                {hasConfirmedLineups && team.formation && <p className="text-[10px] text-muted">{team.formation}</p>}
               </div>
             </div>
           ))}
@@ -309,9 +467,18 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
           <div className="absolute bottom-3 left-3 z-20 grid place-items-center rounded-full border border-white/30 bg-emerald-950/85 p-1.5 shadow">
             <Shield src={fixture.home.logo} alt={fixture.home.name} size={24} />
           </div>
-          {confirmedLineups.map((lineup) => (
-            <LineupPlayers key={lineup.teamId} lineup={lineup} side={lineup.teamId === fixture.home.id ? "home" : "away"} />
-          ))}
+          {confirmedLineups.map((lineup) => {
+            const isHome = lineup.teamId === fixture.home.id;
+            return (
+              <LineupPlayers
+                key={lineup.teamId}
+                lineup={lineup}
+                side={isHome ? "home" : "away"}
+                teamColor={isHome ? displayColors.home : displayColors.away}
+                borderColor={isHome ? homeBorderColor : awayBorderColor}
+              />
+            );
+          })}
           {!hasConfirmedLineups && (
             <div className="absolute inset-0 grid place-items-center p-8 text-center text-xs font-bold uppercase tracking-wide text-white/90">
               <span className="rounded-xl bg-black/35 px-4 py-3"><I18nText text="Alineaciones no confirmadas" /></span>
@@ -320,7 +487,9 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
         </div>
         {hasConfirmedLineups && confirmedLineups.some((lineup) => lineup.substitutes.length > 0) && (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {confirmedLineups.filter((lineup) => lineup.substitutes.length > 0).map((lineup) => (
+            {confirmedLineups.filter((lineup) => lineup.substitutes.length > 0).map((lineup) => {
+              const isHome = lineup.teamId === fixture.home.id;
+              return (
               <Panel
                 key={lineup.teamId}
                 title="Suplentes"
@@ -334,7 +503,7 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
                 <div className="divide-y divide-line">
                   {lineup.substitutes.map((player) => (
                     <div key={player.id ?? `${player.name}-${player.jersey}`} className="flex min-h-11 items-center gap-2 py-2">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full border-2 border-white/90 bg-emerald-950/90 text-xs font-black text-white shadow">
+                      <span style={jerseyStyle(isHome ? displayColors.home : displayColors.away, isHome ? homeBorderColor : awayBorderColor)} className="grid size-8 shrink-0 place-items-center rounded-full border-2 border-white/90 bg-emerald-950/90 text-xs font-black text-white shadow">
                         {player.jersey ?? "—"}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold">{player.name}</span>
@@ -343,15 +512,20 @@ function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: 
                   ))}
                 </div>
               </Panel>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
     </div>
   );
 }
-
-function LineupPlayers({ lineup, side }: { lineup: FixtureLineup; side: "home" | "away" }) {
+function LineupPlayers({ lineup, side, teamColor, borderColor }: {
+  lineup: FixtureLineup;
+  side: "home" | "away";
+  teamColor: string | null;
+  borderColor?: string;
+}) {
   const isGoalkeeper = (position: string) => /goalkeeper|keeper|(^|[^a-z])gk?([^a-z]|$)/i.test(position);
   const isDefender = (position: string) => /defender|back|(^|[^a-z])(cd|cb|lb|rb|wb|df)([^a-z]|$)/i.test(position);
   const isAttackingMidfielder = (position: string) => /attacking midfielder|(^|[^a-z])(?:am|cam|lam|ram)([^a-z]|$)/i.test(position);
@@ -381,7 +555,7 @@ function LineupPlayers({ lineup, side }: { lineup: FixtureLineup; side: "home" |
               return (
                 <div key={player.id ?? `${player.name}-${player.jersey}`} className="flex w-full min-w-0 flex-col items-center text-center text-[10px] font-semibold leading-tight text-white drop-shadow sm:text-xs">
                   <div className="relative">
-                    <span role="img" aria-label={`${player.name} #${jersey}`} className="grid size-12 place-items-center rounded-full border-2 border-white/90 bg-emerald-950/90 text-lg font-black shadow sm:size-14 sm:text-xl">
+                    <span role="img" aria-label={`${player.name} #${jersey}`} style={jerseyStyle(teamColor, borderColor)} className="grid size-12 place-items-center rounded-full border-2 border-white/90 bg-emerald-950/90 text-lg font-black shadow sm:size-14 sm:text-xl">
                       {jersey}
                     </span>
                     <LineupPlayerEventMarkers events={player.matchEvents ?? []} />
@@ -403,7 +577,7 @@ function LineupPlayerEventMarkers({ events }: { events: FixtureLineupEvent[] }) 
   const assists = events.filter((event) => event.type === "assist").length;
   const yellowCards = events.filter((event) => event.type === "yellowCard").length;
   const redCard = events.some((event) => event.type === "redCard");
-  const showRedCard = redCard || yellowCards > 1;
+  const showRedCard = redCard;
   const substitutions = events.filter((event) => event.type === "substitutionIn" || event.type === "substitutionOut");
   const minuteLabel = (event: FixtureLineupEvent) => `${event.minute}${event.extra === null ? "" : `+${event.extra}`}′`;
 
@@ -428,9 +602,11 @@ function LineupPlayerEventMarkers({ events }: { events: FixtureLineupEvent[] }) 
         </span>
       )}
       {assists > 0 && (
-        <span role="img" aria-label={`${t("Asistencia")}: ${assists}`} title={`${t("Asistencia")}: ${assists}`} className="absolute -bottom-2 -right-1 inline-flex items-center gap-0.5 text-white">
-          <IconAssist size={16} />
-          {assists > 1 && <b className="grid size-3.5 place-items-center rounded-full bg-slate-950/90 text-[8px] leading-none shadow">{assists}</b>}
+        <span role="img" aria-label={`${t("Asistencia")}: ${assists}`} title={`${t("Asistencia")}: ${assists}`} className="absolute -bottom-2 -right-1 inline-flex text-white">
+          <span className="relative grid size-4 place-items-center">
+            <IconAssist size={16} />
+            {assists > 1 && <b className="absolute -right-1 -top-1 grid size-3.5 place-items-center rounded-full border border-white/80 bg-slate-950/95 text-[8px] leading-none text-white shadow">{assists}</b>}
+          </span>
         </span>
       )}
       {yellowCards > 0 || redCard ? (
@@ -518,10 +694,10 @@ function MatchHeader({ f, cardCounts, returnTo, isAuthenticated, initialFavorite
         {roundLabel && <span><I18nText text={roundLabel} /></span>}
       </div>
       {f.venue && <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-600 sm:text-xs"><MapPin className="h-3 w-3" />{f.venue}</div>}
-      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(5rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
+      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(7rem,auto)_minmax(0,1fr)] items-start gap-1 sm:gap-2">
         <TeamCol teamId={f.home.id} leagueId={f.leagueId} season={f.season} timestamp={f.timestamp} returnTo={returnTo} name={f.home.name} logo={f.home.logo} yellowCards={cardCounts.homeYellow} redCards={cardCounts.homeRed} />
-        <div className="relative flex min-h-[72px] min-w-[5rem] flex-col items-center justify-center text-center">
-          {g === "live" ? <><div className="text-lg font-extrabold text-loss">{f.statusShort === "HT" ? "HT" : `${f.elapsed ?? ""}′`}</div><div className="text-3xl font-black text-loss">{score}</div></>
+        <div className={`relative flex min-h-[72px] min-w-[7rem] flex-col items-center justify-center text-center ${g === "live" ? "-translate-y-1" : ""}`}>
+          {g === "live" ? <><div><LiveMatchClock statusShort={f.statusShort} elapsed={f.elapsed} elapsedSeconds={f.elapsedSeconds} elapsedDisplay={f.elapsedDisplay} /></div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-loss sm:text-5xl">{score}</div></>
             : g === "finished" ? (<><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600"><I18nText text="Final" /></div><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal text-slate-900 sm:text-5xl">{score ?? "—"}</div>{halftimeScore && <div className="text-xs text-slate-600">{t("Descanso")} {halftimeScore}</div>}</>)
             : (<><div className="hero-serif whitespace-nowrap text-4xl font-normal leading-normal tracking-normal sm:text-5xl">{timeStr(f.timestamp)}</div>{g === "pending" && <div className="absolute left-1/2 top-full mt-1 w-max max-w-[150px] -translate-x-1/2 rounded-full border border-slate-300/80 bg-white/55 px-2 py-1 text-[10px] leading-tight text-slate-600"><I18nText text="Pendiente de actualizar" /></div>}</>)}
         </div>

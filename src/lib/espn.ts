@@ -1,8 +1,9 @@
 import "server-only";
 import { cached } from "./cache";
 import { FORM_MATCHES } from "./config";
+import { statusGroup } from "./format";
 import { getTz } from "./prefs";
-import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, LeagueAvg, LeagueInfo, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
+import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, LeagueAvg, LeagueInfo, MatchPeriodStats, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
 
 type EspnLeague = {
   id: number;
@@ -26,8 +27,8 @@ const ESPN_LEAGUES: EspnLeague[] = [
   { id: 531, slug: "uefa.super_cup", name: "UEFA Super Cup", type: "Cup", country: "Europe", flag: "https://flagcdn.com/eu.svg", timeZone: "Europe/Zurich" },
 ];
 
-type EspnStat = { name?: string; displayValue?: string | number };
-type EspnTeam = { id?: string | number; displayName?: string; name?: string; logo?: string; logos?: Array<{ href?: string }> };
+type EspnStat = { name?: string; displayValue?: string | number; value?: string | number };
+type EspnTeam = { id?: string | number; displayName?: string; name?: string; logo?: string; logos?: Array<{ href?: string }>; color?: string; alternateColor?: string };
 type EspnCompetitor = {
   homeAway?: string;
   order?: number;
@@ -50,9 +51,11 @@ type EspnDetail = {
 type EspnKeyEvent = {
   type?: { text?: string };
   clock?: { value?: number; displayValue?: string };
-  team?: { id?: string | number };
+  period?: { number?: number };
+  team?: { id?: string | number; displayName?: string };
   scoringPlay?: boolean;
   ownGoal?: boolean;
+  shootout?: boolean;
   participants?: Array<{ athlete?: { id?: string | number; displayName?: string } }>;
 };
 type EspnEvent = {
@@ -62,7 +65,7 @@ type EspnEvent = {
   week?: { number?: number };
   competitions?: Array<{
     id?: string | number;
-    status?: { clock?: number; period?: number; type?: { name?: string; state?: string; completed?: boolean; description?: string; detail?: string } };
+    status?: { clock?: number; period?: number; type?: { name?: string; state?: string; completed?: boolean; description?: string; detail?: string; shortDetail?: string } };
     venue?: { fullName?: string };
     competitors?: EspnCompetitor[];
     details?: EspnDetail[];
@@ -87,8 +90,10 @@ type EspnRosterEntry = {
 };
 type EspnTeamList = { sports?: Array<{ leagues?: Array<{ teams?: Array<{ team?: EspnTeam }> }> }> };
 type EspnSummary = {
+  header?: { competitions?: Array<{ competitors?: EspnCompetitor[] }> };
   boxscore?: { teams?: Array<{ team?: EspnTeam; statistics?: EspnStat[] }> };
   keyEvents?: EspnKeyEvent[];
+  commentary?: Array<{ play?: EspnKeyEvent }>;
   rosters?: Array<{
     homeAway?: string;
     team?: EspnTeam;
@@ -158,7 +163,17 @@ function teamLogo(team: EspnTeam | undefined): string | null {
 }
 
 function statValue(competitor: EspnCompetitor, name: string): number | null {
-  return numeric(competitor.statistics?.find((stat) => stat.name === name)?.displayValue);
+  const stat = competitor.statistics?.find((item) => item.name === name);
+  return numeric(stat?.displayValue ?? stat?.value);
+}
+
+function statDetails(statistics: EspnStat[] | undefined): Record<string, number> | undefined {
+  const details = Object.fromEntries((statistics ?? []).flatMap((stat) => {
+    if (!stat.name) return [];
+    const value = numeric(stat.displayValue ?? stat.value);
+    return value === null ? [] : [[stat.name, value] as const];
+  }));
+  return Object.keys(details).length ? details : undefined;
 }
 
 function parseMinute(detail: { clock?: { value?: number; displayValue?: string } }): { minute: number; extra: number | null } {
@@ -171,15 +186,23 @@ function parseMinute(detail: { clock?: { value?: number; displayValue?: string }
 
 function normalizeDetail(detail: EspnDetail): Fixture["events"][number] | null {
   const label = detail.type?.text ?? "";
-  const isCard = detail.redCard || detail.yellowCard || label.toLowerCase().includes("card");
-  const type = detail.scoringPlay || label.toLowerCase().includes("goal") ? "Goal" : isCard ? "Card" : "";
+  const lowerLabel = label.toLowerCase();
+  const isCard = detail.redCard || detail.yellowCard || lowerLabel.includes("card");
+  const isSubstitution = lowerLabel.includes("substitution");
+  const isVar = lowerLabel.includes("var");
+  const type = detail.scoringPlay || lowerLabel.includes("goal") ? "Goal"
+    : isCard ? "Card"
+      : isSubstitution ? "Substitution"
+        : isVar ? "VAR" : "";
   const teamId = finiteId(detail.team?.id);
   if (!type || !teamId) return null;
-  const athlete = detail.athletesInvolved?.[0];
+  const athletes = detail.athletesInvolved ?? [];
+  const athlete = athletes[0];
   const { minute, extra } = parseMinute(detail);
   return {
     minute, extra, teamId,
     player: athlete?.displayName ?? "",
+    secondaryPlayer: athletes[1]?.displayName,
     playerId: finiteId(athlete?.id) ?? undefined,
     playerPhoto: athlete?.headshot ?? null,
     type,
@@ -204,6 +227,7 @@ function matchStat(competitor: EspnCompetitor, events: Fixture["events"], teamId
     cards: yellows !== null || reds !== null ? (yellows ?? 0) + (reds ?? 0) : hasCardEvents ? eventCards : null,
     yellowCards: yellows,
     redCards: reds,
+    details: statDetails(competitor.statistics),
   };
 }
 
@@ -221,6 +245,8 @@ function normalizeFixture(event: EspnEvent, league: EspnLeague, leagueLogo: stri
   const status = competition.status;
   const statusType = status?.type;
   const state = statusType?.state;
+  const elapsedSeconds = numeric(status?.clock);
+  const elapsedDisplay = statusType?.detail ?? statusType?.shortDetail ?? null;
   const statusText = `${statusType?.name ?? ""} ${statusType?.description ?? ""} ${statusType?.detail ?? ""}`.toLowerCase();
   const events = (competition.details ?? []).flatMap((detail) => {
     const normalized = normalizeDetail(detail);
@@ -266,7 +292,9 @@ function normalizeFixture(event: EspnEvent, league: EspnLeague, leagueLogo: stri
     stage,
     venue: competition.venue?.fullName ?? null,
     statusShort, statusLong: statusType?.detail ?? statusType?.description ?? statusType?.name ?? statusShort,
-    elapsed: numeric(status?.clock) === null ? null : Math.floor((numeric(status?.clock) ?? 0) / 60),
+    elapsed: elapsedSeconds === null ? null : Math.floor(elapsedSeconds / 60),
+    elapsedSeconds,
+    elapsedDisplay,
     home: { id: homeId, name: home.team?.displayName ?? home.team?.name ?? "Local", logo: teamLogo(home.team) },
     away: { id: awayId, name: away.team?.displayName ?? away.team?.name ?? "Visitante", logo: teamLogo(away.team) },
     goalsHome: homeScore, goalsAway: awayScore,
@@ -442,6 +470,12 @@ export async function getEspnFixture(id: number, leagueId?: number, date?: strin
   return null;
 }
 
+function hasMatchStatData(team: MatchStat): boolean {
+  return [team.shots, team.shotsOn, team.corners, team.cards, team.yellowCards, team.redCards]
+    .some((value) => typeof value === "number")
+    || Object.values(team.details ?? {}).some((value) => typeof value === "number");
+}
+
 function statsFromFixture(fixture: Fixture): StoredStats | null {
   const home = fixture.homeStats;
   const away = fixture.awayStats;
@@ -450,30 +484,81 @@ function statsFromFixture(fixture: Fixture): StoredStats | null {
     fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,
     homeId: fixture.home.id, awayId: fixture.away.id, home, away,
     goalsHome: fixture.goalsHome ?? 0, goalsAway: fixture.goalsAway ?? 0,
-    hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
+    hasData: [home, away].some(hasMatchStatData),
   };
+}
+
+function periodStatsFromSummary(data: EspnSummary, fixture: Fixture) {
+  const plays = (data.commentary ?? []).flatMap((item) => item.play ? [item.play] : []);
+  const playSide = (play: EspnKeyEvent): "home" | "away" | null => {
+    const teamId = finiteId(play.team?.id);
+    if (teamId === fixture.home.id) return "home";
+    if (teamId === fixture.away.id) return "away";
+    const name = play.team?.displayName?.trim().toLocaleLowerCase();
+    if (name && name === fixture.home.name.trim().toLocaleLowerCase()) return "home";
+    if (name && name === fixture.away.name.trim().toLocaleLowerCase()) return "away";
+    return null;
+  };
+  const teams = new Set(plays.map(playSide).filter((side): side is "home" | "away" => side !== null));
+  if (!plays.length || !teams.has("home") || !teams.has("away")) return null;
+  const createHalves = () => ({
+    first: { shots: 0, shotsOn: 0, corners: 0, cards: 0, yellowCards: 0, redCards: 0 },
+    second: { shots: 0, shotsOn: 0, corners: 0, cards: 0, yellowCards: 0, redCards: 0 },
+  });
+  const result: Record<"home" | "away", { first: MatchPeriodStats; second: MatchPeriodStats }> = {
+    home: createHalves(),
+    away: createHalves(),
+  };
+  for (const play of plays) {
+    const period = play.period?.number;
+    if (!period || period > 4 || play.shootout) continue;
+    const side = playSide(play);
+    if (!side) continue;
+    const half = period === 1 ? result[side].first : result[side].second;
+    const type = play.type?.text?.toLowerCase() ?? "";
+    const isGoal = play.scoringPlay === true || type.startsWith("goal");
+    if (type.startsWith("shot") || isGoal) {
+      half.shots = (half.shots ?? 0) + 1;
+      if (type === "shot on target" || type === "shot hit woodwork" || isGoal) half.shotsOn = (half.shotsOn ?? 0) + 1;
+    }
+    if (type === "corner" || type === "corner awarded") {
+      half.corners = (half.corners ?? 0) + 1;
+    }
+    const isYellow = type.includes("yellow card");
+    const isRed = type.includes("red card") || type === "second yellow card";
+    if (isYellow || isRed) {
+      half.cards = (half.cards ?? 0) + 1;
+      if (isYellow) half.yellowCards = (half.yellowCards ?? 0) + 1;
+      if (isRed) half.redCards = (half.redCards ?? 0) + 1;
+    }
+  }
+  return result;
 }
 
 export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats | null> {
   const direct = statsFromFixture(fixture);
-  const hasCardBreakdown = (stats: MatchStat | undefined) =>
-    stats?.yellowCards != null && stats.redCards != null;
-  if (direct?.hasData && hasCardBreakdown(direct.home) && hasCardBreakdown(direct.away)) return direct;
-  if (!fixture.statusShort.match(/^(FT|AET|PEN)$/)) return direct;
+  const live = statusGroup(fixture) === "live";
+  if (!live && statusGroup(fixture) !== "finished") return direct;
   const league = leagueFor(fixture.leagueId);
   if (!league) return direct;
   try {
-    const summary = await cached(`espn:fixture-stats:v2:${fixture.id}`, 30 * DAY, async () => {
+    const summary = await cached(`espn:fixture-stats:v4:${fixture.id}`, live ? 30 : 30 * DAY, async () => {
       const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
       const teams = data.boxscore?.teams ?? [];
+      const halves = periodStatsFromSummary(data, fixture);
       const getStats = (teamId: number): MatchStat => {
         const stats = teams.find((item) => finiteId(item.team?.id) === teamId)?.statistics ?? [];
-        const get = (name: string) => numeric(stats.find((stat) => stat.name === name)?.displayValue);
+        const get = (name: string) => {
+          const stat = stats.find((item) => item.name === name);
+          return numeric(stat?.displayValue ?? stat?.value);
+        };
         const yellow = get("yellowCards"), red = get("redCards");
         return {
           shots: get("totalShots"), shotsOn: get("shotsOnTarget"), corners: get("wonCorners"),
           cards: yellow === null && red === null ? null : (yellow ?? 0) + (red ?? 0),
           yellowCards: yellow, redCards: red,
+          details: statDetails(stats),
+          halves: halves?.[teamId === fixture.home.id ? "home" : "away"],
         };
       };
       const home = getStats(fixture.home.id), away = getStats(fixture.away.id);
@@ -481,7 +566,7 @@ export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats
         fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,
         homeId: fixture.home.id, awayId: fixture.away.id, home, away,
         goalsHome: fixture.goalsHome ?? 0, goalsAway: fixture.goalsAway ?? 0,
-        hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
+        hasData: [home, away].some(hasMatchStatData),
       };
     });
     const merge = (primary: MatchStat, fallback: MatchStat): MatchStat => ({
@@ -491,12 +576,14 @@ export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats
       cards: primary.cards ?? fallback.cards,
       yellowCards: primary.yellowCards ?? fallback.yellowCards,
       redCards: primary.redCards ?? fallback.redCards,
+      details: { ...fallback.details, ...primary.details },
+      halves: primary.halves ?? fallback.halves,
     });
     const home = direct ? merge(direct.home, summary.home) : summary.home;
     const away = direct ? merge(direct.away, summary.away) : summary.away;
     return {
       ...(direct ?? summary), home, away,
-      hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
+      hasData: [home, away].some(hasMatchStatData),
     };
   } catch (error) {
     if (!direct?.hasData) throw error;
@@ -512,7 +599,7 @@ export async function getEspnFixtureLineups(fixture: Fixture): Promise<FixtureLi
   const now = Date.now() / 1000;
   const finished = fixture.statusShort.match(/^(FT|AET|PEN)$/) !== null;
   const untilKickoff = fixture.timestamp - now;
-  return cached(`espn:fixture-lineups:v9:${fixture.id}`, (lineups) => {
+  return cached(`espn:fixture-lineups:v12:${fixture.id}`, (lineups) => {
     if (finished) return 30 * DAY;
     if (lineups.some((lineup) => lineup.starters.length > 0)) return 5 * 60;
     return untilKickoff <= HOUR ? 45 : untilKickoff <= DAY ? 5 * 60 : 30 * 60;
@@ -529,17 +616,15 @@ export async function getEspnFixtureLineups(fixture: Fixture): Promise<FixtureLi
       events.push({ type, minute, extra, ...(ownGoal ? { ownGoal: true } : {}) });
       playerEvents.set(id, events);
     };
-    for (const event of fixture.events) {
-      if (!event.playerId) continue;
-      const cardDetail = event.detail.toLowerCase();
-      if (event.yellowCard || cardDetail.includes("yellow")) addPlayerEvent(event.playerId, "yellowCard", event.minute, event.extra);
-      if (event.redCard || cardDetail.includes("red")) addPlayerEvent(event.playerId, "redCard", event.minute, event.extra);
-    }
     for (const event of data.keyEvents ?? []) {
       const label = event.type?.text?.toLowerCase() ?? "";
       const participants = event.participants ?? [];
       const { minute, extra } = parseMinute(event);
-      if (label === "substitution") {
+      if (label.includes("red card") || label.includes("second yellow")) {
+        addPlayerEvent(participants[0]?.athlete?.id, "redCard", minute, extra);
+      } else if (label.includes("yellow card")) {
+        addPlayerEvent(participants[0]?.athlete?.id, "yellowCard", minute, extra);
+      } else if (label === "substitution") {
         addPlayerEvent(participants[0]?.athlete?.id, "substitutionIn", minute, extra);
         addPlayerEvent(participants[1]?.athlete?.id, "substitutionOut", minute, extra);
       } else if (event.scoringPlay || label.includes("goal")) {
@@ -580,6 +665,8 @@ export async function getEspnFixtureLineups(fixture: Fixture): Promise<FixtureLi
         teamId: matchTeam.id,
         teamName: matchTeam.name,
         teamLogo: teamLogo(roster.team) ?? matchTeam.logo,
+        teamColor: roster.team?.color ?? null,
+        teamAlternateColor: roster.team?.alternateColor ?? null,
         formation: roster.formation ?? null,
         starters: players.filter((item) => item.starter).map((item) => item.player),
         substitutes: players.filter((item) => !item.starter).map((item) => item.player),
@@ -611,6 +698,24 @@ function toTeamRow(fixture: Fixture, teamId: number, stats: StoredStats | null):
   };
 }
 
+async function getEspnFixtureHalfTime(fixture: Fixture): Promise<{ htHome: number | null; htAway: number | null }> {
+  if (fixture.htHome !== null && fixture.htAway !== null) {
+    return { htHome: fixture.htHome, htAway: fixture.htAway };
+  }
+  const league = leagueFor(fixture.leagueId);
+  if (!league) return { htHome: fixture.htHome, htAway: fixture.htAway };
+  return cached(`espn:fixture-halftime:v1:${fixture.id}`, 30 * DAY, async () => {
+    const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
+    const competitors = data.header?.competitions?.[0]?.competitors ?? [];
+    const home = competitors.find((team) => finiteId(team.team?.id) === fixture.home.id);
+    const away = competitors.find((team) => finiteId(team.team?.id) === fixture.away.id);
+    return {
+      htHome: numeric(home?.linescores?.[0]?.displayValue ?? home?.linescores?.[0]?.value),
+      htAway: numeric(away?.linescores?.[0]?.displayValue ?? away?.linescores?.[0]?.value),
+    };
+  });
+}
+
 export async function getEspnTeamProfile(
   teamId: number,
   withStats: boolean,
@@ -619,11 +724,12 @@ export async function getEspnTeamProfile(
   leagueId: number | undefined,
   limit = FORM_MATCHES,
   venue?: "home" | "away",
+  withHalfTime = false,
 ): Promise<TeamProfile> {
   const league = leagueId ? leagueFor(leagueId) : null;
   if (!league) return { teamId, rows: [] };
   const selectedSeason = season ?? (new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1);
-  return cached(`espn:profile:v6:${leagueId}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}`, 30 * 60, async () => {
+  return cached(`espn:profile:v8:${leagueId}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}:${withHalfTime}`, 30 * 60, async () => {
     const seasons = limit > FORM_MATCHES ? [selectedSeason] : [selectedSeason, selectedSeason - 1];
     const scheduleResults = await Promise.allSettled(seasons.map((item) =>
       getEspnTeamSchedule(league, teamId, item),
@@ -644,11 +750,19 @@ export async function getEspnTeamProfile(
         (venue === "home" ? fixture.home.id === teamId : venue === "away" ? fixture.away.id === teamId : fixture.home.id === teamId || fixture.away.id === teamId),
       ).sort((a, b) => a.timestamp - b.timestamp).slice(-limit);
     const rows = await Promise.all(fixtures.map(async (fixture) => {
-      const stats = withStats ? await getEspnFixtureStats(fixture).catch((error: unknown) => {
-        console.error(`No se pudieron cargar estadísticas ESPN del partido ${fixture.id}:`, error);
-        return null;
-      }) : null;
-      return toTeamRow(fixture, teamId, stats);
+      const [stats, halftime] = await Promise.all([
+        withStats ? getEspnFixtureStats(fixture).catch((error: unknown) => {
+          console.error(`No se pudieron cargar estadísticas ESPN del partido ${fixture.id}:`, error);
+          return null;
+        }) : Promise.resolve(null),
+        withHalfTime
+          ? getEspnFixtureHalfTime(fixture).catch((error: unknown) => {
+            console.error(`No se pudieron cargar los goles al descanso ESPN del partido ${fixture.id}:`, error);
+            return { htHome: fixture.htHome, htAway: fixture.htAway };
+          })
+          : Promise.resolve({ htHome: fixture.htHome, htAway: fixture.htAway }),
+      ]);
+      return toTeamRow({ ...fixture, ...halftime }, teamId, stats);
     }));
     return { teamId, rows };
   });
@@ -684,7 +798,7 @@ export async function getEspnLeagueAverage(leagueId: number, season: number): Pr
     const known = values.filter((value): value is number => value !== null);
     return known.length ? known.reduce((sum, value) => sum + value, 0) / known.length : null;
   };
-  const totalStat = (key: keyof MatchStat) => fixtures.map((fixture) => {
+  const totalStat = (key: Exclude<keyof MatchStat, "details" | "halves">) => fixtures.map((fixture) => {
     const home = fixture.homeStats?.[key], away = fixture.awayStats?.[key];
     return home === null || home === undefined || away === null || away === undefined ? null : home + away;
   });
