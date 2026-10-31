@@ -292,6 +292,13 @@ export async function getEspnLeagues(): Promise<LeagueInfo[]> {
   }));
 }
 
+export function getEspnLeagueInfo(leagueId: number): LeagueInfo | null {
+  const league = leagueFor(leagueId);
+  return league
+    ? { id: league.id, name: league.name, type: league.type, country: league.country, flag: league.flag, logo: null }
+    : null;
+}
+
 export async function getEspnTeams(leagueId: number, season: number): Promise<Array<{ id: number; name: string; logo: string | null }>> {
   const league = leagueFor(leagueId);
   if (!league) throw new Error(`ESPN no tiene configurada la liga ${leagueId}`);

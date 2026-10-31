@@ -18,7 +18,7 @@ function BlurredValue({ size = "short", tone = 0 }: { size?: "short" | "medium";
   return <span aria-hidden="true" className={`inline-block h-5 rounded-md ${color} blur-[10px] opacity-55 ${size === "medium" ? "w-14" : "w-9"}`} />;
 }
 
-function PremiumUnlockBanner({ text = "Desbloquea las estadísticas de córners con Premium" }: { text?: string }) {
+function PremiumUnlockBanner({ text = "Desbloquea el análisis de córners con Premium" }: { text?: string }) {
   return (
     <Link href="/premium" className="flex items-center justify-center gap-2 rounded-xl bg-brand px-3 py-3 text-center text-xs font-extrabold text-black shadow-lg shadow-brand/10">
       <IconLock className="h-4 w-4" />
@@ -142,7 +142,7 @@ function CornersLockedPreview({ teams, locale }: { teams: Teams; locale: string 
 
 function CardsLockedPreview({ teams, locale }: { teams: Teams; locale: string }) {
   const [view, setView] = useState<"match" | "team">("match");
-  const unlockText = "Desbloquea las estadísticas de tarjetas con Premium";
+  const unlockText = "Desbloquea el análisis de tarjetas con Premium";
   const rows = view === "match"
     ? [2.5, 3.5, 4.5, 5.5, 6.5].map((line) => `Más de ${num(line, locale)}`)
     : [

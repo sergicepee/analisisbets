@@ -3,14 +3,13 @@ import { Notice } from "@/components/ui";
 import { LeagueCompetition } from "@/components/LeagueCompetition";
 import {
   getLeagueFixtures,
+  getLeagueById,
   getLeagueSeasons,
   getLeagueStandingsZones,
   getLeagueTeams,
   getLeagueTopScorers,
-  getLeagues,
   getTeamLogoFallbackUrl,
 } from "@/lib/apifootball";
-import { csvLeagueById } from "@/lib/csvLeagues";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { I18nText } from "@/components/I18nProvider";
 import { getTz } from "@/lib/prefs";
@@ -25,9 +24,8 @@ export default async function LeaguePage({ params, searchParams }: { params: { i
     return <><Header back="/leagues" /><main className="p-4"><Notice><I18nText text="Liga no válida." /></Notice></main></>;
   }
 
-  const [leagues, seasons] = await Promise.all([getLeagues(), getLeagueSeasons(id)]);
-  const league = leagues.find((item) => item.id === id) ?? csvLeagueById(id);
-  const leagueLogo = league && "logo" in league ? league.logo : null;
+  const [league, seasons] = await Promise.all([getLeagueById(id), getLeagueSeasons(id)]);
+  const leagueLogo = league?.logo ?? null;
   const currentSeason = new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1;
   const availableSeasons = seasons.length ? seasons : [currentSeason];
   const initialTab = searchParams.tab === "table" ? "table" : "calendar";

@@ -54,19 +54,21 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     : "analysis";
   const analysisTab = TABS.some((t) => t[0] === searchParams.tab) ? (searchParams.tab as string) : "general";
   const date = isDate(searchParams.date) ? (searchParams.date as string) : todayStr();
-  const user = await getUser();
-  const subscriptionAccess = user ? await getSubscriberAccess(user.id) : { active: false, error: false };
+  const fixtureRequest = getFixture(id, Number(searchParams.league) || undefined, date)
+    .then((fixture) => ({ fixture, error: null as unknown }))
+    .catch((error: unknown) => ({ fixture: null, error }));
+  const [user, fixtureResult] = await Promise.all([getUser(), fixtureRequest]);
+  if (fixtureResult.error) {
+    return <><Header back={`/?date=${date}`} /><main className="p-4"><Notice tone="warn">No se pudo cargar el partido: {errMsg(fixtureResult.error)}</Notice></main></>;
+  }
+  const f = fixtureResult.fixture;
+  if (!f) notFound();
+  const [subscriptionAccess, favoriteLookup] = await Promise.all([
+    user ? getSubscriberAccess(user.id) : Promise.resolve({ active: false, error: false }),
+    user ? getFavoriteFixtureIds(user.id, [f.id]) : Promise.resolve({ favoriteIds: new Set<number>(), error: false }),
+  ]);
   const isSubscriber = subscriptionAccess.active;
   const premiumLocked = section === "analysis" && analysisTab !== "general" && analysisTab !== "goles" && !isSubscriber;
-
-  let f: Fixture | null = null;
-  try { f = await getFixture(id, Number(searchParams.league) || undefined, date); } catch (e) {
-    return <><Header back={`/?date=${date}`} /><main className="p-4"><Notice tone="warn">No se pudo cargar el partido: {errMsg(e)}</Notice></main></>;
-  }
-  if (!f) notFound();
-  const favoriteLookup = user
-    ? await getFavoriteFixtureIds(user.id, [f.id])
-    : { favoriteIds: new Set<number>(), error: false };
 
   const needStats = section === "analysis" && analysisTab !== "goles";
   const includeGoalProfiles = section === "analysis" && analysisTab === "goles" && !premiumLocked;
@@ -168,6 +170,33 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
     ["Rojas", stats?.home.redCards ?? null, stats?.away.redCards ?? null],
   ] as const;
   const hasData = !!stats?.hasData;
+  const waitingForStart = !hasData && ["upcoming", "pending"].includes(statusGroup(fixture));
+
+  if (waitingForStart) {
+    return (
+      <section className="card min-w-0 p-3 sm:p-4">
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+          <h3 className="min-w-0 text-xs font-black uppercase tracking-wide sm:text-sm">
+            <I18nText text="Estadísticas del partido" />
+          </h3>
+          <div
+            role="img"
+            aria-label={`${fixture.home.name} ${t("contra")} ${fixture.away.name}`}
+            className="flex shrink-0 items-center gap-2"
+          >
+            <Shield src={fixture.home.logo} alt="" size={20} />
+            <span className="text-[9px] font-bold uppercase text-muted">VS</span>
+            <Shield src={fixture.away.logo} alt="" size={20} />
+          </div>
+        </div>
+        <div className="flex min-h-[96px] items-center justify-center px-2 text-center">
+          <p className="text-sm font-semibold text-muted">
+            <I18nText text="Las estadísticas estarán disponibles cuando empiece el partido." />
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <Panel title="Estadísticas del partido">

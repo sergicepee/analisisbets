@@ -16,6 +16,7 @@ import {
   getEspnLeagueAverage,
   getEspnLeagueCardLeaders,
   getEspnLeagueFixtures,
+  getEspnLeagueInfo,
   getEspnLeagueSeasons,
   getEspnLeagueTopScorers,
   getEspnLeagues,
@@ -443,13 +444,27 @@ export async function getLeagueAverages(leagueId: number, season: number): Promi
 }
 
 // ── Ligas ──
+function csvLeagueInfo(league: typeof CSV_LEAGUES[number]): LeagueInfo {
+  return {
+    id: league.id,
+    name: league.name,
+    type: "League",
+    logo: `https://media.api-sports.io/football/leagues/${league.id}.png`,
+    country: league.country,
+    flag: league.flag,
+  };
+}
+
 export async function getLeagues(): Promise<LeagueInfo[]> {
   if (apiEnabled) return getEspnLeagues();
-  return CSV_LEAGUES.map((league) => ({
-    id: league.id, name: league.name, type: "League",
-    logo: `https://media.api-sports.io/football/leagues/${league.id}.png`,
-    country: league.country, flag: league.flag,
-  }));
+  return CSV_LEAGUES.map(csvLeagueInfo);
+}
+
+export async function getLeagueById(leagueId: number): Promise<LeagueInfo | null> {
+  const espnLeague = apiEnabled ? getEspnLeagueInfo(leagueId) : null;
+  if (espnLeague) return espnLeague;
+  const csvLeague = CSV_LEAGUES.find((league) => league.id === leagueId);
+  return csvLeague ? csvLeagueInfo(csvLeague) : null;
 }
 
 // ── Equipos: búsqueda y partidos ──
@@ -610,31 +625,32 @@ export async function getTeamSeasonProfile(teamId: number, name: string, leagueI
   if (local.rows.length && local.rows.some((row) => row.sFor !== null || row.sAgainst !== null)) return { ...local, teamId };
   return espnProfile ?? { ...local, teamId };
 }
-export async function getTeamSeasonMatchSeries(name: string, leagueId: number, season: number) {
-  let espnSeries: Awaited<ReturnType<typeof getEspnSeasonMatchSeries>> = [];
-  if (apiEnabled) {
-    try {
-      const teams = await getLeagueTeams(leagueId, season);
-      const team = teams.find((item) => item.name === name)
-        ?? teams.find((item) => csvTeamId(item.name) === csvTeamId(name));
-      if (team) {
-        const series = await getEspnSeasonMatchSeries(team.id, leagueId, season);
-        if (series.length) espnSeries = series;
-      }
-    } catch (error) {
-      console.error(`No se pudo cargar la serie ESPN de ${name}:`, error);
-    }
-  }
-  try {
-    const csvSeries = await getCsvTeamMatchSeries(csvTeamId(name), leagueId, season);
-    const statCount = (series: typeof csvSeries) => series.reduce((count, game) =>
-      count + ["shots", "shotsOn", "corners", "cards"].reduce((total, key) =>
-        total + (game.own[key as keyof typeof game.own] !== null ? 1 : 0), 0), 0);
-    return statCount(csvSeries) > statCount(espnSeries) ? csvSeries : espnSeries.length ? espnSeries : csvSeries;
-  } catch (error) {
-    console.error(`No se pudo cargar la serie CSV de ${name}:`, error);
-    return espnSeries;
-  }
+export async function getTeamSeasonMatchSeries(
+  teamId: number,
+  name: string,
+  leagueId: number,
+  season: number,
+  teams: Array<{ id: number; name: string }>,
+) {
+  const team = teams.find((item) => item.name === name)
+    ?? teams.find((item) => csvTeamId(item.name) === csvTeamId(name));
+  const espnTeamId = team?.id ?? teamId;
+  const [espnSeries, csvSeries] = await Promise.all([
+    apiEnabled
+      ? getEspnSeasonMatchSeries(espnTeamId, leagueId, season).catch((error: unknown) => {
+        console.error(`No se pudo cargar la serie ESPN de ${name}:`, error);
+        return [];
+      })
+      : Promise.resolve([]),
+    getCsvTeamMatchSeries(csvTeamId(name), leagueId, season).catch((error: unknown) => {
+      console.error(`No se pudo cargar la serie CSV de ${name}:`, error);
+      return [];
+    }),
+  ]);
+  const statCount = (series: typeof csvSeries) => series.reduce((count, game) =>
+    count + ["shots", "shotsOn", "corners", "cards"].reduce((total, key) =>
+      total + (game.own[key as keyof typeof game.own] !== null ? 1 : 0), 0), 0);
+  return statCount(csvSeries) > statCount(espnSeries) ? csvSeries : espnSeries.length ? espnSeries : csvSeries;
 }
 export async function getTeamUpcomingFixtures(teamId: number, n = 15, leagueId?: number, teamName?: string): Promise<Fixture[]> {
   if (apiEnabled) {

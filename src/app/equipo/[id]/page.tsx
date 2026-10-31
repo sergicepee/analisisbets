@@ -100,6 +100,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
   const id = Number(params.id);
   const leagueId = Number(searchParams.league) || undefined;
   const back = safeReturnPath(searchParams.from);
+  const userPromise = getUser();
   const seasons = leagueId ? await getLeagueSeasons(leagueId) : [];
   const requestedSeason = Number(searchParams.season);
   const season = seasons.includes(requestedSeason) ? requestedSeason : seasons[0];
@@ -120,7 +121,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
       : Promise.resolve(null),
     getTeamRecentFixtures(id, 15, leagueId, name),
     getTeamUpcomingFixtures(id, 15, leagueId, name),
-    name && leagueId && season ? getTeamSeasonMatchSeries(name, leagueId, season) : Promise.resolve([]),
+    name && leagueId && season ? getTeamSeasonMatchSeries(id, name, leagueId, season, teams) : Promise.resolve([]),
   ]);
   if (profileResult.status === "fulfilled") profile = profileResult.value;
   else profileError = errMsg(profileResult.reason);
@@ -188,7 +189,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
   if (leagueId && competitionName) {
     competitions.set(leagueId, { name: competitionName, logo: competitionLogo });
   }
-  const user = await getUser();
+  const user = await userPromise;
   const [favoriteLookup, followLookup] = user
     ? await Promise.all([
       getFavoriteFixtureIds(user.id, [...recent, ...upcoming].map((fixture) => fixture.id)),
