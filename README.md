@@ -6,7 +6,7 @@ Datos de fútbol de **ESPN** (sin clave) con respaldo en los CSV locales y cach�
 ## Pantallas
 Móvil: una columna con barra inferior. Escritorio (≥1024 px): menú superior, buscador de equipos y ligas, y dos columnas (lista de partidos + ficha) con scroll independiente.
 
-Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (General gratis / Goles / Tiros / Córners / Tarjetas Premium) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
+Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (Análisis: General gratis / Goles / Tiros / Córners / Tarjetas Premium; estadísticas reales y alineaciones de ESPN cuando estén disponibles) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
 
 ## Probar en local (ESPN no necesita claves)
 ```bash
@@ -39,7 +39,7 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
    3. Copia el *Client ID* y *Client Secret* en Supabase → Authentication → Providers → **Google** → activar → Guardar.
 
 ## Suscripciones Premium (Stripe)
-- General del partido permanece gratis. Goles, Tiros, Esquinas y Tarjetas requieren una suscripción activa; los usuarios sin suscripción ven una vista previa difuminada sin recibir los datos reales.
+- General del análisis permanece gratis. Goles, Tiros, Esquinas y Tarjetas del análisis requieren una suscripción activa; los usuarios sin suscripción ven una vista previa difuminada sin recibir los datos reales.
 - Crea tres precios recurrentes en Stripe (semanal, mensual y anual) y configura en Vercel `STRIPE_PRICE_WEEKLY_ID`, `STRIPE_PRICE_MONTHLY_ID`, `STRIPE_PRICE_ANNUAL_ID`, `STRIPE_SECRET_KEY` y `SITE_URL`.
 - Añade un webhook de Stripe a `https://TU-PROYECTO.vercel.app/api/billing/webhook` con los eventos `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` y `customer.subscription.deleted`; guarda su secreto como `STRIPE_WEBHOOK_SECRET`.
 - Activa el Customer Portal en Stripe para que cada usuario pueda gestionar o cancelar su suscripción desde `/premium`.
@@ -59,7 +59,7 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - En las competiciones UEFA, el calendario separa fase de liga y eliminatorias; las eliminatorias agrupan los partidos por enfrentamiento y muestran el global cuando hay ida y vuelta. La clasificación solo aparece en fase de liga. Si ESPN no identifica una fase, los partidos se agrupan por fecha sin inferir jornadas o rondas.
 - Cuando ESPN no ofrece estadísticas de partido, se intenta completar con los CSV. Si no existen datos suficientes, se muestran guiones o avisos, no cifras inventadas.
 - La clasificación se calcula con los resultados de la temporada. Las zonas oficiales de clasificación no se obtienen actualmente de ESPN.
-- `FORM_MATCHES`, `LEAGUE_IDS` y `MAX_ANALYSIS_FIXTURES` permiten ajustar el tamaño del análisis y las ligas consideradas.
+- `FORM_MATCHES` (10 por defecto), `LEAGUE_IDS` y `MAX_ANALYSIS_FIXTURES` permiten ajustar el tamaño del análisis y las ligas consideradas.
 
 ## Cómo se calculan los datos (no se inventa nada)
 - **Esperado por equipo** = media(lo que produce, lo que el rival concede) en sus últimos N partidos; total = suma.

@@ -1,18 +1,20 @@
 import "server-only";
-import { apiEnabled } from "./config";
+import { apiEnabled, FORM_MATCHES } from "./config";
 import { getTz } from "./prefs";
 import type {
-  Fixture, LeagueAvg, LeagueInfo, StoredStats, TeamProfile,
+  Fixture, FixtureLineup, LeagueAvg, LeagueCardLeader, LeagueInfo, StoredStats, TeamProfile,
 } from "./types";
 import { canonicalTeamName, csvTeamId, getCsvFixture, getCsvFixtures, getCsvFixturesByDate } from "./csvFixtures";
 import { getCsvLeagueAverage, getCsvLeagueFixtures, getCsvLeagueSeasons, getCsvLeagueTeams, getCsvStatsForFixture, getCsvTeamMatchSeries, getCsvTeamProfile } from "./csvHistory";
 import { CSV_LEAGUES } from "./csvLeagues";
 import {
   getEspnFixture,
+  getEspnFixtureLineups,
   getEspnFixtureStats,
   getEspnFixturesByDate,
   getEspnLeagueCountry,
   getEspnLeagueAverage,
+  getEspnLeagueCardLeaders,
   getEspnLeagueFixtures,
   getEspnLeagueSeasons,
   getEspnLeagueTopScorers,
@@ -26,6 +28,51 @@ import {
 
 function teamNameKey(name: string): string {
   return canonicalTeamName(name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+const fixtureTeamAliases: Record<string, string> = {
+  "brighton hove albion": "brighton",
+  "brighton and hove albion": "brighton",
+  "coventry city": "coventry",
+  "ipswich town": "ipswich",
+  "leeds united": "leeds",
+  "tottenham hotspur": "tottenham",
+  "afc bournemouth": "bournemouth",
+  "ogc nice": "nice",
+  "stade rennais": "rennes",
+  "stade rennais fc": "rennes",
+  "le havre ac": "le havre",
+  "paris saint germain": "paris sg",
+  "tsg hoffenheim": "hoffenheim",
+  "rb leipzig": "leipzig",
+  "ein frankfurt": "frankfurt",
+  "frankfurt": "frankfurt",
+  "psg": "paris sg",
+  "olympique lyonnais": "lyon",
+  "olympique marseille": "marseille",
+  "losc lille": "lille",
+  "rc lens": "lens",
+  "rc strasbourg alsace": "strasbourg",
+  "newcastle united": "newcastle",
+  "west ham united": "west ham",
+  "wolverhampton wanderers": "wolves",
+};
+
+const fixtureClubTokens = new Set([
+  "ac", "afc", "as", "bayer", "borussia", "cd", "cf", "club", "eintracht", "fc",
+  "football", "olympique", "rc", "rcd", "sc", "spvgg", "ssc", "stade", "sv", "tsg",
+  "ud", "us", "vfb", "vfl", "fsv",
+]);
+const ambiguousTeamTokens = new Set(["athletic", "albion", "city", "club", "sporting", "town", "united"]);
+
+function fixtureTeamNameKey(name: string): string {
+  const key = teamNameKey(name);
+  const alias = fixtureTeamAliases[key] ?? key;
+  const coreName = alias.split(" ")
+    .filter((token) => !fixtureClubTokens.has(token) && !/^\d+$/.test(token))
+    .join(" ");
+  const canonical = teamNameKey(canonicalTeamName(coreName));
+  return fixtureTeamAliases[canonical] ?? canonical;
 }
 
 // ESPN and CSV team IDs differ; these stable image IDs preserve CSV badges.
@@ -141,28 +188,59 @@ async function addCsvTeamLogos(fixtures: Fixture[]): Promise<Fixture[]> {
   }));
 }
 
-function fixtureKey(fixture: Fixture): string {
+function fixtureDateKey(fixture: Fixture): string {
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(fixture.timestamp * 1000);
+  return `${fixture.leagueId}|${date}`;
+}
+
+function fixtureKey(fixture: Fixture, dateKey = fixtureDateKey(fixture)): string {
   return [
-    fixture.leagueId,
-    date,
-    teamNameKey(fixture.home.name),
-    teamNameKey(fixture.away.name),
+    dateKey,
+    fixtureTeamNameKey(fixture.home.name),
+    fixtureTeamNameKey(fixture.away.name),
   ].join("|");
+}
+
+function sameFixtureTeam(first: string, second: string): boolean {
+  const firstTokens = fixtureTeamNameKey(first).split(" ").filter(Boolean);
+  const secondTokens = fixtureTeamNameKey(second).split(" ").filter(Boolean);
+  if (firstTokens.join(" ") === secondTokens.join(" ")) return true;
+  const [shorter, longer] = firstTokens.length <= secondTokens.length
+    ? [firstTokens, secondTokens]
+    : [secondTokens, firstTokens];
+  return shorter.length > 0
+    && longer.length - shorter.length <= 2
+    && !(shorter.length === 1 && ambiguousTeamTokens.has(shorter[0]))
+    && shorter.every((token) => longer.includes(token));
+}
+
+function sameFixtureTeams(first: Fixture, second: Fixture): boolean {
+  return (sameFixtureTeam(first.home.name, second.home.name) && sameFixtureTeam(first.away.name, second.away.name))
+    || (sameFixtureTeam(first.home.name, second.away.name) && sameFixtureTeam(first.away.name, second.home.name));
 }
 
 function mergeFixtureSources(primary: Fixture[], fallback: Fixture[]): Fixture[] {
   const seenIds = new Set<number>();
   const seenMatches = new Set<string>();
-  return [...primary, ...fallback]
-    .filter((fixture) => {
-      const key = fixtureKey(fixture);
-      if (seenIds.has(fixture.id) || seenMatches.has(key)) return false;
-      seenIds.add(fixture.id);
-      seenMatches.add(key);
-      return true;
-    })
-    .sort((a, b) => a.timestamp - b.timestamp);
+  const seenByLeagueDate = new Map<string, Fixture[]>();
+  const merged: Fixture[] = [];
+  const primaryLeagueDates = new Set(primary.map(fixtureDateKey));
+  const fixtures = [
+    ...primary,
+    ...fallback.filter((fixture) => !primaryLeagueDates.has(fixtureDateKey(fixture))),
+  ];
+  for (const fixture of fixtures) {
+    const dateKey = fixtureDateKey(fixture);
+    const key = fixtureKey(fixture, dateKey);
+    const sameDay = seenByLeagueDate.get(dateKey) ?? [];
+    if (seenIds.has(fixture.id) || seenMatches.has(key) || sameDay.some((existing) => sameFixtureTeams(existing, fixture))) continue;
+    seenIds.add(fixture.id);
+    seenMatches.add(key);
+    sameDay.push(fixture);
+    seenByLeagueDate.set(dateKey, sameDay);
+    merged.push(fixture);
+  }
+  return merged.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 function addEspnTeamLogos(fixtures: Fixture[]): Fixture[] {
@@ -260,6 +338,8 @@ export async function getFixtureStatsFor(f: Fixture): Promise<StoredStats> {
           shotsOn: primary.shotsOn ?? fallback.shotsOn,
           corners: primary.corners ?? fallback.corners,
           cards: primary.cards ?? fallback.cards,
+          yellowCards: primary.yellowCards ?? fallback.yellowCards,
+          redCards: primary.redCards ?? fallback.redCards,
         });
         const home = merge(stats.home, csvStats.home), away = merge(stats.away, csvStats.away);
         return {
@@ -282,13 +362,34 @@ export async function getFixtureStatsFor(f: Fixture): Promise<StoredStats> {
   };
 }
 
+export async function getFixtureLineups(fixture: Fixture): Promise<FixtureLineup[]> {
+  if (!apiEnabled || fixture.id < 0) return [];
+  try {
+    return await getEspnFixtureLineups(fixture);
+  } catch (error) {
+    console.error(`No se pudieron cargar las alineaciones ESPN del partido ${fixture.id}:`, error);
+    throw error;
+  }
+}
+
 // ── Perfil de un equipo: últimos N partidos (+ estadísticas reales opcionales) ──
-export async function getTeamProfile(teamId: number, withStats = true, season?: number, beforeTimestamp = Infinity, leagueId?: number, teamName?: string): Promise<TeamProfile> {
-  if (teamId < 0) return getCsvTeamProfile(teamId, withStats, beforeTimestamp, leagueId);
+type TeamProfileOptions = { limit?: number; venue?: "home" | "away" };
+export async function getTeamProfile(
+  teamId: number,
+  withStats = true,
+  season?: number,
+  beforeTimestamp = Infinity,
+  leagueId?: number,
+  teamName?: string,
+  options?: TeamProfileOptions,
+): Promise<TeamProfile> {
+  const limit = options?.limit ?? FORM_MATCHES;
+  const profileSeason = options?.venue ? undefined : season;
+  if (teamId < 0) return getCsvTeamProfile(teamId, withStats, beforeTimestamp, leagueId, profileSeason, limit, options?.venue);
   let espnProfile: TeamProfile | null = null;
   if (apiEnabled) {
     try {
-      const profile = await getEspnTeamProfile(teamId, withStats, season, beforeTimestamp, leagueId);
+      const profile = await getEspnTeamProfile(teamId, withStats, season, beforeTimestamp, leagueId, limit, options?.venue);
       if (profile.rows.length) {
         const hasStats = profile.rows.some((row) => row.sFor !== null || row.sAgainst !== null);
         if (!withStats || hasStats) return profile;
@@ -299,7 +400,7 @@ export async function getTeamProfile(teamId: number, withStats = true, season?: 
     }
   }
   const localProfile = teamName
-    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId, season).catch((error: unknown) => {
+    ? await getCsvTeamProfile(csvTeamId(teamName), withStats, beforeTimestamp, leagueId, profileSeason, limit, options?.venue).catch((error: unknown) => {
       console.error(`No se pudo cargar el perfil CSV del equipo ${teamName}:`, error);
       return null;
     })
@@ -468,6 +569,16 @@ export type LeagueTopScorer = {
   appearances: number;
 };
 
+export async function getLeagueCardLeaders(leagueId: number, season: number): Promise<LeagueCardLeader[]> {
+  if (!apiEnabled) return [];
+  try {
+    return await getEspnLeagueCardLeaders(leagueId, season);
+  } catch (error) {
+    console.error(`No se pudieron cargar los líderes de tarjetas ESPN de la liga ${leagueId}:`, error);
+    return [];
+  }
+}
+
 export async function getLeagueTopScorers(leagueId: number, season: number): Promise<LeagueTopScorer[]> {
   if (!apiEnabled) return [];
   try {
@@ -505,7 +616,7 @@ export async function getTeamSeasonMatchSeries(name: string, leagueId: number, s
     try {
       const teams = await getLeagueTeams(leagueId, season);
       const team = teams.find((item) => item.name === name)
-        ?? teams.find((item) => canonicalTeamName(item.name) === canonicalTeamName(name));
+        ?? teams.find((item) => csvTeamId(item.name) === csvTeamId(name));
       if (team) {
         const series = await getEspnSeasonMatchSeries(team.id, leagueId, season);
         if (series.length) espnSeries = series;

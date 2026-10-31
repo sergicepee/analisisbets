@@ -74,6 +74,7 @@ async function readMatchesFrom(code: string, leagueId: number, season: number): 
     const stat = (shots: string, shotsOn: string, corners: string, yellow: number | null, red: number | null): MatchStat => ({
       shots: number(get(shots)), shotsOn: number(get(shotsOn)), corners: number(get(corners)),
       cards: yellow === null && red === null ? null : (yellow ?? 0) + (red ?? 0),
+      yellowCards: yellow, redCards: red,
     });
     return [{
       leagueId, season,
@@ -115,8 +116,13 @@ function readHistory(): Promise<HistoricalMatch[]> {
   return matchesPromise;
 }
 
-export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number, season?: number, limit = FORM_MATCHES): Promise<TeamProfile> {
-  const matches = (await readHistory()).filter((match) => match.timestamp < beforeTimestamp && (!leagueId || match.leagueId === leagueId) && (!season || match.season === season) && (match.homeId === teamId || match.awayId === teamId));
+export async function getCsvTeamProfile(teamId: number, withStats: boolean, beforeTimestamp = Infinity, leagueId?: number, season?: number, limit = FORM_MATCHES, venue?: "home" | "away"): Promise<TeamProfile> {
+  const matches = (await readHistory()).filter((match) =>
+    match.timestamp < beforeTimestamp &&
+    (!leagueId || match.leagueId === leagueId) &&
+    (!season || match.season === season) &&
+    (venue === "home" ? match.homeId === teamId : venue === "away" ? match.awayId === teamId : match.homeId === teamId || match.awayId === teamId),
+  );
   const rows: TeamRow[] = matches.slice(-limit).map((match) => {
     const isHome = match.homeId === teamId;
     const goalsFor = isHome ? match.goalsHome : match.goalsAway;

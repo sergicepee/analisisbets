@@ -57,9 +57,24 @@ const TEAM_ALIASES: Record<string, string> = {
   "granada cf": "Granada", "real sociedad ii": "Sociedad B", "sporting gijon": "Sp Gijon",
 };
 
+function teamNameKey(name: string): string {
+  return name.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/(\p{L})\./gu, "$1")
+    .replace(/['’‘`]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+const teamAliases = new Map<string, string>();
+for (const [alias, canonical] of Object.entries(TEAM_ALIASES)) {
+  teamAliases.set(teamNameKey(alias), canonical);
+  teamAliases.set(teamNameKey(canonical), canonical);
+}
+
 export function canonicalTeamName(name: string): string {
-  const clean = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-  return TEAM_ALIASES[clean] ?? name.trim();
+  return teamAliases.get(teamNameKey(name)) ?? name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 export function csvTeamId(name: string): number {

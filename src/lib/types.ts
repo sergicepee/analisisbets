@@ -5,7 +5,7 @@ export interface TeamRef { id: number; name: string; logo: string | null; logoFa
 export interface FixtureEvent {
   minute: number; extra: number | null; teamId: number;
   player: string; type: string; detail: string;
-  playerId?: number; playerPhoto?: string | null; ownGoal?: boolean;
+  playerId?: number; playerPhoto?: string | null; ownGoal?: boolean; yellowCard?: boolean; redCard?: boolean;
 }
 export interface Fixture {
   id: number; timestamp: number;
@@ -25,6 +25,29 @@ export interface Fixture {
 /** Estadísticas reales de un equipo en un partido. null = no disponible. */
 export interface MatchStat {
   shots: number | null; shotsOn: number | null; corners: number | null; cards: number | null;
+  yellowCards?: number | null; redCards?: number | null;
+}
+export interface FixtureLineupPlayer {
+  id: number | null;
+  name: string;
+  photo: string | null;
+  jersey: string | null;
+  position: string;
+  matchEvents?: FixtureLineupEvent[];
+}
+export interface FixtureLineupEvent {
+  type: "goal" | "assist" | "substitutionIn" | "substitutionOut" | "yellowCard" | "redCard";
+  minute: number;
+  extra: number | null;
+  ownGoal?: boolean;
+}
+export interface FixtureLineup {
+  teamId: number;
+  teamName: string;
+  teamLogo: string | null;
+  formation: string | null;
+  starters: FixtureLineupPlayer[];
+  substitutes: FixtureLineupPlayer[];
 }
 export interface StoredStats {
   fixtureId: number; leagueId: number; season: number;
@@ -41,6 +64,13 @@ export interface TeamRow {
   sFor: MatchStat | null; sAgainst: MatchStat | null;
 }
 export interface TeamProfile { teamId: number; rows: TeamRow[] }
+export interface LeagueCardLeader {
+  id: number;
+  name: string;
+  teamId: number;
+  yellowCards: number;
+  redCards: number;
+}
 
 export interface LeagueInfo {
   id: number; name: string; type: string; country: string; flag: string | null; logo: string | null;

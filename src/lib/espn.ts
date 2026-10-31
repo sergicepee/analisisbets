@@ -2,7 +2,7 @@ import "server-only";
 import { cached } from "./cache";
 import { FORM_MATCHES } from "./config";
 import { getTz } from "./prefs";
-import type { Fixture, LeagueAvg, LeagueInfo, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
+import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, LeagueAvg, LeagueInfo, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
 
 type EspnLeague = {
   id: number;
@@ -47,6 +47,14 @@ type EspnDetail = {
   ownGoal?: boolean;
   athletesInvolved?: Array<{ id?: string | number; displayName?: string; headshot?: string }>;
 };
+type EspnKeyEvent = {
+  type?: { text?: string };
+  clock?: { value?: number; displayValue?: string };
+  team?: { id?: string | number };
+  scoringPlay?: boolean;
+  ownGoal?: boolean;
+  participants?: Array<{ athlete?: { id?: string | number; displayName?: string } }>;
+};
 type EspnEvent = {
   id?: string | number;
   date?: string;
@@ -65,9 +73,28 @@ type EspnScoreboard = {
   leagues?: Array<{ name?: string; logos?: Array<{ href?: string; rel?: string[] }> }>;
 };
 type EspnTeamSchedule = { events?: EspnEvent[] };
+type EspnRosterEntry = {
+  starter?: boolean;
+  jersey?: string | number | null;
+  athlete?: {
+    id?: string | number;
+    displayName?: string;
+    fullName?: string;
+    jersey?: string | number | null;
+    headshot?: string | { href?: string };
+  };
+  position?: { name?: string; displayName?: string; abbreviation?: string };
+};
 type EspnTeamList = { sports?: Array<{ leagues?: Array<{ teams?: Array<{ team?: EspnTeam }> }> }> };
 type EspnSummary = {
   boxscore?: { teams?: Array<{ team?: EspnTeam; statistics?: EspnStat[] }> };
+  keyEvents?: EspnKeyEvent[];
+  rosters?: Array<{
+    homeAway?: string;
+    team?: EspnTeam;
+    formation?: string;
+    roster?: EspnRosterEntry[];
+  }>;
 };
 
 const SITE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
@@ -134,9 +161,9 @@ function statValue(competitor: EspnCompetitor, name: string): number | null {
   return numeric(competitor.statistics?.find((stat) => stat.name === name)?.displayValue);
 }
 
-function parseMinute(detail: EspnDetail): { minute: number; extra: number | null } {
+function parseMinute(detail: { clock?: { value?: number; displayValue?: string } }): { minute: number; extra: number | null } {
   const display = detail.clock?.displayValue ?? "";
-  const match = display.match(/(\d+)(?:\+(\d+))?/);
+  const match = display.match(/(\d+)(?:['′]?\s*\+\s*(\d+))?/);
   if (match) return { minute: Number(match[1]), extra: match[2] ? Number(match[2]) : null };
   const seconds = numeric(detail.clock?.value);
   return { minute: seconds === null ? 0 : Math.floor(seconds / 60), extra: null };
@@ -144,7 +171,8 @@ function parseMinute(detail: EspnDetail): { minute: number; extra: number | null
 
 function normalizeDetail(detail: EspnDetail): Fixture["events"][number] | null {
   const label = detail.type?.text ?? "";
-  const type = detail.scoringPlay || label.toLowerCase().includes("goal") ? "Goal" : label.toLowerCase().includes("card") ? "Card" : "";
+  const isCard = detail.redCard || detail.yellowCard || label.toLowerCase().includes("card");
+  const type = detail.scoringPlay || label.toLowerCase().includes("goal") ? "Goal" : isCard ? "Card" : "";
   const teamId = finiteId(detail.team?.id);
   if (!type || !teamId) return null;
   const athlete = detail.athletesInvolved?.[0];
@@ -157,6 +185,8 @@ function normalizeDetail(detail: EspnDetail): Fixture["events"][number] | null {
     type,
     detail: detail.ownGoal ? "Own Goal" : label || (type === "Goal" ? "Goal" : "Card"),
     ownGoal: detail.ownGoal ?? false,
+    yellowCard: Boolean(detail.yellowCard) || label.toLowerCase().includes("yellow"),
+    redCard: Boolean(detail.redCard) || label.toLowerCase().includes("red"),
   };
 }
 
@@ -172,6 +202,8 @@ function matchStat(competitor: EspnCompetitor, events: Fixture["events"], teamId
     shotsOn: statValue(competitor, "shotsOnTarget"),
     corners: statValue(competitor, "wonCorners"),
     cards: yellows !== null || reds !== null ? (yellows ?? 0) + (reds ?? 0) : hasCardEvents ? eventCards : null,
+    yellowCards: yellows,
+    redCards: reds,
   };
 }
 
@@ -296,7 +328,7 @@ function fixturesFromEvents(events: EspnEvent[], league: EspnLeague, leagueLogo:
 
 async function getEspnTeamSchedule(league: EspnLeague, teamId: number, season: number): Promise<Fixture[]> {
   const ttl = season === new Date().getFullYear() ? 45 : 6 * HOUR;
-  return cached(`espn:team-schedule:v1:${league.slug}:${teamId}:${season}`, ttl, async () => {
+  return cached(`espn:team-schedule:v2:${league.slug}:${teamId}:${season}`, ttl, async () => {
     const data = await requestJson<EspnTeamSchedule>(
       `${SITE}/${league.slug}/teams/${teamId}/schedule?season=${season}`,
     );
@@ -406,46 +438,158 @@ function statsFromFixture(fixture: Fixture): StoredStats | null {
 
 export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats | null> {
   const direct = statsFromFixture(fixture);
-  if (direct?.hasData || !fixture.statusShort.match(/^(FT|AET|PEN)$/)) return direct;
+  const hasCardBreakdown = (stats: MatchStat | undefined) =>
+    stats?.yellowCards != null && stats.redCards != null;
+  if (direct?.hasData && hasCardBreakdown(direct.home) && hasCardBreakdown(direct.away)) return direct;
+  if (!fixture.statusShort.match(/^(FT|AET|PEN)$/)) return direct;
   const league = leagueFor(fixture.leagueId);
   if (!league) return direct;
-  return cached(`espn:fixture-stats:${fixture.id}`, 30 * DAY, async () => {
-    const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
-    const teams = data.boxscore?.teams ?? [];
-    const getStats = (teamId: number): MatchStat => {
-      const stats = teams.find((item) => finiteId(item.team?.id) === teamId)?.statistics ?? [];
-      const get = (name: string) => numeric(stats.find((stat) => stat.name === name)?.displayValue);
-      const yellow = get("yellowCards"), red = get("redCards");
-      return {
-        shots: get("totalShots"), shotsOn: get("shotsOnTarget"), corners: get("wonCorners"),
-        cards: yellow === null && red === null ? null : (yellow ?? 0) + (red ?? 0),
+  try {
+    const summary = await cached(`espn:fixture-stats:v2:${fixture.id}`, 30 * DAY, async () => {
+      const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
+      const teams = data.boxscore?.teams ?? [];
+      const getStats = (teamId: number): MatchStat => {
+        const stats = teams.find((item) => finiteId(item.team?.id) === teamId)?.statistics ?? [];
+        const get = (name: string) => numeric(stats.find((stat) => stat.name === name)?.displayValue);
+        const yellow = get("yellowCards"), red = get("redCards");
+        return {
+          shots: get("totalShots"), shotsOn: get("shotsOnTarget"), corners: get("wonCorners"),
+          cards: yellow === null && red === null ? null : (yellow ?? 0) + (red ?? 0),
+          yellowCards: yellow, redCards: red,
+        };
       };
-    };
-    const home = getStats(fixture.home.id), away = getStats(fixture.away.id);
+      const home = getStats(fixture.home.id), away = getStats(fixture.away.id);
+      return {
+        fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,
+        homeId: fixture.home.id, awayId: fixture.away.id, home, away,
+        goalsHome: fixture.goalsHome ?? 0, goalsAway: fixture.goalsAway ?? 0,
+        hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
+      };
+    });
+    const merge = (primary: MatchStat, fallback: MatchStat): MatchStat => ({
+      shots: primary.shots ?? fallback.shots,
+      shotsOn: primary.shotsOn ?? fallback.shotsOn,
+      corners: primary.corners ?? fallback.corners,
+      cards: primary.cards ?? fallback.cards,
+      yellowCards: primary.yellowCards ?? fallback.yellowCards,
+      redCards: primary.redCards ?? fallback.redCards,
+    });
+    const home = direct ? merge(direct.home, summary.home) : summary.home;
+    const away = direct ? merge(direct.away, summary.away) : summary.away;
     return {
-      fixtureId: fixture.id, leagueId: fixture.leagueId, season: fixture.season,
-      homeId: fixture.home.id, awayId: fixture.away.id, home, away,
-      goalsHome: fixture.goalsHome ?? 0, goalsAway: fixture.goalsAway ?? 0,
+      ...(direct ?? summary), home, away,
       hasData: [home, away].some((team) => Object.values(team).some((value) => value !== null)),
     };
+  } catch (error) {
+    if (!direct?.hasData) throw error;
+    console.error(`No se pudieron completar estadísticas ESPN del partido ${fixture.id}:`, error);
+    return direct;
+  }
+}
+
+export async function getEspnFixtureLineups(fixture: Fixture): Promise<FixtureLineup[]> {
+  if (fixture.id < 0) return [];
+  const league = leagueFor(fixture.leagueId);
+  if (!league) return [];
+  const now = Date.now() / 1000;
+  const finished = fixture.statusShort.match(/^(FT|AET|PEN)$/) !== null;
+  const untilKickoff = fixture.timestamp - now;
+  return cached(`espn:fixture-lineups:v9:${fixture.id}`, (lineups) => {
+    if (finished) return 30 * DAY;
+    if (lineups.some((lineup) => lineup.starters.length > 0)) return 5 * 60;
+    return untilKickoff <= HOUR ? 45 : untilKickoff <= DAY ? 5 * 60 : 30 * 60;
+  }, async () => {
+    const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
+    const playerEvents = new Map<number, FixtureLineupEvent[]>();
+    const ownGoalKeys = new Set(fixture.events
+      .filter((event) => event.ownGoal && event.playerId)
+      .map((event) => `${event.playerId}:${event.minute}:${event.extra ?? ""}`));
+    const addPlayerEvent = (athleteId: string | number | undefined, type: FixtureLineupEvent["type"], minute: number, extra: number | null, ownGoal = false) => {
+      const id = finiteId(athleteId);
+      if (!id) return;
+      const events = playerEvents.get(id) ?? [];
+      events.push({ type, minute, extra, ...(ownGoal ? { ownGoal: true } : {}) });
+      playerEvents.set(id, events);
+    };
+    for (const event of fixture.events) {
+      if (!event.playerId) continue;
+      const cardDetail = event.detail.toLowerCase();
+      if (event.yellowCard || cardDetail.includes("yellow")) addPlayerEvent(event.playerId, "yellowCard", event.minute, event.extra);
+      if (event.redCard || cardDetail.includes("red")) addPlayerEvent(event.playerId, "redCard", event.minute, event.extra);
+    }
+    for (const event of data.keyEvents ?? []) {
+      const label = event.type?.text?.toLowerCase() ?? "";
+      const participants = event.participants ?? [];
+      const { minute, extra } = parseMinute(event);
+      if (label === "substitution") {
+        addPlayerEvent(participants[0]?.athlete?.id, "substitutionIn", minute, extra);
+        addPlayerEvent(participants[1]?.athlete?.id, "substitutionOut", minute, extra);
+      } else if (event.scoringPlay || label.includes("goal")) {
+        const scorerId = participants[0]?.athlete?.id;
+        const ownGoal = event.ownGoal === true || label.includes("own goal")
+          || ownGoalKeys.has(`${finiteId(scorerId)}:${minute}:${extra ?? ""}`);
+        addPlayerEvent(scorerId, "goal", minute, extra, ownGoal);
+        if (!ownGoal) addPlayerEvent(participants[1]?.athlete?.id, "assist", minute, extra);
+      }
+    }
+    return (data.rosters ?? []).flatMap((roster) => {
+      const rosterTeamId = finiteId(roster.team?.id);
+      const matchTeam = rosterTeamId === fixture.home.id || roster.homeAway === "home"
+        ? fixture.home
+        : rosterTeamId === fixture.away.id || roster.homeAway === "away"
+          ? fixture.away
+          : null;
+      if (!matchTeam) return [];
+      const players = (roster.roster ?? []).flatMap((entry): Array<{ starter: boolean; player: FixtureLineupPlayer }> => {
+        const name = entry.athlete?.displayName ?? entry.athlete?.fullName;
+        if (!name) return [];
+        const headshot = entry.athlete?.headshot;
+        const playerId = finiteId(entry.athlete?.id);
+        const jersey = entry.jersey ?? entry.athlete?.jersey;
+        return [{
+          starter: entry.starter === true,
+          player: {
+            id: playerId,
+            name,
+            photo: typeof headshot === "string" ? headshot : headshot?.href ?? null,
+            jersey: jersey == null ? null : String(jersey),
+            position: entry.position?.displayName ?? entry.position?.name ?? entry.position?.abbreviation ?? "",
+            matchEvents: playerId ? playerEvents.get(playerId) ?? [] : [],
+          },
+        }];
+      });
+      return [{
+        teamId: matchTeam.id,
+        teamName: matchTeam.name,
+        teamLogo: teamLogo(roster.team) ?? matchTeam.logo,
+        formation: roster.formation ?? null,
+        starters: players.filter((item) => item.starter).map((item) => item.player),
+        substitutes: players.filter((item) => !item.starter).map((item) => item.player),
+      }];
+    });
   });
 }
 
 function emptyStat(): MatchStat {
-  return { shots: null, shotsOn: null, corners: null, cards: null };
+  return {
+    shots: null, shotsOn: null, corners: null, cards: null,
+    yellowCards: null, redCards: null,
+  };
 }
 
 function toTeamRow(fixture: Fixture, teamId: number, stats: StoredStats | null): TeamRow {
   const isHome = fixture.home.id === teamId;
   const goalsFor = (isHome ? fixture.goalsHome : fixture.goalsAway) ?? 0;
   const goalsAgainst = (isHome ? fixture.goalsAway : fixture.goalsHome) ?? 0;
+  const homeStats = stats?.hasData ? stats.home : null;
+  const awayStats = stats?.hasData ? stats.away : null;
   return {
     fixtureId: fixture.id, ts: fixture.timestamp, isHome, goalsFor, goalsAgainst,
     htFor: isHome ? fixture.htHome : fixture.htAway,
     htAgainst: isHome ? fixture.htAway : fixture.htHome,
     result: goalsFor > goalsAgainst ? "W" : goalsFor === goalsAgainst ? "D" : "L",
-    sFor: stats?.hasData ? (isHome ? stats.home : stats.away) : null,
-    sAgainst: stats?.hasData ? (isHome ? stats.away : stats.home) : null,
+    sFor: homeStats ? (isHome ? homeStats : awayStats) : null,
+    sAgainst: homeStats ? (isHome ? awayStats : homeStats) : null,
   };
 }
 
@@ -456,11 +600,12 @@ export async function getEspnTeamProfile(
   beforeTimestamp: number,
   leagueId: number | undefined,
   limit = FORM_MATCHES,
+  venue?: "home" | "away",
 ): Promise<TeamProfile> {
   const league = leagueId ? leagueFor(leagueId) : null;
   if (!league) return { teamId, rows: [] };
   const selectedSeason = season ?? (new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1);
-  return cached(`espn:profile:v2:${leagueId}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}`, 30 * 60, async () => {
+  return cached(`espn:profile:v5:${leagueId}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}`, 30 * 60, async () => {
     const seasons = limit > FORM_MATCHES ? [selectedSeason] : [selectedSeason, selectedSeason - 1];
     const scheduleResults = await Promise.allSettled(seasons.map((item) =>
       getEspnTeamSchedule(league, teamId, item),
@@ -478,7 +623,7 @@ export async function getEspnTeamProfile(
         fixture.timestamp < beforeTimestamp &&
         ["FT", "AET", "PEN"].includes(fixture.statusShort) &&
         fixture.goalsHome !== null && fixture.goalsAway !== null &&
-        (fixture.home.id === teamId || fixture.away.id === teamId),
+        (venue === "home" ? fixture.home.id === teamId : venue === "away" ? fixture.away.id === teamId : fixture.home.id === teamId || fixture.away.id === teamId),
       ).sort((a, b) => a.timestamp - b.timestamp).slice(-limit);
     const rows = await Promise.all(fixtures.map(async (fixture) => {
       const stats = withStats ? await getEspnFixtureStats(fixture).catch((error: unknown) => {
@@ -569,6 +714,39 @@ export async function getEspnLeagueTopScorers(leagueId: number, season: number):
     .map(({ games, ...player }) => ({ ...player, appearances: games.size }))
     .sort((a, b) => b.goals - a.goals || b.assists - a.assists || a.name.localeCompare(b.name))
     .slice(0, 50);
+}
+
+export type EspnCardLeader = {
+  id: number;
+  name: string;
+  teamId: number;
+  yellowCards: number;
+  redCards: number;
+};
+
+export async function getEspnLeagueCardLeaders(leagueId: number, season: number): Promise<EspnCardLeader[]> {
+  const fixtures = (await getEspnLeagueFixtures(leagueId, season)).filter(fixtureIsFinished);
+  const players = new Map<string, EspnCardLeader>();
+  for (const fixture of fixtures) {
+    for (const event of fixture.events) {
+      if (event.type !== "Card" || !event.playerId || !event.player) continue;
+      if (!["Yellow Card", "Red Card", "Second Yellow Card"].includes(event.detail)) continue;
+      const key = `${event.teamId}:${event.playerId}`;
+      const player = players.get(key) ?? {
+        id: event.playerId,
+        name: event.player,
+        teamId: event.teamId,
+        yellowCards: 0,
+        redCards: 0,
+      };
+      if (event.detail === "Yellow Card") player.yellowCards++;
+      else player.redCards++;
+      players.set(key, player);
+    }
+  }
+  return [...players.values()]
+    .sort((a, b) => b.yellowCards + b.redCards - a.yellowCards - a.redCards || a.name.localeCompare(b.name))
+    .slice(0, 100);
 }
 
 export async function searchEspnTeams(query: string, season: number): Promise<Array<{ id: number; name: string; logo: string | null; country: string; leagueId: number }>> {
