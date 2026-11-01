@@ -6,7 +6,7 @@ import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconCorner } from "@/components/icons";
 import { PeriodTabs } from "@/components/PeriodTabs";
-import { expectedFor, MIN_SAMPLES, profileForPeriod } from "@/lib/metrics";
+import { expectedFor, MIN_SAMPLES, profileForPeriod, recentValues } from "@/lib/metrics";
 import type { Fixture, MatchPeriod, TeamProfile, TeamRow, TeamRef } from "@/lib/types";
 
 type CornerRow = {
@@ -18,7 +18,9 @@ type CornerRow = {
   kind: "percent" | "number";
 };
 const MATCH_LINES = Array.from({ length: 8 }, (_, index) => index + 6);
+const HALF_MATCH_LINES = [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5];
 const TEAM_LINES = [2.5, 3.5, 4.5];
+const HALF_TEAM_LINES = [0.5, 1.5, 2.5, 3.5];
 const formatNumber = (value: number | null, locale: string) =>
   value === null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: 1 });
 const formatPercent = (value: number | null) => value === null ? "—" : `${Math.round(value)}%`;
@@ -29,7 +31,7 @@ function cornerValue(row: TeamRow, side: "for" | "against"): number | null {
 }
 
 function average(rows: TeamRow[], selector: (row: TeamRow) => number | null, sampleSize: number): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -40,7 +42,7 @@ function rate(
   predicate: (value: number) => boolean,
   sampleSize: number,
 ): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.filter(predicate).length * 100 / values.length;
 }
@@ -51,8 +53,9 @@ function matchCorners(row: TeamRow): number | null {
   return own === null || against === null ? null : own + against;
 }
 
-function matchRows(home: TeamProfile, away: TeamProfile, sampleSize: number): CornerRow[] {
-  return MATCH_LINES.map((line) => {
+function matchRows(home: TeamProfile, away: TeamProfile, sampleSize: number, period: MatchPeriod): CornerRow[] {
+  const lines = period === "full" ? MATCH_LINES : HALF_MATCH_LINES;
+  return lines.map((line) => {
     const homeRate = rate(home.rows, matchCorners, (value) => value > line, sampleSize);
     const awayRate = rate(away.rows, matchCorners, (value) => value > line, sampleSize);
     return {
@@ -66,7 +69,7 @@ function matchRows(home: TeamProfile, away: TeamProfile, sampleSize: number): Co
   });
 }
 
-function teamRows(home: TeamProfile, away: TeamProfile, sampleSize: number, locale: string): CornerRow[] {
+function teamRows(home: TeamProfile, away: TeamProfile, sampleSize: number, locale: string, period: MatchPeriod): CornerRow[] {
   const rows: CornerRow[] = [
     {
       key: "corners-for-average",
@@ -86,7 +89,7 @@ function teamRows(home: TeamProfile, away: TeamProfile, sampleSize: number, loca
     },
   ];
   for (const [side, label] of [["for", "Córners ganados"], ["against", "Córners en contra"]] as const) {
-    for (const line of TEAM_LINES) {
+    for (const line of (period === "full" ? TEAM_LINES : HALF_TEAM_LINES)) {
       rows.push({
         key: `corners-${side}-over-${line}`,
         label: <><I18nText text="Más de" /> {formatNumber(line, locale)} · <I18nText text={label} /></>,
@@ -218,8 +221,8 @@ export function CornersAnalysis({
   const [period, setPeriod] = useState<MatchPeriod>("full");
   const activeHomeProfile = profileForPeriod(homeProfile, period);
   const activeAwayProfile = profileForPeriod(awayProfile, period);
-  const firstTableRows = matchRows(activeHomeProfile, activeAwayProfile, sampleSize);
-  const rows = view === "match" ? firstTableRows : teamRows(activeHomeProfile, activeAwayProfile, sampleSize, locale);
+  const firstTableRows = matchRows(activeHomeProfile, activeAwayProfile, sampleSize, period);
+  const rows = view === "match" ? firstTableRows : teamRows(activeHomeProfile, activeAwayProfile, sampleSize, locale, period);
   return (
     <div className="min-w-0 space-y-3">
       <PeriodTabs value={period} onChange={setPeriod} label="Periodo de córners" />

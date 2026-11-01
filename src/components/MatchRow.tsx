@@ -1,13 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import type { Fixture } from "@/lib/types";
-import { statusGroup, timeStr } from "@/lib/format";
+import { liveMinuteLabel, statusGroup } from "@/lib/fixtureStatus";
 import { Shield } from "./Shield";
 import { IconStats } from "./icons";
 import { FavoriteMatchButton } from "./FollowMatchButton";
 import { I18nText } from "./I18nProvider";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 
-export function MatchRow({ f, date, displayDate, selected = false, isAuthenticated, initialFavorite, showFavorite = true, showLeagueLogo = false, showDate = false }: { f: Fixture; date: string; displayDate?: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean; showFavorite?: boolean; showLeagueLogo?: boolean; showDate?: boolean }) {
+export function MatchRow({ f, date, matchTime, displayDate, selected = false, isAuthenticated, initialFavorite, showFavorite = true, showLeagueLogo = false, showDate = false }: { f: Fixture; date: string; matchTime: string; displayDate?: string; selected?: boolean; isAuthenticated: boolean; initialFavorite: boolean; showFavorite?: boolean; showLeagueLogo?: boolean; showDate?: boolean }) {
   const g = statusGroup(f);
   const suspended = f.statusShort === "SUSP";
   const score = f.goalsHome !== null && f.goalsAway !== null ? `${f.goalsHome} - ${f.goalsAway}` : null;
@@ -34,11 +36,11 @@ export function MatchRow({ f, date, displayDate, selected = false, isAuthenticat
             <div className="text-xs font-medium text-muted"><I18nText text="Final" /></div>
           ) : g === "live" ? (
             <span className="inline-flex items-center whitespace-nowrap text-xs font-bold text-loss sm:text-sm">
-              {f.statusShort === "HT" ? <span className="live-match-minute">DES</span> : <>{f.elapsed ?? "—"}′<span aria-hidden="true" className="live-match-indicator ml-1 inline-block h-1.5 w-1.5 rounded-full bg-loss align-middle" /></>}
+              {f.statusShort === "HT" ? <span className="live-match-minute">DES</span> : <>{liveMinuteLabel(f.elapsed, f.elapsedDisplay)}′<span aria-hidden="true" className="live-match-indicator ml-1 inline-block h-1.5 w-1.5 rounded-full bg-loss align-middle" /></>}
             </span>
           ) : (
             <>
-              <div className="text-xs font-bold tabular-nums sm:text-sm">{timeStr(f.timestamp)}</div>
+              <div className="text-xs font-bold tabular-nums sm:text-sm">{matchTime}</div>
               {g === "pending" && <div className="mt-0.5 text-[9px] leading-tight text-muted"><I18nText text="Pendiente de actualizar" /></div>}
             </>
           )}

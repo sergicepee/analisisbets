@@ -2,12 +2,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star } from "lucide-react";
-import { IconMatches, IconStats } from "./icons";
+import { IconMatches } from "./icons";
 import { useT } from "./I18nProvider";
 
 const ITEMS = [
   { href: "/", label: "Partidos", Icon: IconMatches, match: (p: string) => p === "/" || p.startsWith("/match") },
-  { href: "/stats", label: "Estadísticas", Icon: IconStats, match: (p: string) => p.startsWith("/stats") },
   { href: "/favoritos", label: "Favoritos", Icon: Star, match: (p: string) => p.startsWith("/favoritos") },
 ];
 

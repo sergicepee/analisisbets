@@ -7,5 +7,6 @@ const ESPN_LEAGUE_LOGOS: Record<number, number> = {
 export function getLeagueLogoUrl(leagueId: number, logo?: string | null): string {
   if (leagueId === 61) return LIGUE_1_LOGO;
   const espnId = ESPN_LEAGUE_LOGOS[leagueId];
-  return logo ?? (espnId ? `https://a.espncdn.com/i/leaguelogos/soccer/500/${espnId}.png` : `https://media.api-sports.io/football/leagues/${leagueId}.png`);
+  if (espnId) return `https://a.espncdn.com/i/leaguelogos/soccer/500/${espnId}.png`;
+  return logo ?? `https://media.api-sports.io/football/leagues/${leagueId}.png`;
 }

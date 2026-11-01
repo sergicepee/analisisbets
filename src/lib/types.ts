@@ -40,6 +40,7 @@ export interface FixtureLineupPlayer {
   photo: string | null;
   jersey: string | null;
   position: string;
+  positionCode?: string | null;
   matchEvents?: FixtureLineupEvent[];
 }
 export interface FixtureLineupEvent {
@@ -47,6 +48,7 @@ export interface FixtureLineupEvent {
   minute: number;
   extra: number | null;
   ownGoal?: boolean;
+  relatedPlayerId?: number;
 }
 export interface FixtureLineup {
   teamId: number;

@@ -9,9 +9,19 @@ export type LeagueStandingRow = LeagueStandingTeam & {
   goalsFor: number;
   goalsAgainst: number;
   points: number;
+  liveMatch?: {
+    opponentName: string;
+    score: string;
+    resultTone: "win" | "loss" | "draw";
+    statusShort: string;
+    elapsed: number | null;
+  };
 };
 export type LeagueStandingsZone = { teamId: number; description: string };
 export type StandingsZoneStyle = { label: string; color: string };
+
+const FINISHED_STATUSES = new Set(["FT", "AET", "PEN"]);
+const LIVE_STATUSES = new Set(["1H", "HT", "2H", "LIVE", "ET", "BT", "P", "INT"]);
 
 export function makeLeagueStandings(fixtures: Fixture[], teams: LeagueStandingTeam[]): LeagueStandingRow[] {
   const rows = new Map<number, LeagueStandingRow>();
@@ -28,9 +38,17 @@ export function makeLeagueStandings(fixtures: Fixture[], teams: LeagueStandingTe
     row.logoFallback = team.logoFallback;
   });
   for (const fixture of fixtures) {
-    if (fixture.goalsHome === null || fixture.goalsAway === null || !["FT", "AET", "PEN"].includes(fixture.statusShort)) continue;
+    const isLive = LIVE_STATUSES.has(fixture.statusShort);
+    if (fixture.goalsHome === null || fixture.goalsAway === null || (!isLive && !FINISHED_STATUSES.has(fixture.statusShort))) continue;
     const home = ensure(fixture.home.id, fixture.home.name, fixture.home.logo);
     const away = ensure(fixture.away.id, fixture.away.name, fixture.away.logo);
+    if (isLive) {
+      const score = `${fixture.goalsHome}-${fixture.goalsAway}`;
+      const homeResultTone = fixture.goalsHome > fixture.goalsAway ? "win" : fixture.goalsHome < fixture.goalsAway ? "loss" : "draw";
+      const awayResultTone = fixture.goalsAway > fixture.goalsHome ? "win" : fixture.goalsAway < fixture.goalsHome ? "loss" : "draw";
+      home.liveMatch = { opponentName: away.name, score, resultTone: homeResultTone, statusShort: fixture.statusShort, elapsed: fixture.elapsed };
+      away.liveMatch = { opponentName: home.name, score, resultTone: awayResultTone, statusShort: fixture.statusShort, elapsed: fixture.elapsed };
+    }
     home.played++;
     away.played++;
     home.goalsFor += fixture.goalsHome;
@@ -58,6 +76,30 @@ export function makeLeagueStandings(fixtures: Fixture[], teams: LeagueStandingTe
     b.goalsFor - a.goalsFor ||
     a.name.localeCompare(b.name),
   );
+}
+
+export function makeStandingsMovements(
+  fixtures: Fixture[],
+  teams: LeagueStandingTeam[],
+  standings: LeagueStandingRow[],
+): Map<number, number> {
+  const liveRound = fixtures
+    .filter((fixture) => LIVE_STATUSES.has(fixture.statusShort) && fixture.round.trim())
+    .sort((a, b) => a.timestamp - b.timestamp)[0]?.round;
+  const lastFinishedRound = fixtures
+    .filter((fixture) => FINISHED_STATUSES.has(fixture.statusShort) && fixture.round.trim())
+    .sort((a, b) => b.timestamp - a.timestamp)[0]?.round;
+  const round = liveRound ?? lastFinishedRound;
+  if (!round || !fixtures.some((fixture) => fixture.round !== round && FINISHED_STATUSES.has(fixture.statusShort))) {
+    return new Map();
+  }
+
+  const previousStandings = makeLeagueStandings(fixtures.filter((fixture) => fixture.round !== round), teams);
+  const previousPositions = new Map(previousStandings.map((row, index) => [row.id, index + 1]));
+  return new Map(standings.map((row, index) => [
+    row.id,
+    (previousPositions.get(row.id) ?? index + 1) - (index + 1),
+  ]));
 }
 
 export function getStandingsZoneStyle(description: string): StandingsZoneStyle {

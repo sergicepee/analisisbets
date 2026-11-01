@@ -1,5 +1,5 @@
 import { getLang, getLocale, getTz } from "./prefs";
-import type { Fixture, StatusGroup } from "./types";
+export { statusGroup } from "./fixtureStatus";
 
 export const isDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
 export const todayStr = () => new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(new Date());
@@ -16,19 +16,6 @@ export const dayMonthTime = (ts: number) =>
 export const fullDateTime = (ts: number) =>
   new Intl.DateTimeFormat(getLocale(), { timeZone: getTz(), day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })
     .format(ts * 1000).replace(",", " ·");
-
-const LIVE = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"];
-const FIN = ["FT", "AET", "PEN"];
-export function statusGroup(f: Fixture): StatusGroup {
-  if (LIVE.includes(f.statusShort)) return "live";
-  if (FIN.includes(f.statusShort)) return "finished";
-  if (["NS", "TBD"].includes(f.statusShort)) {
-    const now = Date.now() / 1000;
-    if (now < f.timestamp) return "upcoming";
-    return "pending";
-  }
-  return "other";
-}
 
 /** Formatea un número con coma decimal; null => "—". */
 export const num = (v: number | null | undefined, d = 1) =>

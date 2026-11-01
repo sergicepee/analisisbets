@@ -9,6 +9,7 @@ export type TeamGamePoint = {
   opponent: string;
   opponentLogo: string | null;
   opponentLogoFallback?: string | null;
+  leagueName?: string;
   isHome: boolean;
   own: Partial<Record<Metric, number | null>>;
   against: Partial<Record<Metric, number | null>>;
@@ -139,7 +140,7 @@ export function TeamStatsChart({ games }: { games: TeamGamePoint[] }) {
             const color = passes ? "bg-statGreen" : nearLine ? "bg-statOrange" : "bg-statRed";
             return <div key={`${game.timestamp}-${index}`} className="relative h-full min-w-0">
               <span className="absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold" style={{ bottom: `${barHeight + 4}px` }}>{game.value}</span>
-              <div title={`${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`absolute bottom-0 left-1/2 w-[88%] max-w-7 -translate-x-1/2 rounded-md transition-colors duration-300 ease-in-out ${color}`} style={{ height: `${barHeight}px` }} />
+              <div title={`${game.leagueName ? `${game.leagueName} · ` : ""}${game.opponent} (${game.isHome ? "Local" : "Visitante"}): ${game.value}`} className={`absolute bottom-0 left-1/2 w-[88%] max-w-7 -translate-x-1/2 rounded-md transition-colors duration-300 ease-in-out ${color}`} style={{ height: `${barHeight}px` }} />
             </div>;
           })}
           <div

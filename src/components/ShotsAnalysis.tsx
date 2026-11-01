@@ -6,7 +6,7 @@ import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconTarget } from "@/components/icons";
 import { PeriodTabs } from "@/components/PeriodTabs";
-import { expectedFor, MIN_SAMPLES, profileForPeriod } from "@/lib/metrics";
+import { expectedFor, MIN_SAMPLES, profileForPeriod, recentValues } from "@/lib/metrics";
 import type { Fixture, LeagueAvg, MatchPeriod, TeamProfile, TeamRef, TeamRow } from "@/lib/types";
 
 type ShotMetric = "shots" | "shotsOn";
@@ -25,6 +25,16 @@ const LINES: Record<Scope, Record<ShotMetric, number[]>> = {
   team: {
     shots: [8.5, 10.5, 12.5, 14.5, 16.5, 18.5],
     shotsOn: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5],
+  },
+};
+const HALF_LINES: Record<Scope, Record<ShotMetric, number[]>> = {
+  match: {
+    shots: [8.5, 10.5, 12.5, 14.5, 16.5, 18.5],
+    shotsOn: [1.5, 2.5, 3.5, 4.5, 5.5, 6.5],
+  },
+  team: {
+    shots: [3.5, 5.5, 7.5, 9.5, 11.5],
+    shotsOn: [0.5, 1.5, 2.5, 3.5],
   },
 };
 
@@ -49,13 +59,13 @@ function valueFor(row: TeamRow, metric: ShotMetric, scope: Scope): number | null
 }
 
 function average(rows: TeamRow[], selector: (row: TeamRow) => number | null, sampleSize: number): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function rate(rows: TeamRow[], selector: (row: TeamRow) => number | null, line: number, sampleSize: number): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.filter((value) => value > line).length * 100 / values.length;
 }
@@ -179,6 +189,7 @@ function metricRows(
   away: TeamProfile,
   sampleSize: number,
   locale: string,
+  period: MatchPeriod,
 ): ShotRow[] {
   const selector = (row: TeamRow) => valueFor(row, metric, scope);
   const homeAverage = average(home.rows, selector, sampleSize);
@@ -191,7 +202,8 @@ function metricRows(
     mean: homeAverage === null || awayAverage === null ? null : (homeAverage + awayAverage) / 2,
     kind: "number",
   }];
-  for (const line of LINES[scope][metric]) {
+  const lines = (period === "full" ? LINES : HALF_LINES)[scope][metric];
+  for (const line of lines) {
     const homeRate = rate(home.rows, selector, line, sampleSize);
     const awayRate = rate(away.rows, selector, line, sampleSize);
     rows.push({
@@ -256,7 +268,7 @@ export function ShotsAnalysis({
             <div key={metric.key} className="space-y-2">
               <h3 className="text-xs font-bold sm:text-sm"><I18nText text={scope === "match" ? metric.matchTitle : metric.teamTitle} /></h3>
               <ShotTable
-                rows={metricRows(metric.key, scope, activeHomeProfile, activeAwayProfile, sampleSize, locale)}
+                rows={metricRows(metric.key, scope, activeHomeProfile, activeAwayProfile, sampleSize, locale, period)}
                 home={fixture.home}
                 away={fixture.away}
                 locale={locale}

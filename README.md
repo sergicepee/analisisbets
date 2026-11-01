@@ -28,12 +28,13 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 
 1. Ejecuta **todo** `supabase/schema.sql` (incluye la tabla `profiles` y sus políticas de seguridad).
 2. En Vercel añade `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API → clave **anon/publishable**) y haz *Redeploy*.
-3. Supabase → **Authentication → URL Configuration**:
+3. Si el proyecto ya estaba desplegado antes de añadir el seguimiento de ligas, ejecuta `supabase/migrations/20261101_followed_leagues.sql` en el SQL Editor de Supabase para crear `followed_leagues` y sus políticas de acceso.
+4. Supabase → **Authentication → URL Configuration**:
    - *Site URL*: `https://TU-PROYECTO.vercel.app`
    - *Redirect URLs*: añade `https://TU-PROYECTO.vercel.app/auth/callback` (y `http://localhost:3000/auth/callback` para local).
-4. **Email y contraseña** funciona ya. Por defecto Supabase exige confirmar el email; si quieres entrar sin confirmar (solo pruebas): Authentication → Providers → Email → desactiva *Confirm email*.
+5. **Email y contraseña** funciona ya. Por defecto Supabase exige confirmar el email; si quieres entrar sin confirmar (solo pruebas): Authentication → Providers → Email → desactiva *Confirm email*.
    El envío gratuito de emails de Supabase está limitado a pocos por hora; para producción configura un SMTP propio (Authentication → SMTP Settings).
-5. **Google**:
+6. **Google**:
    1. Google Cloud Console → *APIs & Services → Credentials → Create credentials → OAuth client ID* (tipo *Web application*). Si te lo pide, configura antes la pantalla de consentimiento.
    2. En *Authorized redirect URIs* pega la URL de callback que te muestra Supabase en Authentication → Providers → Google (`https://xxxx.supabase.co/auth/v1/callback`).
    3. Copia el *Client ID* y *Client Secret* en Supabase → Authentication → Providers → **Google** → activar → Guardar.

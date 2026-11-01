@@ -147,7 +147,7 @@ export function SearchModal() {
                 <section className="space-y-1.5">
                   <h3 className="px-2 text-xs font-bold uppercase tracking-wide text-muted">{t("Equipos")}</h3>
                   {results.teams.map((team) => (
-                    <button key={team.id} type="button" onClick={() => navigate(`/equipo/${team.id}?name=${encodeURIComponent(team.name)}${team.leagueId ? `&league=${team.leagueId}` : ""}`)} className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-card2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
+                    <button key={`${team.id}-${team.leagueId ?? "team"}`} type="button" onClick={() => navigate(`/equipo/${team.id}?name=${encodeURIComponent(team.name)}${team.leagueId ? `&league=${team.leagueId}` : ""}`)} className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-card2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
                       <Shield src={team.logo} fallbackSrc={team.logoFallback} alt={team.name} size={32} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold">{team.name}</span>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { MatchRow } from "@/components/MatchRow";
 import { Notice } from "@/components/ui";
@@ -14,11 +15,11 @@ import {
   getTeamLogoUrl,
   getTeamRecentFixtures,
   getTeamSeasonMatchSeries,
-  getTeamSeasonProfile,
+  getTeamCompetitions,
   getTeamUpcomingFixtures,
   getTeamProfile,
 } from "@/lib/apifootball";
-import { countryEs, errMsg } from "@/lib/format";
+import { countryEs, errMsg, timeStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds, getTeamFollowStatus } from "@/lib/favorites";
@@ -85,6 +86,7 @@ function FixtureGroups({
           key={fixture.id}
           f={fixture}
           date={dateForFixture(fixture.timestamp)}
+          matchTime={timeStr(fixture.timestamp)}
           displayDate={displayDateForFixture(fixture.timestamp)}
           isAuthenticated={isAuthenticated}
           initialFavorite={favoriteIds.has(fixture.id)}
@@ -98,9 +100,13 @@ function FixtureGroups({
 
 export default async function Page({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
   const id = Number(params.id);
-  const leagueId = Number(searchParams.league) || undefined;
+  const contextLeagueId = Number(searchParams.league) || undefined;
+  const leagueId = contextLeagueId;
   const back = safeReturnPath(searchParams.from);
   const userPromise = getUser();
+  const teamCompetitionsPromise = getTeamCompetitions(id)
+    .then((competitions) => ({ competitions, error: null as string | null }))
+    .catch((error: unknown) => ({ competitions: [], error: errMsg(error) }));
   const [leagueInfo, seasons] = await Promise.all([
     leagueId ? getLeagueById(leagueId) : Promise.resolve(null),
     leagueId ? getLeagueSeasons(leagueId) : Promise.resolve([]),
@@ -124,15 +130,15 @@ export default async function Page({ params, searchParams }: { params: { id: str
   let profileError: string | null = null;
   let fixtureError: string | null = null;
   let seriesError: string | null = null;
+  let competitionsError: string | null = null;
+  const chartSeason = new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1;
 
-  const [profileResult, recentResult, upcomingResult, seriesResult] = await Promise.allSettled([
-    name ? (leagueId && season
-      ? getTeamSeasonProfile(id, leagueId, season)
-      : getTeamProfile(id, true, season, Infinity, leagueId))
-      : Promise.resolve(null),
-    getTeamRecentFixtures(id, 15, leagueId),
-    getTeamUpcomingFixtures(id, 15, leagueId),
-    name && leagueId && season ? getTeamSeasonMatchSeries(id, name, leagueId, season, teams) : Promise.resolve([]),
+  const [profileResult, recentResult, upcomingResult, seriesResult, competitionsResult] = await Promise.allSettled([
+    getTeamProfile(id, true, chartSeason, Infinity),
+    getTeamRecentFixtures(id, Number.MAX_SAFE_INTEGER),
+    getTeamUpcomingFixtures(id, 15),
+    getTeamSeasonMatchSeries(id, undefined, chartSeason),
+    teamCompetitionsPromise,
   ]);
   if (profileResult.status === "fulfilled") profile = profileResult.value;
   else profileError = errMsg(profileResult.reason);
@@ -141,15 +147,21 @@ export default async function Page({ params, searchParams }: { params: { id: str
   if (upcomingResult.status === "fulfilled") upcoming = upcomingResult.value;
   else fixtureError = fixtureError ? `${fixtureError}; ${errMsg(upcomingResult.reason)}` : errMsg(upcomingResult.reason);
   if (seriesResult.status === "fulfilled") {
-    const country = leagueInfo?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
     chartGames = seriesResult.value.map((game) => ({
       ...game,
-      opponentLogo: getTeamLogoUrl(game.opponent, country),
-      opponentLogoFallback: getTeamLogoFallbackUrl(game.opponent, country),
+      opponentLogo: getTeamLogoUrl(game.opponent, game.country),
+      opponentLogoFallback: getTeamLogoFallbackUrl(game.opponent, game.country),
     }));
   } else seriesError = errMsg(seriesResult.reason);
+  const teamCompetitions = competitionsResult.status === "fulfilled" ? competitionsResult.value.competitions : [];
+  competitionsError = competitionsResult.status === "fulfilled"
+    ? competitionsResult.value.error
+    : errMsg(competitionsResult.reason);
 
-  const teamName = name ?? `Equipo ${id}`;
+  const fixtureTeam = [...recent, ...upcoming]
+    .flatMap((fixture) => [fixture.home, fixture.away])
+    .find((team) => team.id === id);
+  const teamName = name ?? fixtureTeam?.name ?? `Equipo ${id}`;
   const country = leagueInfo?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
   const standingsLeagueId = leagueId ?? recent[0]?.leagueId ?? upcoming[0]?.leagueId;
   const standingsSeason = (leagueId ? season : undefined)
@@ -191,9 +203,19 @@ export default async function Page({ params, searchParams }: { params: { id: str
   const league = leagueInfo;
   const competitionName = league?.name ?? upcoming[0]?.leagueName ?? recent[0]?.leagueName;
   const competitionLogo = upcoming[0]?.leagueLogo ?? recent[0]?.leagueLogo ?? null;
-  const logo = getTeamLogoUrl(teamName, country);
+  const fixtureTeamLogo = [...recent, ...upcoming]
+    .flatMap((fixture) => [fixture.home, fixture.away])
+    .find((team) => team.id === id)?.logo;
+  const logo = teams.find((team) => team.id === id)?.logo
+    || fixtureTeamLogo
+    || getTeamLogoUrl(teamName, country);
+  const stadium = recent.find((fixture) => fixture.home.id === id && fixture.venue)?.venue
+    ?? upcoming.find((fixture) => fixture.home.id === id && fixture.venue)?.venue;
   const recentForm = profile?.rows.slice(-5) ?? [];
   const competitions = new Map<number, { name: string; logo: string | null }>();
+  for (const competition of teamCompetitions) {
+    competitions.set(competition.id, { name: competition.name, logo: competition.logo });
+  }
   for (const fixture of [...recent, ...upcoming]) {
     competitions.set(fixture.leagueId, { name: fixture.leagueName, logo: fixture.leagueLogo });
   }
@@ -244,6 +266,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
               <div className="mt-1">
                 <h1 className="min-w-0 truncate text-2xl font-black uppercase leading-tight sm:text-3xl">{teamName}</h1>
                 <FollowTeamButton teamId={id} teamName={teamName} isAuthenticated={!!user} initialFollowing={followLookup.following} />
+                {stadium && <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-slate-600"><MapPin aria-hidden="true" className="h-3 w-3 shrink-0" /><span className="truncate">{stadium}</span></p>}
               </div>
             </div>
           </div>
@@ -268,23 +291,27 @@ export default async function Page({ params, searchParams }: { params: { id: str
             </div>
           )}
           {competitions.size > 0 && (
-            <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2">
-              {[...competitions.entries()].map(([competitionId, item]) => (
-                <Link
-                  key={competitionId}
-                  href={`/liga/${competitionId}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/50 px-2.5 py-1 text-[10px] font-semibold text-slate-700"
-                >
-                  <Shield src={getLeagueLogoUrl(competitionId, item.logo)} alt="" size={16} />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
+            <div className="relative z-10 mt-3">
+              <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-600"><I18nText text="Competiciones" /></p>
+              <nav aria-label="Competiciones del equipo" className="flex flex-wrap items-center gap-2">
+                {[...competitions.entries()].map(([competitionId, item]) => (
+                  <Link
+                    key={competitionId}
+                    href={`/liga/${competitionId}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/50 px-2.5 py-1 text-[10px] font-semibold text-slate-700"
+                  >
+                    <Shield src={getLeagueLogoUrl(competitionId, item.logo)} alt="" size={16} />
+                    <span>{item.name}</span>
+                  </Link>
+                ))}
+              </nav>
             </div>
           )}
         </section>
 
         {profileError && <Notice tone="warn">{profileError}</Notice>}
         {teamListError && <Notice tone="warn">{teamListError}</Notice>}
+        {competitionsError && <Notice tone="warn">{competitionsError}</Notice>}
         {fixtureError && <Notice tone="warn">{fixtureError}</Notice>}
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {followLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar los equipos seguidos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { liveMinuteLabel } from "@/lib/fixtureStatus";
 
 export function LiveMatchClock({
   statusShort, elapsed, elapsedSeconds, elapsedDisplay,
@@ -46,15 +47,7 @@ export function LiveMatchClock({
     ? null
     : clock.seconds + Math.floor((now - clock.startedAt) / 1000);
   const currentMinute = totalSeconds === null ? elapsed : Math.floor(totalSeconds / 60);
-  const stoppage = elapsedDisplay?.match(/(\d+)\s*\+\s*(\d+)/);
-  const baseMinute = stoppage ? Number(stoppage[1]) : null;
-  const initialExtra = stoppage ? Number(stoppage[2]) : null;
-  const extraMinute = baseMinute !== null && initialExtra !== null && currentMinute !== null
-    ? Math.max(initialExtra, currentMinute - baseMinute)
-    : null;
-  const minuteLabel = baseMinute !== null && extraMinute !== null
-    ? `${baseMinute}+${extraMinute}`
-    : currentMinute ?? "—";
+  const minuteLabel = liveMinuteLabel(currentMinute, elapsedDisplay);
 
   return (
     <span role="timer" aria-label={`${minuteLabel} minutos`} className="inline-flex whitespace-nowrap text-[10px] font-semibold leading-none tabular-nums tracking-wide text-loss">

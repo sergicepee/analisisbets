@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, ListOrdered } from "lucide-react";
 import type { Fixture } from "@/lib/types";
-import { IconStats } from "./icons";
-import { FavoriteMatchButton } from "./FollowMatchButton";
+import { AutoRefresh } from "./AutoRefresh";
+import { MatchRow } from "./MatchRow";
 import { FollowLeagueButton } from "./FollowLeagueButton";
 import { Flag, Shield } from "./Shield";
 import { useLang, useT } from "./I18nProvider";
@@ -114,6 +114,7 @@ export function LeagueCompetition({
 
   return (
     <div className="space-y-4">
+      {season === currentSeason && <AutoRefresh seconds={60} />}
       <section className="relative isolate overflow-hidden rounded-3xl border border-slate-300/80 p-5 text-slate-900 shadow-sm sm:p-6" style={{ background: "#f1f3f0" }}>
         <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-32 z-0 flex h-96 w-96 items-center justify-center opacity-35 blur-[64px]">
           <Shield src={leagueLogo} fallbackSrc={null} alt="" size={300} />
@@ -235,7 +236,14 @@ export function LeagueCompetition({
                           <span>{dateFixtures.length} {t(dateFixtures.length === 1 ? "partido" : "partidos")}</span>
                         </div>
                         {dateFixtures.map((fixture) => (
-                          <LeagueFixtureRow key={fixture.id} fixture={fixture} date={dateKey} timeZone={timeZone} locale={locale} isAuthenticated={isAuthenticated} initialFavorite={favorites.has(fixture.id)} />
+                          <MatchRow
+                            key={fixture.id}
+                            f={fixture}
+                            date={dateKey}
+                            matchTime={new Intl.DateTimeFormat(locale, { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(fixture.timestamp * 1000)}
+                            isAuthenticated={isAuthenticated}
+                            initialFavorite={favorites.has(fixture.id)}
+                          />
                         ))}
                       </div>
                     ))}
@@ -452,66 +460,19 @@ function KnockoutTies({ fixtures, timeZone, locale, isAuthenticated, favorites }
                     <span>{isTwoLeggedTie ? t(index === 0 ? "Ida" : index === 1 ? "Vuelta" : "Partido") : ""}</span>
                     <span>{isTwoLeggedTie && index > 1 ? `${index + 1} · ` : ""}{formatFixtureDate(fixture.timestamp, timeZone, locale)}</span>
                   </div>
-                  <LeagueFixtureRow fixture={fixture} date={date} timeZone={timeZone} locale={locale} isAuthenticated={isAuthenticated} initialFavorite={favorites.has(fixture.id)} />
+                  <MatchRow
+                    f={fixture}
+                    date={date}
+                    matchTime={new Intl.DateTimeFormat(locale, { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(fixture.timestamp * 1000)}
+                    isAuthenticated={isAuthenticated}
+                    initialFavorite={favorites.has(fixture.id)}
+                  />
                 </div>
               );
             })}
           </section>
         );
       })}
-    </div>
-  );
-}
-
-function LeagueFixtureRow({ fixture, date, timeZone, locale, isAuthenticated, initialFavorite }: { fixture: Fixture; date: string; timeZone: string; locale: string; isAuthenticated: boolean; initialFavorite: boolean }) {
-  const t = useT();
-  const finished = ["FT", "AET", "PEN"].includes(fixture.statusShort);
-  const live = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(fixture.statusShort);
-  const suspended = fixture.statusShort === "SUSP";
-  const score = fixture.goalsHome !== null && fixture.goalsAway !== null ? `${fixture.goalsHome} - ${fixture.goalsAway}` : null;
-  const time = suspended
-    ? "SUSP."
-    : finished
-      ? t("Final")
-      : live
-        ? fixture.statusShort === "HT" ? "HT" : `${fixture.elapsed ?? ""}′`
-        : new Intl.DateTimeFormat(locale, { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(fixture.timestamp * 1000);
-  const redCards = (teamId: number) => fixture.redCardsHome !== undefined && teamId === fixture.home.id
-    ? fixture.redCardsHome
-    : fixture.redCardsAway !== undefined && teamId === fixture.away.id
-      ? fixture.redCardsAway
-      : fixture.events.filter((event) => event.teamId === teamId && event.type === "Card" && (event.detail === "Red Card" || event.detail === "Second Yellow Card")).length;
-  const homeRed = redCards(fixture.home.id) > 0;
-  const awayRed = redCards(fixture.away.id) > 0;
-  const homeWon = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsHome > fixture.goalsAway;
-  const awayWon = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsAway > fixture.goalsHome;
-  const homeLost = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsHome < fixture.goalsAway;
-  const awayLost = finished && fixture.goalsHome !== null && fixture.goalsAway !== null && fixture.goalsAway < fixture.goalsHome;
-  return (
-    <div className={`match-row flex min-w-0 items-center gap-1.5 border-t border-line border-l-[3px] border-l-transparent px-2 sm:px-3 ${suspended ? "bg-card text-muted" : "bg-card"}`}>
-      <FavoriteMatchButton fixtureId={fixture.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
-      <Link href={`/match/${fixture.id}?date=${date}&league=${fixture.leagueId}`} aria-label={`${fixture.home.name} contra ${fixture.away.name}`} className="group flex min-w-0 flex-1 items-center gap-3 py-3 sm:px-1">
-        <div className={`w-11 shrink-0 text-center text-xs font-bold tabular-nums sm:w-14 ${live ? "text-chartHit" : "text-muted"}`}>
-          {live && score ? <><span className="block text-sm font-extrabold">{score}</span><span className="text-[10px]">{time}</span></> : time}
-          {!live && !finished && !suspended && fixture.timestamp < Date.now() / 1000 && <span className="mt-0.5 block text-[9px] leading-tight">{t("Pendiente de actualizar")}</span>}
-        </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <LeagueTeamLine name={fixture.home.name} logo={fixture.home.logo} fallback={fixture.home.logoFallback} winner={homeWon} loser={homeLost} redCard={homeRed} suspended={suspended} />
-          <LeagueTeamLine name={fixture.away.name} logo={fixture.away.logo} fallback={fixture.away.logoFallback} winner={awayWon} loser={awayLost} redCard={awayRed} suspended={suspended} />
-        </div>
-        {finished && <div className="flex w-4 shrink-0 flex-col items-center text-xs font-bold leading-5 tabular-nums sm:text-sm"><span>{fixture.goalsHome ?? "—"}</span><span>{fixture.goalsAway ?? "—"}</span></div>}
-        <IconStats aria-hidden="true" className="h-8 w-8 shrink-0 rounded-lg border border-line p-1.5 text-muted transition-colors group-hover:border-chartHit/40 group-hover:text-chartHit" />
-      </Link>
-    </div>
-  );
-}
-
-function LeagueTeamLine({ name, logo, fallback, winner, loser, redCard, suspended }: { name: string; logo: string | null; fallback?: string | null; winner: boolean; loser: boolean; redCard: boolean; suspended: boolean }) {
-  return (
-    <div className={`flex min-w-0 items-center gap-2 text-xs sm:text-sm ${winner ? "font-bold" : "font-normal"} ${loser || suspended ? "text-muted" : ""}`}>
-      <Shield src={logo} fallbackSrc={fallback} alt="" size={20} />
-      <span className={`min-w-0 truncate ${suspended ? "line-through decoration-loss decoration-2" : ""}`}>{name}</span>
-      {redCard && <span aria-label="Tarjeta roja" title="Tarjeta roja" className="h-3.5 w-2.5 shrink-0 rounded-[2px] bg-red-500" />}
     </div>
   );
 }

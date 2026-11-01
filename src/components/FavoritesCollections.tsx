@@ -8,6 +8,7 @@ import type { Fixture } from "@/lib/types";
 import { useT } from "./I18nProvider";
 import { Shield } from "./Shield";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { MatchRow } from "./MatchRow";
 
 export type FollowedLeagueCard = { id: number; name: string; country: string; logo: string | null };
 export type FollowedTeamCard = {
@@ -104,33 +105,6 @@ export function FavoritesCollections({
     }
   }
 
-  async function removeFixture(fixtureId: number) {
-    const key = `fixture:${fixtureId}`;
-    if (busy) return;
-    setBusy(key);
-    setError(null);
-    try {
-      const response = await fetch("/api/favorites", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fixtureId }),
-      });
-      const result = await response.json() as { favorite?: boolean; error?: string };
-      if (!response.ok || result.favorite !== false) {
-        throw new Error(result.error || "No se pudo quitar el favorito. Comprueba la configuración de la base de datos.");
-      }
-      setFixtures((current) => current.filter((item) => item.fixture.id !== fixtureId));
-      window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
-        detail: { fixtureId, favorite: false },
-      }));
-      router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo quitar el favorito.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <div className="space-y-6">
       {error && <p role="alert" className="rounded-xl border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">{t(error)}</p>}
@@ -199,23 +173,16 @@ export function FavoritesCollections({
           <h2 className="border-b border-line px-3 py-3 font-display text-lg font-extrabold uppercase leading-none">{t("Partidos seguidos")} ({fixtures.length})</h2>
           <div>
             {fixtures.map(({ fixture, date, dateKey }) => (
-              <article key={fixture.id} className="flex items-center gap-2 border-b border-line px-3 py-3 last:border-b-0">
-                <Shield src={fixture.home.logo} alt="" size={28} />
-                <Link href={`/match/${fixture.id}?date=${encodeURIComponent(dateKey)}&league=${fixture.leagueId}`} className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold">{fixture.home.name} - {fixture.away.name}</span>
-                  <span className="mt-1 block text-xs text-muted">{date}</span>
-                </Link>
-                <button
-                  type="button"
-                  aria-label={`${t("Quitar de favoritos")}: ${fixture.home.name} - ${fixture.away.name}`}
-                  title={t("Quitar de favoritos")}
-                  disabled={busy !== null}
-                  onClick={() => void removeFixture(fixture.id)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted hover:text-loss disabled:opacity-50"
-                >
-                  <Trash2 aria-hidden="true" className="h-4 w-4" />
-                </button>
-              </article>
+              <MatchRow
+                key={fixture.id}
+                f={fixture}
+                date={dateKey}
+                matchTime={date.split(" · ").at(-1) ?? ""}
+                displayDate={date.split(" · ")[0]}
+                showDate
+                isAuthenticated
+                initialFavorite
+              />
             ))}
           </div>
         </section>

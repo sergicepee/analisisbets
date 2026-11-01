@@ -8,7 +8,7 @@ import { Notice } from "./ui";
 import { IconBall, IconCalendar, IconInfo, IconMatches, IconTrophy } from "./icons";
 import { getFixturesByDate } from "@/lib/apifootball";
 import { apiEnabled, LEAGUE_IDS, PRIORITY_LEAGUES, SHOW_PREMIUM } from "@/lib/config";
-import { countryEs, errMsg, statusGroup, todayStr } from "@/lib/format";
+import { countryEs, errMsg, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import type { Fixture, StatusGroup } from "@/lib/types";
 import { I18nText } from "./I18nProvider";
@@ -20,11 +20,17 @@ const FILTERS: [string, string][] = [
   ["finished", "Finalizados"],
   ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
-export async function MatchList({ date, filter = "all", leagueId = null, selectedId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number }) {
+export async function MatchList({ date, filter = "all", leagueId = null, selectedId, userId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number; userId?: string | null }) {
   const today = todayStr();
-  let fixtures: Fixture[] = [];
-  let error: string | null = null;
-  try { fixtures = await getFixturesByDate(date, date === today); } catch (e) { error = errMsg(e); }
+  const fixturesPromise = getFixturesByDate(date, date === today)
+    .then((fixtures) => ({ fixtures, error: null as string | null }))
+    .catch((error: unknown) => ({ fixtures: [] as Fixture[], error: errMsg(error) }));
+  const userIdPromise = userId === undefined
+    ? getUser().then((user) => user?.id ?? null)
+    : Promise.resolve(userId);
+  const [fixtureResult, resolvedUserId] = await Promise.all([fixturesPromise, userIdPromise]);
+  let fixtures = fixtureResult.fixtures;
+  const error = fixtureResult.error;
   if (LEAGUE_IDS.length) fixtures = fixtures.filter((f) => LEAGUE_IDS.includes(f.leagueId));
   if (leagueId) fixtures = fixtures.filter((f) => f.leagueId === leagueId);
 
@@ -38,9 +44,8 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
   const ordered = [...groups.values()]
     .map((g) => g.sort((a, b) => a.timestamp - b.timestamp))
     .sort((a, b) => prio(a[0].leagueId) - prio(b[0].leagueId) || a[0].country.localeCompare(b[0].country) || a[0].leagueName.localeCompare(b[0].leagueName));
-  const user = await getUser();
-  const favoriteLookup = user
-    ? await getFavoriteFixtureIds(user.id, shown.map((fixture) => fixture.id))
+  const favoriteLookup = resolvedUserId
+    ? await getFavoriteFixtureIds(resolvedUserId, shown.map((fixture) => fixture.id))
     : { favoriteIds: new Set<number>(), error: false };
 
   const filters = FILTERS.filter(([key]) => key !== "live" || apiEnabled || counts.live > 0);
@@ -84,7 +89,7 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
               <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{countryEs(g[0].country, g[0].flag)}</span>
               <span className="min-w-0 truncate text-xs font-extrabold sm:text-sm">{g[0].leagueName}</span>
             </Link>
-            {g.map((f) => <MatchRow key={f.id} f={f} date={date} selected={f.id === selectedId} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />)}
+            {g.map((f) => <MatchRow key={f.id} f={f} date={date} matchTime={timeStr(f.timestamp)} selected={f.id === selectedId} isAuthenticated={!!resolvedUserId} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />)}
           </section>
           {i === 0 && banner}
         </div>

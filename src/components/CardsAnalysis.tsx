@@ -6,7 +6,7 @@ import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconCard } from "@/components/icons";
 import { PeriodTabs } from "@/components/PeriodTabs";
-import { expectedFor, MIN_SAMPLES, profileForPeriod } from "@/lib/metrics";
+import { expectedFor, MIN_SAMPLES, profileForPeriod, recentValues } from "@/lib/metrics";
 import type { Fixture, LeagueCardLeader, MatchPeriod, TeamProfile, TeamRef, TeamRow } from "@/lib/types";
 
 type CardRow = {
@@ -19,7 +19,9 @@ type CardRow = {
 };
 
 const MATCH_LINES = [2.5, 3.5, 4.5, 5.5, 6.5];
+const HALF_MATCH_LINES = [0.5, 1.5, 2.5, 3.5];
 const TEAM_LINES = [0.5, 1.5, 2.5];
+const HALF_TEAM_LINES = [0.5, 1.5];
 const numberText = (value: number | null, locale: string) =>
   value === null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: 1 });
 const percentText = (value: number | null) => value === null ? "—" : `${Math.round(value)}%`;
@@ -34,7 +36,7 @@ function average(
   selector: (row: TeamRow) => number | null,
   sampleSize: number,
 ): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -45,7 +47,7 @@ function rate(
   line: number,
   sampleSize: number,
 ): number | null {
-  const values = rows.slice(-sampleSize).map(selector).filter((value): value is number => value !== null);
+  const values = recentValues(rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   return values.filter((value) => value > line).length * 100 / values.length;
 }
@@ -150,9 +152,11 @@ function Summary({
   const homeAverage = expected?.home ?? average(activeHomeProfile.rows, (row) => cardValue(row, "for"), sampleSize);
   const awayAverage = expected?.away ?? average(activeAwayProfile.rows, (row) => cardValue(row, "for"), sampleSize);
   const expectedTotal = homeAverage === null || awayAverage === null ? null : homeAverage + awayAverage;
+  const matchLines = period === "full" ? MATCH_LINES : HALF_MATCH_LINES;
+  const teamLines = period === "full" ? TEAM_LINES : HALF_TEAM_LINES;
   const rows: CardRow[] = view === "match"
     ? [
-        ...MATCH_LINES.map((line) => ({
+        ...matchLines.map((line) => ({
           key: `match-over-${line}`,
           label: <><I18nText text="Más de" /> {numberText(line, locale)}</>,
           home: rate(activeHomeProfile.rows, (row) => {
@@ -185,7 +189,7 @@ function Summary({
           kind: "number",
         },
         ...(["for", "against"] as const).flatMap((side) =>
-          TEAM_LINES.map((line) => {
+          teamLines.map((line) => {
             const sideLabel = side === "for" ? "Tarjetas recibidas" : "Tarjetas del rival";
             return {
               key: `team-${side}-${line}`,

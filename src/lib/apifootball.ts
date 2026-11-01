@@ -21,6 +21,7 @@ import {
   getEspnSeasonMatchSeries,
   getEspnTeams,
   getEspnTeamFixtures,
+  getEspnTeamCompetitions,
   getEspnTeamProfile,
   searchEspnTeams,
 } from "./espn";
@@ -324,20 +325,22 @@ export async function getTeamSeasonProfile(teamId: number, leagueId: number, sea
     throw error;
   }
 }
-export async function getTeamSeasonMatchSeries(
-  teamId: number,
-  name: string,
-  leagueId: number,
-  season: number,
-  teams: Array<{ id: number; name: string }>,
-) {
+export async function getTeamCompetitions(teamId: number): Promise<LeagueInfo[]> {
   if (!apiEnabled) return [];
-  const team = teams.find((item) => teamNameKey(item.name) === teamNameKey(name));
-  const espnTeamId = team?.id ?? teamId;
   try {
-    return await getEspnSeasonMatchSeries(espnTeamId, leagueId, season);
+    return await getEspnTeamCompetitions(teamId);
   } catch (error) {
-    console.error(`No se pudo cargar la serie ESPN de ${name}:`, error);
+    console.error(`No se pudieron cargar las competiciones ESPN del equipo ${teamId}:`, error);
+    throw error;
+  }
+}
+
+export async function getTeamSeasonMatchSeries(teamId: number, leagueId: number | undefined, season: number) {
+  if (!apiEnabled) return [];
+  try {
+    return await getEspnSeasonMatchSeries(teamId, leagueId, season);
+  } catch (error) {
+    console.error(`No se pudo cargar la serie ESPN del equipo ${teamId}:`, error);
     throw error;
   }
 }

@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import {
   getFallbackStandingsZones,
   getStandingsZoneStyle,
   makeLeagueStandings,
+  makeStandingsMovements,
   type LeagueStandingTeam,
   type LeagueStandingsZone,
 } from "@/lib/leagueStandings";
@@ -33,6 +35,7 @@ export function LeagueStandingsTable({
   zoneError?: string | null;
 }) {
   const standings = useMemo(() => makeLeagueStandings(fixtures, teams), [fixtures, teams]);
+  const movements = useMemo(() => makeStandingsMovements(fixtures, teams, standings), [fixtures, standings, teams]);
   const displayedZones = useMemo(
     () => zones.length ? zones : getFallbackStandingsZones(leagueId, standings),
     [leagueId, standings, zones],
@@ -57,7 +60,7 @@ export function LeagueStandingsTable({
           <table className="w-full table-fixed text-left text-xs">
             <thead className="text-[10px] font-bold uppercase text-muted">
               <tr>
-                <th className="w-8 px-2 py-2">#</th>
+                <th className="w-12 px-2 py-2">#</th>
                 <th className="px-1 py-2"><I18nText text="Equipo" /></th>
                 <th className="w-11 px-1 py-2 text-center">PJ</th>
                 <th className="w-12 px-1 py-2 text-center">DG</th>
@@ -70,18 +73,37 @@ export function LeagueStandingsTable({
                 const zone = description ? getStandingsZoneStyle(description) : null;
                 const isCurrentTeam = row.id === currentTeamId;
                 const goalDifference = row.goalsFor - row.goalsAgainst;
+                const movement = movements.get(row.id);
                 return (
                   <tr key={row.id} aria-current={isCurrentTeam ? "true" : undefined} className={`border-t border-line ${isCurrentTeam ? "bg-brand/10" : ""}`}>
                     <td className="relative px-2 py-2.5 font-bold text-muted">
                       {isCurrentTeam
                         ? <span aria-hidden="true" className="absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-full bg-brand" />
                         : zone && <span aria-hidden="true" title={zone.label} className={`absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-full ${zone.color}`} />}
-                      {index + 1}
+                      <span className="flex items-center gap-1">
+                        {index + 1}
+                        {movement !== undefined && (
+                          <span className={movement > 0 ? "text-win" : movement < 0 ? "text-loss" : "text-muted"} title={movement > 0 ? "Sube posiciones" : movement < 0 ? "Baja posiciones" : "Mantiene posición"}>
+                            {movement > 0 ? <ArrowUp aria-hidden="true" className="h-3 w-3" /> : movement < 0 ? <ArrowDown aria-hidden="true" className="h-3 w-3" /> : <Minus aria-hidden="true" className="h-3 w-3" />}
+                            <span className="sr-only"><I18nText text={movement > 0 ? "Sube posiciones" : movement < 0 ? "Baja posiciones" : "Mantiene posición"} /></span>
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td className="overflow-hidden px-1 py-2.5">
                       <Link href={`/equipo/${row.id}?league=${leagueId}&season=${season}&name=${encodeURIComponent(row.name)}`} className={`flex min-w-0 items-center gap-2 font-semibold hover:text-brand ${isCurrentTeam ? "text-brand" : ""}`}>
                         <Shield src={row.logo ?? null} fallbackSrc={row.logoFallback} alt="" size={22} />
-                        <span className="truncate">{row.name}</span>
+                        <span className="min-w-0 truncate">{row.name}</span>
+                        {row.liveMatch && (
+                          <span
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold leading-none ${row.liveMatch.resultTone === "win" ? "bg-win/10 text-win" : row.liveMatch.resultTone === "loss" ? "bg-loss/10 text-loss" : "bg-card2 text-muted"}`}
+                            title={`${row.liveMatch.opponentName}: ${row.liveMatch.score} · ${row.liveMatch.statusShort === "HT" ? "Descanso" : row.liveMatch.elapsed === null ? "En vivo" : `${row.liveMatch.elapsed}′`}`}
+                          >
+                            <span aria-hidden="true" className={`h-1.5 w-1.5 animate-pulse rounded-full ${row.liveMatch.resultTone === "win" ? "bg-win" : row.liveMatch.resultTone === "loss" ? "bg-loss" : "bg-muted"}`} />
+                            <span>{row.liveMatch.score}</span>
+                            <span>{row.liveMatch.statusShort === "HT" ? <I18nText text="Descanso" /> : row.liveMatch.elapsed === null ? <I18nText text="En vivo" /> : `${row.liveMatch.elapsed}′`}</span>
+                          </span>
+                        )}
                       </Link>
                     </td>
                     <td className="px-1 py-2.5 text-center font-semibold text-muted">{row.played}</td>

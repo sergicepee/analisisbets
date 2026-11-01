@@ -1,6 +1,19 @@
 import type { MatchPeriod, Metric, TeamProfile, TeamRow } from "./types";
 
 export const MIN_SAMPLES = 3;
+export function recentValues<T>(
+  rows: readonly T[],
+  selector: (row: T) => number | null,
+  sampleSize: number,
+): number[] {
+  const limit = Math.floor(sampleSize);
+  if (!Number.isFinite(limit) || limit <= 0) return [];
+  return rows.flatMap((row) => {
+    const value = selector(row);
+    return value !== null && Number.isFinite(value) ? [value] : [];
+  }).slice(-limit);
+}
+
 export const METRIC_LABEL: Record<Metric, string> = {
   goals: "Goles", shots: "Tiros", shotsOn: "Tiros a puerta", corners: "Córners", cards: "Tarjetas",
 };

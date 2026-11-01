@@ -30,14 +30,9 @@ import { getLocale, getTz } from "@/lib/prefs";
 import {
   avg2, expectedFor, pctTone, poissonModel, tone,
 } from "@/lib/metrics";
-import type { Fixture, FixtureLineup, FixtureLineupEvent, MatchStat, Metric, StoredStats, TeamProfile } from "@/lib/types";
+import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, MatchPeriod, MatchStat, Metric, StoredStats, TeamProfile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-const OUTCOME_COLORS = {
-  home: "#adc9a3",
-  draw: "#68737d",
-  away: "#39ab6b",
-} as const;
 export const maxDuration = 60;
 
 const TABS = [
@@ -54,6 +49,9 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     ? searchParams.section as typeof MATCH_SECTIONS[number][0]
     : "analysis";
   const analysisTab = TABS.some((t) => t[0] === searchParams.tab) ? (searchParams.tab as string) : "general";
+  const statisticsPeriod: MatchPeriod = searchParams.period === "first" || searchParams.period === "second"
+    ? searchParams.period
+    : "full";
   const date = isDate(searchParams.date) ? (searchParams.date as string) : todayStr();
   const fixtureRequest = getFixture(id, Number(searchParams.league) || undefined, date)
     .then((fixture) => ({ fixture, error: null as unknown }))
@@ -82,14 +80,14 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     <>
       <Header back={`/?date=${date}`} />
       {apiEnabled && g === "live" ? <AutoRefresh seconds={45} /> : null}
-      <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} />}>
+      <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} userId={user?.id ?? null} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}
         <MatchHeader f={f} cardCounts={cardCounts} returnTo={`/match/${f.id}?date=${date}&league=${f.leagueId}`} isAuthenticated={!!user} initialFavorite={favoriteLookup.favoriteIds.has(f.id)} />
         <nav role="tablist" aria-label={t("Secciones del partido")} className="grid grid-cols-4 border-b border-line">
           {MATCH_SECTIONS.map(([key, label]) => (
-            <Link key={key} role="tab" aria-selected={section === key} href={`/match/${id}?section=${key}&tab=${analysisTab}&date=${date}&league=${f.leagueId}`} className={`flex flex-col items-center gap-1 border-b-2 py-2.5 text-xs font-semibold sm:text-sm ${section === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
+            <Link key={key} replace scroll={false} role="tab" aria-selected={section === key} href={`/match/${id}?section=${key}&tab=${analysisTab}&date=${date}&league=${f.leagueId}`} className={`flex flex-col items-center gap-1 border-b-2 py-2.5 text-xs font-semibold sm:text-sm ${section === key ? "border-brand text-brand" : "border-transparent text-muted"}`}>
               <I18nText text={label} />
             </Link>
           ))}
@@ -98,7 +96,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
           <>
             <nav aria-label={t("Apartados del análisis")} className="flex gap-1.5 overflow-x-auto rounded-full border border-line bg-card2 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {TABS.map(([key, label, Icon]) => (
-                <Link key={key} aria-current={analysisTab === key ? "page" : undefined} href={`/match/${id}?section=analysis&tab=${key}&date=${date}&league=${f.leagueId}`} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs ${analysisTab === key ? "bg-brand text-slate-950" : "text-muted hover:bg-white/5 hover:text-fg"}`}>
+                <Link key={key} replace scroll={false} aria-current={analysisTab === key ? "page" : undefined} href={`/match/${id}?section=analysis&tab=${key}&date=${date}&league=${f.leagueId}`} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs ${analysisTab === key ? "bg-brand text-slate-950" : "text-muted hover:bg-white/5 hover:text-fg"}`}>
                   <Icon className="h-3.5 w-3.5" /><I18nText text={label} />
                 </Link>
               ))}
@@ -106,7 +104,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
           </>
         )}
         <Suspense fallback={<MatchContentFallback section={section} />}>
-          <MatchData f={f} section={section} analysisTab={analysisTab} isSubscriber={isSubscriber} />
+          <MatchData f={f} section={section} analysisTab={analysisTab} statisticsPeriod={statisticsPeriod} date={date} isSubscriber={isSubscriber} />
         </Suspense>
       </main>
     </Workspace>
@@ -115,11 +113,13 @@ export default async function MatchPage({ params, searchParams }: { params: { id
 }
 
 async function MatchData({
-  f, section, analysisTab, isSubscriber,
+  f, section, analysisTab, statisticsPeriod, date, isSubscriber,
 }: {
   f: Fixture;
   section: typeof MATCH_SECTIONS[number][0];
   analysisTab: string;
+  statisticsPeriod: MatchPeriod;
+  date: string;
   isSubscriber: boolean;
 }) {
   const premiumLocked = section === "analysis" && analysisTab !== "general" && analysisTab !== "goles" && !isSubscriber;
@@ -144,7 +144,7 @@ async function MatchData({
     ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away", withHalfTime: true }))
     : Promise.resolve(null);
   const actualStatsPromise = section === "statistics" ? getFixtureStatsFor(f) : Promise.resolve(null);
-  const lineupsPromise = section === "lineups"
+  const lineupsPromise = section === "lineups" || section === "timeline"
     ? getFixtureLineups(f).catch((error: unknown) => {
       lineupsError = errMsg(error);
       return [];
@@ -182,8 +182,8 @@ async function MatchData({
           {!premiumLocked && analysisTab === "tarjetas" && <Block f={f} pa={pa} pb={pb} tab="tarjetas" />}
         </>
       )}
-      {section === "statistics" && <MatchStatistics fixture={f} stats={actualStats} />}
-      {section === "timeline" && <MatchTimeline fixture={f} />}
+      {section === "statistics" && <MatchStatistics fixture={f} stats={actualStats} period={statisticsPeriod} date={date} />}
+      {section === "timeline" && <MatchTimeline fixture={f} lineups={lineups} error={lineupsError} />}
       {section === "lineups" && <MatchLineups fixture={f} lineups={lineups} error={lineupsError} />}
     </>
   );
@@ -200,7 +200,7 @@ function MatchContentFallback({ section }: { section: typeof MATCH_SECTIONS[numb
   return <div role="status" aria-live="polite" className="card flex min-h-28 animate-pulse items-center justify-center p-4 text-sm text-muted"><I18nText text={label} /></div>;
 }
 
-function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredStats | null }) {
+function MatchStatistics({ fixture, stats, period, date }: { fixture: Fixture; stats: StoredStats | null; period: MatchPeriod; date: string }) {
   const groups: Array<{ title: string; rows: Array<{ label: string; key: string; percent?: boolean }> }> = [
     { title: "Resumen", rows: [
       { label: "Posesión", key: "possessionPct", percent: true },
@@ -235,7 +235,17 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
       { label: "Intercepciones", key: "interceptions" },
     ] },
   ];
-  const hasData = !!stats?.hasData;
+  const hasData = period === "full"
+    ? !!stats?.hasData
+    : !!stats && [stats.home, stats.away].some((team) => team.halves?.[period] !== undefined);
+  const visibleGroups = period === "full"
+    ? groups
+    : groups
+      .map((group) => ({
+        ...group,
+        rows: group.rows.filter((row) => ["totalShots", "shotsOnTarget", "wonCorners", "cards"].includes(row.key)),
+      }))
+      .filter((group) => group.rows.length > 0);
   const waitingForStart = !hasData && ["upcoming", "pending"].includes(statusGroup(fixture));
 
   if (waitingForStart) {
@@ -266,14 +276,28 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
 
   return (
     <section className="min-w-0 space-y-3">
-      <div className="flex justify-center">
-        <span className="rounded-full border border-line bg-card2 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide text-muted">
-          <I18nText text="Partido completo" />
-        </span>
+      <div role="tablist" aria-label={t("Periodo de estadísticas")} className="grid grid-cols-3 gap-1 rounded-full border border-line bg-bg/70 p-1">
+        {([
+          ["full", "Partido completo"],
+          ["first", "1.ª parte"],
+          ["second", "2.ª parte"],
+        ] as const).map(([value, label]) => (
+          <Link
+            key={value}
+            replace
+            scroll={false}
+            role="tab"
+            aria-selected={period === value}
+            href={`/match/${fixture.id}?section=statistics&period=${value}&date=${date}&league=${fixture.leagueId}`}
+            className={`min-w-0 rounded-full px-1.5 py-2 text-center text-[9px] font-bold transition sm:px-3 sm:text-xs ${period === value ? "bg-brand text-slate-950" : "text-muted hover:bg-white/5 hover:text-fg"}`}
+          >
+            <I18nText text={label} />
+          </Link>
+        ))}
       </div>
-      {hasData ? (
+      {stats && hasData ? (
         <div className="space-y-2">
-          {groups.map((group) => (
+          {visibleGroups.map((group) => (
             <details key={group.title} open className="group overflow-hidden rounded-xl border border-line bg-card">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-3 [&::-webkit-details-marker]:hidden">
                 <span className="text-xs font-black uppercase tracking-wide"><I18nText text={group.title} /></span>
@@ -283,7 +307,16 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
               <div className="space-y-2 border-t border-line px-2.5 py-2">
                 {group.rows.map((row) => {
                   const getValue = (team: MatchStat) => {
-                    if (row.key === "cards") {
+                if (period !== "full") {
+                  const half = team.halves?.[period];
+                  if (!half) return null;
+                  if (row.key === "cards") return half.cards;
+                  if (row.key === "totalShots") return half.shots;
+                  if (row.key === "shotsOnTarget") return half.shotsOn;
+                  if (row.key === "wonCorners") return half.corners;
+                  return null;
+                }
+                if (row.key === "cards") {
                       const yellow = team.details?.yellowCards ?? team.yellowCards ?? null;
                       const red = team.details?.redCards ?? team.redCards ?? null;
                       return team.cards ?? (yellow !== null && red !== null ? yellow + red : null);
@@ -347,7 +380,11 @@ function MatchStatistics({ fixture, stats }: { fixture: Fixture; stats: StoredSt
           ))}
         </div>
       ) : (
-        <Notice><I18nText text="ESPN todavía no ofrece estadísticas reales para este partido." /></Notice>
+        <Notice>
+          <I18nText text={period === "full"
+            ? "ESPN todavía no ofrece estadísticas reales para este partido."
+            : "ESPN todavía no ofrece estadísticas desglosadas por parte para este partido."} />
+        </Notice>
       )}
     </section>
   );
@@ -548,9 +585,10 @@ function LineupPlayers({ lineup, side, teamColor, borderColor }: {
       {rows.map((row, index) => {
         const offset = rows.length === 1 ? 25 : 6 + (index * 38) / (rows.length - 1);
         const top = side === "away" ? offset : 100 - offset;
+        const players = orderLineupPlayers(row.players, side);
         return (
           <div key={row.label} className="absolute inset-x-4 z-10 grid -translate-y-1/2 justify-items-center" style={{ top: `${top}%`, gridTemplateColumns: `repeat(${row.players.length}, minmax(0, 1fr))` }}>
-            {row.players.map((player) => {
+            {players.map((player) => {
               const jersey = player.jersey?.trim() || "—";
               return (
                 <div key={player.id ?? `${player.name}-${player.jersey}`} className="flex w-full min-w-0 flex-col items-center text-center text-[10px] font-semibold leading-tight text-white drop-shadow sm:text-xs">
@@ -569,6 +607,20 @@ function LineupPlayers({ lineup, side, teamColor, borderColor }: {
       })}
     </>
   );
+}
+
+function orderLineupPlayers(players: FixtureLineupPlayer[], side: "home" | "away") {
+  const lane = (code: string | null | undefined) => {
+    const position = code?.toUpperCase().replace(/[^A-Z]/g, "") ?? "";
+    if (/^(?:L|LB|LWB|LW|LWF|LM|LAM|LCM|LDM|LCB|AML|LWING)$/.test(position)) return -1;
+    if (/^(?:R|RB|RWB|RW|RWF|RM|RAM|RCM|RDM|RCB|AMR|RWING)$/.test(position)) return 1;
+    return 0;
+  };
+  const direction = side === "away" ? -1 : 1;
+  return players
+    .map((player, index) => ({ player, index }))
+    .sort((a, b) => (lane(a.player.positionCode) - lane(b.player.positionCode)) * direction || a.index - b.index)
+    .map(({ player }) => player);
 }
 
 function LineupPlayerEventMarkers({ events }: { events: FixtureLineupEvent[] }) {
@@ -725,10 +777,11 @@ type TeamColProps = {
   yellowCards: number;
   redCards: number;
 };
-async function TeamColForm({ teamId, leagueId, season, timestamp }: Pick<TeamColProps, "teamId" | "leagueId" | "season" | "timestamp">) {
+async function TeamColForm({ teamId, leagueId }: Pick<TeamColProps, "teamId" | "leagueId">) {
   try {
-    const profile = await getTeamProfile(teamId, false, season, timestamp, leagueId, { limit: 5 });
-    return <TeamFormRows rows={profile.rows.slice(-5)} />;
+    const now = Math.floor(Date.now() / 1000);
+    const profile = await getTeamProfile(teamId, false, undefined, now, leagueId, { limit: 5 });
+    return <TeamFormRows results={profile.rows.slice(-5).map((row) => row.result)} />;
   } catch (error: unknown) {
     return <span role="alert" className="text-center text-[9px] text-muted"><I18nText text="No se pudo cargar la forma reciente." /> {friendlyApiError(errMsg(error))}</span>;
   }
@@ -747,16 +800,16 @@ function TeamCol({ teamId, leagueId, season, timestamp, returnTo, name, logo, ye
       </Link>
       <div className="hero-serif min-h-[2.4em] max-w-full whitespace-normal break-words text-center text-[13px] font-normal uppercase leading-tight tracking-normal sm:text-sm">{name}</div>
       <Suspense fallback={<div aria-hidden="true" className="mt-1 h-5" />}>
-        <TeamColForm teamId={teamId} leagueId={leagueId} season={season} timestamp={timestamp} />
+        <TeamColForm teamId={teamId} leagueId={leagueId} />
       </Suspense>
     </div>
   );
 }
-function TeamFormRows({ rows }: { rows: TeamProfile["rows"] }) {
+function TeamFormRows({ results }: { results: TeamProfile["rows"][number]["result"][] }) {
   return (
     <div className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5 sm:gap-1">
-      {rows.map((row, index) => (
-        <span key={index} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${row.result === "W" ? "bg-statGreen" : row.result === "D" ? "bg-statOrange" : "bg-statRed"}`}>{row.result}</span>
+      {results.map((result, index) => (
+        <span key={index} className={`flex h-[18px] w-[18px] items-center justify-center rounded font-serif text-[10px] font-bold text-black sm:h-5 sm:w-5 sm:text-xs ${result === "W" ? "bg-statGreen" : result === "D" ? "bg-statOrange" : "bg-statRed"}`}>{result}</span>
       ))}
     </div>
   );
@@ -779,39 +832,44 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   const ex = (m: Metric) => expectedFor(pa, pb, m)?.total ?? null;
   const L = lavg;
 
-  const barColor = (value: number | null, ref: number | null | undefined, isProbability = false) => {
+  const valueTone = (value: number | null, ref: number | null | undefined, isProbability = false) => {
     const state = ref != null ? tone(value, ref) : isProbability ? pctTone(value) : "none";
-    return state === "up" ? "bg-statGreen" : state === "flat" ? "bg-statOrange" : state === "down" ? "bg-statRed" : "bg-muted/40";
+    return state === "up" ? "bg-statGreen/20 text-statGreen"
+      : state === "flat" ? "bg-statOrange/20 text-statOrange"
+        : state === "down" ? "bg-statRed/15 text-statRed" : "bg-card2 text-muted";
+  };
+  const outcomeTone = (value: number) => {
+    const values = [p1x2?.home, p1x2?.draw, p1x2?.away].filter((item): item is number => item !== undefined);
+    const highest = Math.max(...values);
+    const lowest = Math.min(...values);
+    if (highest === lowest) return "bg-statOrange/20 text-statOrange";
+    if (value === highest) return "bg-statGreen/20 text-statGreen";
+    if (value === lowest) return "bg-statRed/15 text-statRed";
+    return "bg-statOrange/20 text-statOrange";
   };
   const prob = (label: string, Icon: typeof IconNet, value: number | null, ref: number | null | undefined) => (
-    <article className="min-w-0 rounded-xl border border-line bg-bg/70 p-3">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><Icon className="h-4 w-4" /></span>
-        <span className="min-w-0 flex-1 text-xs font-semibold leading-4 text-muted"><I18nText text={label} /></span>
-        <strong className="shrink-0 text-xl font-black tabular-nums text-fg">{pct(value)}</strong>
+    <article className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-bg/70 px-2.5 py-2.5 sm:px-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-card2 text-brand"><Icon className="h-4 w-4" /></span>
+        <div className="min-w-0">
+          <span className="block text-xs font-semibold leading-4 text-fg"><I18nText text={label} /></span>
+          {ref != null && <span className="mt-0.5 block text-[10px] text-muted"><I18nText text="Media liga" /> <b className="text-fg">{pct(ref)}</b></span>}
+        </div>
       </div>
-      <div aria-hidden="true" className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
-        <div className={`h-full rounded-full ${barColor(value, ref, true)}`} style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }} />
-      </div>
-      {ref != null && <p className="mt-2 text-[11px] text-muted"><I18nText text="Media liga" /> <span className="font-bold text-fg">{pct(ref)}</span></p>}
+      <strong className={`flex min-h-10 min-w-[4.5rem] shrink-0 items-center justify-center rounded-lg px-3 text-base font-extrabold tabular-nums ${valueTone(value, ref, true)}`}>{pct(value)}</strong>
     </article>
   );
   const average = (label: string, Icon: typeof IconNet, value: number | null, ref: number | null | undefined, digits = 1) => {
-    const fill = value !== null && ref ? (value / (ref * 2)) * 100 : value !== null ? 40 : 0;
     return (
-      <article className="min-w-0 rounded-xl border border-line bg-bg/70 p-3">
+      <article className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-bg/70 px-2.5 py-2.5 sm:px-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-card2 text-brand"><Icon className="h-4 w-4" /></span>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-card2 text-brand"><Icon className="h-4 w-4" /></span>
           <div className="min-w-0 flex-1">
-            <span className="block text-xs font-semibold leading-4 text-muted"><I18nText text={label} /></span>
-            <strong className="mt-1 block text-xl font-black tabular-nums text-fg">{num(value, digits)}</strong>
+            <span className="block text-xs font-semibold leading-4 text-fg"><I18nText text={label} /></span>
+            {ref != null && <span className="mt-0.5 block text-[10px] text-muted"><I18nText text="Media de liga" /> <b className="text-fg">{num(ref, 1)}</b></span>}
           </div>
         </div>
-        <div aria-hidden="true" className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-line">
-          <div className={`h-full rounded-full ${barColor(value, ref)}`} style={{ width: `${Math.max(0, Math.min(100, fill))}%` }} />
-          {ref != null && <span className="absolute inset-y-[-2px] left-1/2 w-0.5 bg-fg/70" />}
-        </div>
-        {ref != null && <p className="mt-2 text-[11px] text-muted"><I18nText text="Media liga" /> <span className="font-bold text-fg">{num(ref, 1)}</span></p>}
+        <strong className={`flex min-h-10 min-w-[4.5rem] shrink-0 items-center justify-center rounded-lg px-3 text-base font-extrabold tabular-nums ${valueTone(value, ref)}`}>{num(value, digits)}</strong>
       </article>
     );
   };
@@ -819,36 +877,31 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   return (
     <div className="min-w-0 space-y-3">
       {p1x2 ? (
-        <section className="overflow-hidden rounded-2xl border border-brand/25 bg-gradient-to-br from-brand/10 via-card to-card p-3 sm:p-4">
+        <section className="min-w-0 overflow-hidden rounded-2xl border border-line bg-card p-3 sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold"><I18nText text="Probabilidad 1X2" /></h2>
+            <h2 className="text-sm font-extrabold"><I18nText text="Probabilidad 1X2" /></h2>
             <span className="rounded-full border border-line bg-bg/70 px-2.5 py-1 text-[10px] font-bold tracking-wider text-brand">1X2</span>
           </div>
           <div className="grid min-w-0 grid-cols-3 gap-1.5 sm:gap-2">
-            <div className="min-w-0 rounded-xl border border-line bg-bg/70 px-2 py-2.5 text-center sm:px-3">
+            <div className="min-w-0 rounded-xl bg-card2 px-2 py-2.5 text-center sm:px-3">
               <span className="block truncate text-[10px] font-semibold text-muted sm:text-xs">{f.home.name}</span>
-              <strong className="mt-1 block text-2xl font-black tabular-nums text-fg sm:text-3xl">{Math.round(p1x2.home)}%</strong>
+              <strong className={`mt-1 block rounded-lg px-2 py-1 text-xl font-extrabold tabular-nums sm:text-2xl ${outcomeTone(p1x2.home)}`}>{Math.round(p1x2.home)}%</strong>
             </div>
-            <div className="min-w-0 rounded-xl border border-line bg-bg/70 px-2 py-2.5 text-center sm:px-3">
+            <div className="min-w-0 rounded-xl bg-card2 px-2 py-2.5 text-center sm:px-3">
               <span className="block truncate text-[10px] font-semibold text-muted sm:text-xs"><I18nText text="Empate" /></span>
-              <strong className="mt-1 block text-2xl font-black tabular-nums text-fg sm:text-3xl">{Math.round(p1x2.draw)}%</strong>
+              <strong className={`mt-1 block rounded-lg px-2 py-1 text-xl font-extrabold tabular-nums sm:text-2xl ${outcomeTone(p1x2.draw)}`}>{Math.round(p1x2.draw)}%</strong>
             </div>
-            <div className="min-w-0 rounded-xl border border-line bg-bg/70 px-2 py-2.5 text-center sm:px-3">
+            <div className="min-w-0 rounded-xl bg-card2 px-2 py-2.5 text-center sm:px-3">
               <span className="block truncate text-[10px] font-semibold text-muted sm:text-xs">{f.away.name}</span>
-              <strong className="mt-1 block text-2xl font-black tabular-nums text-fg sm:text-3xl">{Math.round(p1x2.away)}%</strong>
+              <strong className={`mt-1 block rounded-lg px-2 py-1 text-xl font-extrabold tabular-nums sm:text-2xl ${outcomeTone(p1x2.away)}`}>{Math.round(p1x2.away)}%</strong>
             </div>
-          </div>
-          <div aria-hidden="true" className="mt-3 flex h-2 overflow-hidden rounded-full bg-line">
-            <div className="border-r-2 border-bg" style={{ width: `${p1x2.home}%`, backgroundColor: OUTCOME_COLORS.home }} />
-            <div className="border-r-2 border-bg" style={{ width: `${p1x2.draw}%`, backgroundColor: OUTCOME_COLORS.draw }} />
-            <div style={{ width: `${p1x2.away}%`, backgroundColor: OUTCOME_COLORS.away }} />
           </div>
         </section>
       ) : <Notice tone="warn"><I18nText text="Datos insuficientes para estimar el 1X2 (pocos partidos recientes o cobertura limitada)." /></Notice>}
 
       <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-bold"><I18nText text="Probabilidades clave" /></h2>
+          <h2 className="text-sm font-extrabold"><I18nText text="Probabilidades clave" /></h2>
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted"><I18nText text="Modelo" /></span>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -860,10 +913,10 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
 
       <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-bold"><I18nText text="Promedios previstos" /></h2>
+          <h2 className="text-sm font-extrabold"><I18nText text="Promedios previstos" /></h2>
           <span className="rounded-full bg-card2 px-2.5 py-1 text-[10px] font-semibold text-muted">{FORM_MATCHES} <I18nText text="Partidos" /></span>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
           {average("Promedio de goles", IconBall, eg?.total ?? null, L?.goals, 2)}
           {average("Promedio de tarjetas", IconCard, ex("cards"), L?.cards)}
           {average("Promedio de córners", IconCorner, ex("corners"), L?.corners)}
@@ -878,8 +931,8 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
         </div>
       </section>
 
-      <section className="rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/5 via-card to-card p-3 sm:p-4">
-        <h2 className="font-bold"><I18nText text="Contexto estadístico" /></h2>
+      <section className="min-w-0 rounded-2xl border border-line bg-card p-3 sm:p-4">
+        <h2 className="text-sm font-extrabold"><I18nText text="Contexto estadístico" /></h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           {eg ? <><I18nText text="La proyección central es de" /> <b className="text-fg">{num(eg.total, 2)}</b> <I18nText text="goles totales." /></> : <I18nText text="No hay muestra suficiente para generar contexto de goles." />}
           {topOutcome ? <> <I18nText text="El resultado individual más probable es" /> <b className="text-fg"><I18nText text={topOutcome.name} /></b> ({pct(topOutcome.value)}).</> : null}

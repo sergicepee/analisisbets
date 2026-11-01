@@ -4,6 +4,7 @@ import { FavoriteFixtureVisibility } from "./FavoriteFixtureVisibility";
 import { I18nText } from "./I18nProvider";
 import { IconSearch } from "./icons";
 import { SearchLauncher } from "./SearchModal";
+import { timeStr } from "@/lib/format";
 
 export function FavoriteFixturesList({
   fixtures,
@@ -36,6 +37,7 @@ export function FavoriteFixturesList({
           <MatchRow
             f={fixture}
             date={dates[fixture.id]}
+            matchTime={timeStr(fixture.timestamp)}
             isAuthenticated
             initialFavorite
           />

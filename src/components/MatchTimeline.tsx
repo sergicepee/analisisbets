@@ -1,8 +1,8 @@
-import { IconSoccerBall, IconSubstitution } from "@/components/icons";
+import { IconSoccerBall, IconSubstitution, IconSubstitutionIn } from "@/components/icons";
 import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
-import { statusGroup } from "@/lib/format";
-import type { Fixture, FixtureEvent } from "@/lib/types";
+import { friendlyApiError, statusGroup } from "@/lib/format";
+import type { Fixture, FixtureEvent, FixtureLineup } from "@/lib/types";
 
 function timelineDescription(event: FixtureEvent) {
   const detail = event.detail.toLowerCase();
@@ -24,7 +24,7 @@ function TimelineMarker({ event }: { event: FixtureEvent }) {
   if (event.type === "VAR" || /var/i.test(event.detail)) {
     return <span className="rounded bg-card2 px-1.5 py-0.5 text-[9px] font-black text-muted">VAR</span>;
   }
-  if (event.type === "Substitution") return <IconSubstitution size={16} />;
+  if (event.type === "Substitution") return null;
   if (event.type === "Goal") return <IconSoccerBall size={16} />;
   return null;
 }
@@ -39,10 +39,42 @@ function TimelineEvent({ event, fixture }: { event: FixtureEvent; fixture: Fixtu
     : null;
   const eventInfo = (
     <div className="min-w-0">
-      <p className="truncate text-xs font-bold text-fg">{playerName}</p>
-      <p className="text-[10px] leading-tight text-muted"><I18nText text={description} /></p>
-      {event.type === "Substitution" && event.secondaryPlayer && (
-        <p className="truncate text-[10px] leading-tight text-muted">{event.secondaryPlayer}</p>
+      {event.type === "Substitution" ? (
+        <div className="space-y-0.5">
+          <p className={`flex min-w-0 items-center gap-1 text-xs font-bold text-fg ${isHome ? "justify-end" : "justify-start"}`}>
+            {isHome ? (
+              <>
+                <span className="truncate">{playerName}</span>
+                <IconSubstitutionIn size={15} />
+              </>
+            ) : (
+              <>
+                <IconSubstitutionIn size={15} />
+                <span className="truncate">{playerName}</span>
+              </>
+            )}
+          </p>
+          {event.secondaryPlayer && (
+            <p className={`flex min-w-0 items-center gap-1 text-xs font-bold text-fg ${isHome ? "justify-end" : "justify-start"}`}>
+              {isHome ? (
+                <>
+                  <span className="truncate">{event.secondaryPlayer}</span>
+                  <IconSubstitution size={15} />
+                </>
+              ) : (
+                <>
+                  <IconSubstitution size={15} />
+                  <span className="truncate">{event.secondaryPlayer}</span>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
+          <p className="truncate text-xs font-bold text-fg">{playerName}</p>
+          <p className="text-[10px] leading-tight text-muted"><I18nText text={description} /></p>
+        </>
       )}
     </div>
   );
@@ -65,11 +97,54 @@ function TimelineEvent({ event, fixture }: { event: FixtureEvent; fixture: Fixtu
   );
 }
 
-export function MatchTimeline({ fixture }: { fixture: Fixture }) {
+function TimelineBoundary({ label, className = "" }: { label: string; className?: string }) {
+  return (
+    <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-muted ${className}`}>
+      <span className="h-px flex-1 bg-line" />
+      <span className="rounded-full bg-card2 px-3 py-1"><I18nText text={label} /></span>
+      <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
+
+function lineupSubstitutions(lineups: FixtureLineup[]): FixtureEvent[] {
+  return lineups.flatMap((lineup) => {
+    const players = [...lineup.starters, ...lineup.substitutes];
+    const playersById = new Map(players.flatMap((player) => player.id === null ? [] : [[player.id, player] as const]));
+    return players.flatMap((player) => (player.matchEvents ?? [])
+      .filter((event) => event.type === "substitutionIn")
+      .map((event) => {
+        const outgoing = event.relatedPlayerId ? playersById.get(event.relatedPlayerId) : undefined;
+        return {
+          minute: event.minute,
+          extra: event.extra,
+          teamId: lineup.teamId,
+          player: player.name,
+          secondaryPlayer: outgoing?.name,
+          playerId: player.id ?? undefined,
+          playerPhoto: player.photo,
+          type: "Substitution",
+          detail: "Substitution",
+        };
+      }));
+  });
+}
+
+export function MatchTimeline({ fixture, lineups, error }: { fixture: Fixture; lineups: FixtureLineup[]; error: string | null }) {
   const group = statusGroup(fixture);
-  const events = [...fixture.events]
+  const existingSubstitutions = fixture.events.filter((event) => event.type === "Substitution");
+  const addedSubstitutions = lineupSubstitutions(lineups).filter((event) => !existingSubstitutions.some((existing) =>
+    existing.teamId === event.teamId && existing.minute === event.minute &&
+    (existing.playerId && event.playerId
+      ? existing.playerId === event.playerId
+      : existing.player.trim().toLowerCase() === event.player.trim().toLowerCase()),
+  ));
+  const events = [...fixture.events, ...addedSubstitutions]
     .filter((event) => event.teamId === fixture.home.id || event.teamId === fixture.away.id)
     .sort((a, b) => b.minute - a.minute || (b.extra ?? 0) - (a.extra ?? 0));
+  const firstHalfEnded = group === "finished" || fixture.statusShort === "HT" || fixture.statusShort === "2H";
+  const secondHalfEvents = events.filter((event) => event.minute > 45);
+  const firstHalfEvents = events.filter((event) => event.minute <= 45);
   const score = fixture.goalsHome !== null && fixture.goalsAway !== null
     ? `${fixture.goalsHome} - ${fixture.goalsAway}`
     : "— - —";
@@ -81,6 +156,7 @@ export function MatchTimeline({ fixture }: { fixture: Fixture }) {
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-line bg-card p-3 sm:p-4">
       <h2 className="mb-4 text-sm font-extrabold uppercase tracking-wide"><I18nText text="Cronología" /></h2>
+      {error && <p role="alert" className="mb-3 rounded-xl border border-loss/40 bg-loss/10 px-3 py-2 text-xs text-loss"><I18nText text="No se pudieron cargar las sustituciones." /> {friendlyApiError(error)}</p>}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Shield src={fixture.home.logo} alt="" size={20} />
@@ -99,26 +175,29 @@ export function MatchTimeline({ fixture }: { fixture: Fixture }) {
         </span>
         <span className="h-px flex-1 bg-line" />
       </div>
-      {events.length ? (
+      {events.length || firstHalfEnded ? (
         <div className="divide-y divide-line/70">
-          {events.map((event, index) => (
+          {secondHalfEvents.map((event, index) => (
             <TimelineEvent
-              key={`${event.minute}-${event.extra ?? 0}-${event.teamId}-${event.type}-${event.playerId ?? index}`}
+              key={`second-${event.minute}-${event.extra ?? 0}-${event.teamId}-${event.type}-${event.playerId ?? index}`}
               event={event}
               fixture={fixture}
             />
           ))}
+          {firstHalfEnded && <TimelineBoundary label="Fin de la primera parte" className="my-2" />}
+          {firstHalfEvents.map((event, index) => (
+            <TimelineEvent
+              key={`first-${event.minute}-${event.extra ?? 0}-${event.teamId}-${event.type}-${event.playerId ?? index}`}
+              event={event}
+              fixture={fixture}
+            />
+          ))}
+          {!events.length && <p className="py-5 text-center text-xs text-muted"><I18nText text="Aún no hay eventos registrados." /></p>}
         </div>
       ) : (
         <p className="py-5 text-center text-xs text-muted"><I18nText text="Aún no hay eventos registrados." /></p>
       )}
-      {started && (
-        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-muted">
-          <span className="h-px flex-1 bg-line" />
-          <span className="rounded-full bg-card2 px-3 py-1"><I18nText text="Inicio del partido" /></span>
-          <span className="h-px flex-1 bg-line" />
-        </div>
-      )}
+      {started && <TimelineBoundary label="Inicio del partido" className="mt-3" />}
     </section>
   );
 }

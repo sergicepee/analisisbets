@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconLock, IconNet } from "@/components/icons";
-import { MIN_SAMPLES } from "@/lib/metrics";
+import { MIN_SAMPLES, recentValues } from "@/lib/metrics";
 import type { TeamRef, TeamRow } from "@/lib/types";
 
 type History = { team: TeamRef; rows: TeamRow[] };
@@ -15,15 +15,10 @@ type ValueSelector = (row: TeamRow) => number | null;
 type Direction = "over" | "under";
 
 const TEAM_LINES = [0.5, 1.5, 2.5, 3.5];
+const HALF_TEAM_LINES = [0.5, 1.5];
 const MATCH_LINES = [0.5, 1.5, 2.5, 3.5, 4.5];
 const displayNumber = (value: number, locale: string) => value.toLocaleString(locale, { maximumFractionDigits: 1 });
 const displayPercent = (value: number | null) => value === null ? "—" : `${Math.round(value)}%`;
-
-function recentValues(history: History, selector: ValueSelector, sampleSize: number) {
-  return history.rows.slice(-sampleSize).map(selector).filter((value): value is number =>
-    value !== null && Number.isFinite(value),
-  );
-}
 
 function percentage(
   history: History,
@@ -31,7 +26,7 @@ function percentage(
   predicate: (value: number) => boolean,
   sampleSize: number,
 ): { value: number; hits: number; total: number } | null {
-  const values = recentValues(history, selector, sampleSize);
+  const values = recentValues(history.rows, selector, sampleSize);
   if (values.length < MIN_SAMPLES) return null;
   const hits = values.filter(predicate).length;
   return { value: hits * 100 / values.length, hits, total: values.length };
@@ -89,11 +84,13 @@ function rowPercentage(
   predicate: (row: TeamRow) => boolean,
   sampleSize: number,
 ): { value: number; hits: number; total: number } | null {
-  const rows = history.rows.slice(-sampleSize);
-  const available = rows.filter((row) => row.goalsFor !== null && row.goalsAgainst !== null);
-  if (available.length < MIN_SAMPLES) return null;
-  const hits = available.filter(predicate).length;
-  return { value: hits * 100 / available.length, hits, total: available.length };
+  const values = recentValues(history.rows, (row) => {
+    if (!Number.isFinite(row.goalsFor) || !Number.isFinite(row.goalsAgainst)) return null;
+    return predicate(row) ? 1 : 0;
+  }, sampleSize);
+  if (values.length < MIN_SAMPLES) return null;
+  const hits = values.filter((value) => value === 1).length;
+  return { value: hits * 100 / values.length, hits, total: values.length };
 }
 
 function marketRows(home: History, away: History, sampleSize: number, locale: string, view: "over" | "under"): GoalRow[] {
@@ -125,12 +122,14 @@ function halfMarketRows(home: History, away: History, sampleSize: number, locale
   const selector = (row: TeamRow) => halfTotalGoals(row, period);
   const rows = thresholdRows(home, away, selector, [0.5, 1.5, 2.5], sampleSize, locale, "over", undefined, true);
   const makeBttsRate = (history: History) => {
-    const values = history.rows.slice(-sampleSize)
-      .map((row) => ({ forGoals: scoredValue(row, period), againstGoals: concededValue(row, period) }))
-      .filter((item) => item.forGoals !== null && item.againstGoals !== null);
+    const values = recentValues(history.rows, (row) => {
+      const forGoals = scoredValue(row, period);
+      const againstGoals = concededValue(row, period);
+      if (forGoals === null || againstGoals === null) return null;
+      return forGoals > 0 && againstGoals > 0 ? 1 : 0;
+    }, sampleSize);
     if (values.length < MIN_SAMPLES) return null;
-    const hits = values.filter((item) => item.forGoals !== null && item.againstGoals !== null && item.forGoals > 0 && item.againstGoals > 0).length;
-    return hits * 100 / values.length;
+    return values.filter((value) => value === 1).length * 100 / values.length;
   };
   const homeRate = makeBttsRate(home), awayRate = makeBttsRate(away);
   rows.push({
@@ -244,7 +243,7 @@ function GoalRatePanel({
   const firstColumn = isScored ? "Anotados por juego" : "Concedidos / partido";
   const makeRows = (period: 0 | 1 | 2) => {
     const selector: ValueSelector = (row) => getValue(row, period);
-    const rows = thresholdRows(home, away, selector, TEAM_LINES, sampleSize, locale);
+    const rows = thresholdRows(home, away, selector, period === 0 ? TEAM_LINES : HALF_TEAM_LINES, sampleSize, locale);
     const zeroLabel = isScored ? "Sin marcar" : "Porterías a 0";
     const zero = (history: History) => percentage(history, selector, (value) => value === 0, sampleSize)?.value ?? null;
     rows.push({
