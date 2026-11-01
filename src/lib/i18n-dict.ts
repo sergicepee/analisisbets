@@ -4,7 +4,7 @@ export type LangCode = "es" | "en";
 /** Clave = texto en español. Si no hay traducción, se muestra el español. */
 const EN: Record<string, string> = {
   // navegación
-  "Partidos": "Matches", "Plantilla": "Squad", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "Estadísticas": "Stats", "Ligas": "Leagues",
+  "Partidos": "Matches", "Mis apuestas": "My bets", "Registrar apuesta": "Track bet", "Plantilla": "Squad", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "Estadísticas": "Stats", "Ligas": "Leagues",
   "Buscar equipos, ligas...": "Search teams, leagues...",
   "Buscando...": "Searching...",
   "Escribe al menos 2 letras para buscar equipos o ligas.": "Type at least 2 letters to search teams or leagues.",

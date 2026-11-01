@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ChevronDown, MapPin } from "lucide-react";
+import { CalendarDays, ChevronDown, MapPin, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { t } from "@/lib/i18n";
 import { I18nText } from "@/components/I18nProvider";
@@ -706,6 +706,7 @@ function MatchHeader({ f, cardCounts, returnTo, isAuthenticated, initialFavorite
   const forHome = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.away.id : e.teamId === f.home.id));
   const forAway = goals.filter((e) => (e.detail === "Own Goal" ? e.teamId === f.home.id : e.teamId === f.away.id));
   const dateLabel = new Intl.DateTimeFormat(getLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: getTz() }).format(new Date(f.timestamp * 1000));
+  const dateKey = new Intl.DateTimeFormat("en-CA", { timeZone: getTz() }).format(new Date(f.timestamp * 1000));
   const matchday = f.round.match(/(\d+)\s*$/)?.[1];
   const roundLabel = matchday ? `Jornada ${matchday}` : f.round;
   return (
@@ -742,7 +743,16 @@ function MatchHeader({ f, cardCounts, returnTo, isAuthenticated, initialFavorite
           <div className="space-y-0.5 text-right">{forAway.map((e, i) => <div key={i}>{scorer(e)}</div>)}</div>
         </div>
       )}
-      <div className="flex justify-center"><FollowMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} /></div>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+        <FollowMatchButton fixtureId={f.id} isAuthenticated={isAuthenticated} initialFavorite={initialFavorite} />
+        <Link
+          href={`/mis-apuestas?fixtureId=${f.id}&leagueId=${f.leagueId}&date=${dateKey}`}
+          className="mt-3 inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-slate-400/70 bg-white/75 px-4 py-1.5 text-[11px] font-bold text-slate-900 shadow-sm transition-colors hover:bg-white"
+        >
+          <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+          <I18nText text="Registrar apuesta" />
+        </Link>
+      </div>
       </div>
     </section>
   );

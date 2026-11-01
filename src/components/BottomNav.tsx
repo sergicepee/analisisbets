@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Star } from "lucide-react";
+import { ClipboardList, Star } from "lucide-react";
 import { IconMatches } from "./icons";
 import { useT } from "./I18nProvider";
 
 const ITEMS = [
   { href: "/", label: "Partidos", Icon: IconMatches, match: (p: string) => p === "/" || p.startsWith("/match") },
+  { href: "/mis-apuestas", label: "Mis apuestas", Icon: ClipboardList, match: (p: string) => p.startsWith("/mis-apuestas") },
   { href: "/favoritos", label: "Favoritos", Icon: Star, match: (p: string) => p.startsWith("/favoritos") },
 ];
 

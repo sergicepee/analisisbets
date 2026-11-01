@@ -6,8 +6,9 @@ import { useT } from "./I18nProvider";
 
 const ITEMS = [
   { href: "/", label: "Partidos", match: (p: string) => p === "/" || p.startsWith("/match") },
-  { href: "/stats", label: "Estadísticas", match: (p: string) => p.startsWith("/stats") },
+  { href: "/mis-apuestas", label: "Mis apuestas", match: (p: string) => p.startsWith("/mis-apuestas") },
   { href: "/favoritos", label: "Favoritos", match: (p: string) => p.startsWith("/favoritos") },
+  { href: "/stats", label: "Estadísticas", match: (p: string) => p.startsWith("/stats") },
 ];
 export function DesktopNav() {
   const path = usePathname();

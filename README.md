@@ -6,7 +6,7 @@ Datos de fútbol de **ESPN** (sin clave) y caché en **Supabase**. Los CSV del r
 ## Pantallas
 Móvil: una columna con barra inferior. Escritorio (≥1024 px): menú superior, buscador de equipos y ligas, y dos columnas (lista de partidos + ficha) con scroll independiente.
 
-Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Ficha (Análisis: General gratis / Goles / Tiros / Córners / Tarjetas Premium; estadísticas reales y alineaciones de ESPN cuando estén disponibles) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
+Partidos (fecha, filtros con contadores, agrupado por liga, autorefresco en vivo) · Mi registro (`/mis-apuestas`, historial privado con resultados y rendimiento) · Ficha (Análisis: General gratis / Goles / Tiros / Córners / Tarjetas Premium; estadísticas reales y alineaciones de ESPN cuando estén disponibles) · Los 3 mejores · Estadísticas (máximo / más bajo) · Ligas (buscador) · Buscador (`/buscar`) y página de equipo (`/equipo/ID`) · Suscripciones Premium con Stripe (`/premium`) · Registro, inicio de sesión (email y Google), recuperar contraseña y Mi cuenta · Estado (`/estado`).
 
 ## Probar en local (ESPN no necesita claves)
 ```bash
@@ -29,15 +29,22 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 1. Ejecuta **todo** `supabase/schema.sql` (incluye la tabla `profiles` y sus políticas de seguridad).
 2. En Vercel añade `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API → clave **anon/publishable**) y haz *Redeploy*.
 3. Si el proyecto ya estaba desplegado antes de añadir el seguimiento de ligas, ejecuta `supabase/migrations/20261101_followed_leagues.sql` en el SQL Editor de Supabase para crear `followed_leagues` y sus políticas de acceso.
-4. Supabase → **Authentication → URL Configuration**:
+4. Si el proyecto ya estaba desplegado antes de añadir **Mi registro**, ejecuta `supabase/migrations/20261101_bet_tracker.sql` para crear el historial privado de apuestas y sus políticas.
+5. Si ya habías ejecutado la migración inicial de **Mi registro**, ejecuta también `supabase/migrations/20261101_bet_tracker_combinations.sql` para habilitar las apuestas combinadas.
+6. Supabase → **Authentication → URL Configuration**:
    - *Site URL*: `https://TU-PROYECTO.vercel.app`
    - *Redirect URLs*: añade `https://TU-PROYECTO.vercel.app/auth/callback` (y `http://localhost:3000/auth/callback` para local).
-5. **Email y contraseña** funciona ya. Por defecto Supabase exige confirmar el email; si quieres entrar sin confirmar (solo pruebas): Authentication → Providers → Email → desactiva *Confirm email*.
+7. **Email y contraseña** funciona ya. Por defecto Supabase exige confirmar el email; si quieres entrar sin confirmar (solo pruebas): Authentication → Providers → Email → desactiva *Confirm email*.
    El envío gratuito de emails de Supabase está limitado a pocos por hora; para producción configura un SMTP propio (Authentication → SMTP Settings).
-6. **Google**:
+8. **Google**:
    1. Google Cloud Console → *APIs & Services → Credentials → Create credentials → OAuth client ID* (tipo *Web application*). Si te lo pide, configura antes la pantalla de consentimiento.
    2. En *Authorized redirect URIs* pega la URL de callback que te muestra Supabase en Authentication → Providers → Google (`https://xxxx.supabase.co/auth/v1/callback`).
    3. Copia el *Client ID* y *Client Secret* en Supabase → Authentication → Providers → **Google** → activar → Guardar.
+
+## Resultados de «Mi registro»
+- Las apuestas pendientes se comprueban al abrir `/mis-apuestas` y cada tres minutos mientras la página está abierta.
+- Se liquidan automáticamente los mercados reconocidos de 1X2, goles, tarjetas, tiros, tiros a puerta y córners cuando el partido figura como finalizado y hay datos suficientes. En combinadas, una selección perdida hace perder el ticket; todas ganadas lo hacen ganador.
+- Si el partido no aparece, faltan estadísticas o la selección no se reconoce, permanece pendiente para revisión manual. Las combinadas con selecciones anuladas también quedan pendientes para no alterar su cuota final. Solo se actualizan apuestas pendientes, así que los resultados corregidos manualmente no se sobrescriben.
 
 ## Suscripciones Premium (Stripe)
 - General del análisis permanece gratis. Goles, Tiros, Esquinas y Tarjetas del análisis requieren una suscripción activa; los usuarios sin suscripción ven una vista previa difuminada sin recibir los datos reales.
