@@ -26,6 +26,7 @@ import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { jerseyStyle, normalizedTeamColor } from "@/lib/teamColor";
 import { getLocale, getTz } from "@/lib/prefs";
 import {
   avg2, expectedFor, pctTone, poissonModel, tone,
@@ -390,11 +391,6 @@ function MatchStatistics({ fixture, stats, period, date }: { fixture: Fixture; s
   );
 }
 
-function normalizedTeamColor(color: string | null | undefined) {
-  const value = color?.replace(/^#/, "");
-  return value && /^[\da-f]{6}$/i.test(value) ? value.toUpperCase() : null;
-}
-
 function teamColorOptions(lineup: FixtureLineup | undefined) {
   return [...new Set([
     normalizedTeamColor(lineup?.teamColor),
@@ -436,21 +432,6 @@ function distinctLineupColors(homeLineup: FixtureLineup | undefined, awayLineup:
     .sort((left, right) => left.changes - right.changes || right.distance - left.distance);
   const selected = distinctPairs[0] ?? [...pairs].sort((left, right) => right.distance - left.distance || left.changes - right.changes)[0];
   return { home: selected.home, away: selected.away, needsBorder: selected.distance < 100 };
-}
-
-function jerseyStyle(color: string | null | undefined, borderColor?: string) {
-  const normalizedColor = normalizedTeamColor(color);
-  const style: { backgroundColor?: string; color?: string; borderColor?: string } = {};
-  if (normalizedColor) {
-    const red = Number.parseInt(normalizedColor.slice(0, 2), 16);
-    const green = Number.parseInt(normalizedColor.slice(2, 4), 16);
-    const blue = Number.parseInt(normalizedColor.slice(4, 6), 16);
-    const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
-    style.backgroundColor = `#${normalizedColor}`;
-    style.color = brightness > 155 ? "#111827" : "#fff";
-  }
-  if (borderColor) style.borderColor = borderColor;
-  return Object.keys(style).length ? style : undefined;
 }
 
 function MatchLineups({ fixture, lineups, error }: { fixture: Fixture; lineups: FixtureLineup[]; error: string | null }) {

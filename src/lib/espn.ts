@@ -3,7 +3,7 @@ import { cached } from "./cache";
 import { FORM_MATCHES } from "./config";
 import { statusGroup } from "./format";
 import { getTz } from "./prefs";
-import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, LeagueAvg, LeagueInfo, MatchPeriodStats, MatchStat, StoredStats, TeamProfile, TeamRow } from "./types";
+import type { Fixture, FixtureLineup, FixtureLineupEvent, FixtureLineupPlayer, LeagueAvg, LeagueInfo, MatchPeriodStats, MatchStat, StoredStats, TeamProfile, TeamRoster, TeamRosterPlayer, TeamRow } from "./types";
 
 type EspnLeague = {
   id: number;
@@ -76,6 +76,17 @@ type EspnScoreboard = {
   leagues?: Array<{ name?: string; logos?: Array<{ href?: string; rel?: string[] }> }>;
 };
 type EspnTeamSchedule = { events?: EspnEvent[] };
+type EspnRosterAthlete = {
+  id?: string | number;
+  displayName?: string;
+  fullName?: string;
+  jersey?: string | number | null;
+  age?: string | number;
+  citizenship?: string;
+  position?: { name?: string; displayName?: string; abbreviation?: string };
+  headshot?: string | { href?: string };
+};
+type EspnTeamRoster = { athletes?: EspnRosterAthlete[] };
 type EspnRosterEntry = {
   starter?: boolean;
   jersey?: string | number | null;
@@ -304,10 +315,10 @@ function normalizeFixture(event: EspnEvent, league: EspnLeague, leagueLogo: stri
   };
 }
 
-function normalizeTeam(team: EspnTeam): { id: number; name: string; logo: string | null } | null {
+function normalizeTeam(team: EspnTeam): { id: number; name: string; logo: string | null; color: string | null; alternateColor: string | null } | null {
   const id = finiteId(team.id);
   const name = team.displayName ?? team.name;
-  return id && name ? { id, name, logo: teamLogo(team) } : null;
+  return id && name ? { id, name, logo: teamLogo(team), color: team.color ?? null, alternateColor: team.alternateColor ?? null } : null;
 }
 
 export async function getEspnLeagues(): Promise<LeagueInfo[]> {
@@ -338,14 +349,14 @@ export function getEspnLeagueInfos(): LeagueInfo[] {
   }));
 }
 
-export async function getEspnTeams(leagueId: number, season: number): Promise<Array<{ id: number; name: string; logo: string | null }>> {
+export async function getEspnTeams(leagueId: number, season: number): Promise<Array<{ id: number; name: string; logo: string | null; color: string | null; alternateColor: string | null }>> {
   const league = leagueFor(leagueId);
   if (!league) throw new Error(`ESPN no tiene configurada la liga ${leagueId}`);
-  return cached(`espn:teams:${league.slug}:${season}`, DAY, async () => {
+  return cached(`espn:teams:v2:${league.slug}:${season}`, DAY, async () => {
     const data = await requestJson<EspnTeamList>(`${SITE}/${league.slug}/teams?season=${season}`);
     const teams = data.sports?.flatMap((sport) => sport.leagues ?? []).flatMap((item) => item.teams ?? [])
       .flatMap((item) => item.team ? [normalizeTeam(item.team)] : [])
-      .filter((team): team is { id: number; name: string; logo: string | null } => team !== null);
+      .filter((team): team is { id: number; name: string; logo: string | null; color: string | null; alternateColor: string | null } => team !== null);
     if (!teams?.length) throw new Error(`ESPN no devolvió equipos para ${league.name} (${season})`);
     return teams;
   });
@@ -373,6 +384,35 @@ export async function getEspnTeamCompetitions(teamId: number): Promise<LeagueInf
     return ESPN_LEAGUES.filter((league) => competitionIds.has(league.id)).map((league) => ({
       id: league.id, name: league.name, type: league.type, country: league.country, flag: league.flag, logo: null,
     }));
+  });
+}
+
+export async function getEspnTeamRoster(teamId: number, leagueId: number, season: number): Promise<TeamRoster> {
+  const league = leagueFor(leagueId);
+  if (!league) throw new Error(`ESPN no tiene configurada la competición ${leagueId}`);
+  const currentSeason = new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  return cached(`espn:team-roster:v2:${league.slug}:${teamId}:${season}`, season >= currentSeason ? 6 * HOUR : 30 * DAY, async () => {
+    const [data, teams] = await Promise.all([
+      requestJson<EspnTeamRoster>(`${SITE}/${league.slug}/teams/${teamId}/roster?season=${season}`),
+      getEspnTeams(leagueId, season),
+    ]);
+    if (!Array.isArray(data.athletes)) throw new Error(`ESPN no devolvió la plantilla del equipo ${teamId} (${season})`);
+    const team = teams.find((item) => item.id === teamId);
+    const players = data.athletes.flatMap((athlete): TeamRosterPlayer[] => {
+      const name = athlete.displayName ?? athlete.fullName;
+      if (!name?.trim()) return [];
+      const jersey = athlete.jersey == null ? null : String(athlete.jersey).trim() || null;
+      return [{
+        id: finiteId(athlete.id),
+        name: name.trim(),
+        jersey,
+        position: athlete.position?.displayName ?? athlete.position?.name ?? athlete.position?.abbreviation ?? "",
+        positionAbbreviation: athlete.position?.abbreviation ?? null,
+        age: numeric(athlete.age),
+        nationality: athlete.citizenship?.trim() || null,
+      }];
+    });
+    return { players, teamColor: team?.color || team?.alternateColor || null };
   });
 }
 

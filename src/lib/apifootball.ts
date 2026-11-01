@@ -1,7 +1,7 @@
 import "server-only";
 import { apiEnabled, FORM_MATCHES } from "./config";
 import type {
-  Fixture, FixtureLineup, LeagueAvg, LeagueCardLeader, LeagueInfo, StoredStats, TeamProfile,
+  Fixture, FixtureLineup, LeagueAvg, LeagueCardLeader, LeagueInfo, StoredStats, TeamProfile, TeamRoster,
 } from "./types";
 import { canonicalTeamName } from "./csvFixtures";
 import {
@@ -22,6 +22,7 @@ import {
   getEspnTeams,
   getEspnTeamFixtures,
   getEspnTeamCompetitions,
+  getEspnTeamRoster,
   getEspnTeamProfile,
   searchEspnTeams,
 } from "./espn";
@@ -331,6 +332,16 @@ export async function getTeamCompetitions(teamId: number): Promise<LeagueInfo[]>
     return await getEspnTeamCompetitions(teamId);
   } catch (error) {
     console.error(`No se pudieron cargar las competiciones ESPN del equipo ${teamId}:`, error);
+    throw error;
+  }
+}
+
+export async function getTeamRoster(teamId: number, leagueId: number, season: number): Promise<TeamRoster> {
+  if (!apiEnabled) return { players: [], teamColor: null };
+  try {
+    return await getEspnTeamRoster(teamId, leagueId, season);
+  } catch (error) {
+    console.error(`No se pudo cargar la plantilla ESPN del equipo ${teamId} (${season}):`, error);
     throw error;
   }
 }

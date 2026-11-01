@@ -1,11 +1,11 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
 import { createAuthBrowser } from "@/lib/auth-browser";
 import { useLang } from "./I18nProvider";
 import { SettingsOptions } from "./SettingsModal";
-import { IconCalendar, IconCamera, IconClose, IconGlobe, IconGo, IconLock, IconSettings } from "./icons";
+import { IconCalendar, IconCamera, IconGo, IconLock, IconMail, IconTrophy } from "./icons";
 
 type Props = { userId: string; email: string; displayName: string; avatarUrl: string | null; provider: string; createdAt: string; tz: string };
 
@@ -25,8 +25,6 @@ export function ProfileCard({ userId, email, displayName, avatarUrl, provider, c
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeError, setNoticeError] = useState(false);
@@ -35,22 +33,6 @@ export function ProfileCard({ userId, email, displayName, avatarUrl, provider, c
   const nameParts = (name.trim() || emailValue.split("@")[0] || "U").split(/[\s._-]+/).filter(Boolean);
   const initials = (nameParts.length > 1 ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}` : Array.from(nameParts[0] || "U").slice(0, 2).join("")).toUpperCase();
   const memberSince = new Date(createdAt).toLocaleDateString(en ? "en-GB" : "es-ES", { day: "numeric", month: "short", year: "numeric" });
-  const closeSettings = useCallback(() => { if (!busy) setSettingsOpen(false); }, [busy]);
-
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const bodyOverflow = document.body.style.overflow;
-    const htmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    const esc = (event: KeyboardEvent) => { if (event.key === "Escape") closeSettings(); };
-    window.addEventListener("keydown", esc);
-    return () => {
-      document.body.style.overflow = bodyOverflow;
-      document.documentElement.style.overflow = htmlOverflow;
-      window.removeEventListener("keydown", esc);
-    };
-  }, [settingsOpen, closeSettings]);
 
   function report(text: string, error = false) { setNotice(text); setNoticeError(error); }
   async function saveName(event: React.FormEvent<HTMLFormElement>) {
@@ -122,60 +104,107 @@ export function ProfileCard({ userId, email, displayName, avatarUrl, provider, c
   const fieldClass = "w-full min-w-0 rounded-xl border border-line bg-card2 px-3 py-3 text-sm outline-none focus:border-brand";
   const actionClass = "inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-card2 px-4 py-2.5 text-sm font-bold hover:border-brand disabled:opacity-50";
 
-  return <>
-    <section className="profile-hero relative isolate overflow-hidden rounded-2xl border border-line bg-card text-white">
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(5,15,19,.92),rgba(5,15,19,.54)),url('/images/profile-stadium.jpg')] bg-cover bg-center" />
-      <div className="flex min-h-32 items-center gap-4 p-4 sm:min-h-36 sm:gap-5 sm:p-6">
-        <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/40 bg-win/20 text-xl font-black text-brand sm:h-20 sm:w-20 sm:text-2xl">{avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}</div>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-extrabold sm:text-2xl">{name || email}</h1>
-          <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-200 sm:text-sm"><IconGlobe className="h-4 w-4 shrink-0" />{tr("Idioma", "Language")}: {lang.toUpperCase()}</p>
-          <p className="mt-1.5 flex items-center gap-2 text-xs text-slate-200 sm:text-sm"><IconCalendar className="h-4 w-4 shrink-0" />{tr("Miembro desde", "Member since")} {memberSince}</p>
-        </div>
-        <button type="button" onClick={() => setSettingsOpen(true)} aria-label={tr("Configuración del perfil", "Profile settings")} title={tr("Configuración del perfil", "Profile settings")} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 bg-black/25 text-slate-200 hover:bg-black/45 sm:h-12 sm:w-12"><IconSettings className="h-5 w-5" /></button>
-      </div>
-    </section>
-    {settingsOpen && createPortal(<div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/75 p-5 max-[720px]:p-0" onMouseDown={(event) => { if (event.target === event.currentTarget) closeSettings(); }}>
-    <section role="dialog" aria-modal="true" aria-labelledby="profile-settings-title" className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl max-[720px]:h-[100dvh] max-[720px]:max-h-none max-[720px]:max-w-none max-[720px]:rounded-none max-[720px]:border-0">
-      <header className="flex shrink-0 items-center gap-4 border-b border-line px-5 py-4 sm:px-7">
-        <h2 id="profile-settings-title" className="flex-1 text-xl font-extrabold sm:text-2xl">{tr("Configuración del perfil", "Profile settings")}</h2>
-        <button type="button" onClick={closeSettings} disabled={busy} aria-label={tr("Cerrar", "Close")} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-card2"><IconClose className="h-5 w-5" /></button>
-      </header>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:space-y-5 sm:px-7 sm:py-5">
-        {notice && <p role={noticeError ? "alert" : "status"} className={`rounded-xl border px-3 py-2 text-sm ${noticeError ? "border-loss/40 bg-loss/10 text-loss" : "border-win/40 bg-win/10 text-win"}`}>{notice}</p>}
-        <section className="rounded-2xl border border-line p-4 sm:p-5">
-          <h3 className="mb-4 text-base font-extrabold">{tr("Información personal", "Personal information")}</h3>
-          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_185px] md:gap-7">
-            <div className="space-y-4">
-              <form onSubmit={saveName} className="space-y-2">
-                <label htmlFor="profile-settings-name" className="block text-sm text-muted">{tr("Nombre", "Name")}</label>
-                <div className="flex gap-2"><input id="profile-settings-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} autoComplete="name" className={fieldClass} /><button type="submit" disabled={busy || !name.trim() || name.trim() === savedName} className={actionClass}>{tr("Guardar", "Save")}</button></div>
-              </form>
-              <div className="space-y-2">
-                <span className="block text-sm text-muted">Email</span>
-                {!emailEdit ? <div className="flex min-h-11 items-center gap-2"><span className="min-w-0 flex-1 break-all text-sm">{emailValue}</span>{provider === "email" && <button type="button" onClick={() => { setEmailEdit(true); setPasswordEdit(false); report(""); }} className={actionClass}>{tr("Editar", "Edit")}</button>}</div> : <form onSubmit={updateEmail} className="space-y-2"><input type="email" required autoComplete="email" placeholder={tr("Nuevo correo", "New email")} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className={fieldClass} /><input type="password" required autoComplete="current-password" placeholder={tr("Contraseña actual", "Current password")} value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} className={fieldClass} /><div className="flex gap-2"><button type="submit" disabled={busy} className={`${actionClass} border-brand bg-brand text-black`}>{tr("Enviar confirmación", "Send confirmation")}</button><button type="button" onClick={() => setEmailEdit(false)} className={actionClass}>{tr("Cancelar", "Cancel")}</button></div></form>}
-              </div>
-              <div className="space-y-2">
-                <span className="flex items-center gap-2 text-sm text-muted"><IconLock className="h-4 w-4" />{tr("Contraseña", "Password")}</span>
-                {provider !== "email" ? <span className="text-sm text-muted">{tr("Gestionada por tu proveedor de acceso.", "Managed by your sign-in provider.")}</span> : !passwordEdit ? <div className="flex min-h-11 items-center gap-2"><span aria-hidden="true" className="flex-1 text-base tracking-[0.3em]">••••••••</span><button type="button" onClick={() => { setPasswordEdit(true); setEmailEdit(false); report(""); }} className={actionClass}>{tr("Cambiar contraseña", "Change password")}</button></div> : <form onSubmit={updatePassword} className="space-y-2"><input type="password" required autoComplete="current-password" placeholder={tr("Contraseña actual", "Current password")} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={fieldClass} /><input type="password" required minLength={8} maxLength={128} autoComplete="new-password" placeholder={tr("Nueva contraseña", "New password")} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={fieldClass} /><input type="password" required minLength={8} maxLength={128} autoComplete="new-password" placeholder={tr("Confirmar contraseña", "Confirm password")} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} /><div className="flex gap-2"><button type="submit" disabled={busy} className={`${actionClass} border-brand bg-brand text-black`}>{tr("Guardar contraseña", "Save password")}</button><button type="button" onClick={() => setPasswordEdit(false)} className={actionClass}>{tr("Cancelar", "Cancel")}</button></div></form>}
-              </div>
-            </div>
-            <div className="flex flex-col items-center border-t border-line pt-4 text-center md:border-l md:border-t-0 md:pl-6 md:pt-1">
-              <span className="text-sm text-muted">{tr("Foto del perfil", "Profile picture")}</span>
-              <div className="my-3 grid h-24 w-24 place-items-center overflow-hidden rounded-full border-2 border-win/50 bg-win/20 text-3xl font-extrabold text-brand">{avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}</div>
-              <input ref={photoInput} type="file" accept="image/jpeg,image/png" hidden onChange={uploadPhoto} />
-              <button type="button" disabled={busy} onClick={() => photoInput.current?.click()} className={actionClass}><IconCamera className="mr-2 h-4 w-4" />{tr("Cambiar foto", "Change photo")}</button>
-              <small className="mt-2 text-xs text-muted">JPG, PNG. {tr("Máx. 5 MB", "Max 5 MB")}</small>
-            </div>
-          </div>
-        </section>
+  return <div className="space-y-5 sm:space-y-6">
+    <header className="space-y-1">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{tr("Tu espacio", "Your space")}</p>
+      <h1 className="text-2xl font-black sm:text-3xl">{tr("Mi perfil", "My profile")}</h1>
+      <p className="text-sm text-muted">{tr("Gestiona tu información y personaliza tu experiencia en PICKZONE.", "Manage your information and personalize your PICKZONE experience.")}</p>
+    </header>
 
-        <section className="overflow-hidden rounded-2xl border border-line">
-          <button type="button" aria-expanded={preferencesOpen} onClick={() => setPreferencesOpen((open) => !open)} className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold hover:bg-card2"><IconSettings className="h-5 w-5" /><span className="flex-1">{tr("Idioma, tema y zona horaria", "Language, theme and time zone")}</span><IconGo className={`h-4 w-4 text-muted transition-transform ${preferencesOpen ? "rotate-90" : ""}`} /></button>
-          {preferencesOpen && <div className="border-t border-line p-3 sm:p-4"><SettingsOptions tz={tz} /></div>}
-        </section>
+    <section className="card overflow-hidden">
+      <div className="h-1 bg-brand" />
+      <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-center sm:p-6">
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="grid size-20 place-items-center overflow-hidden rounded-full border-2 border-brand/40 bg-win/15 text-2xl font-black text-brand sm:size-24 sm:text-3xl">
+            {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}
+          </div>
+          <input ref={photoInput} type="file" accept="image/jpeg,image/png" hidden onChange={uploadPhoto} />
+          <button type="button" disabled={busy} onClick={() => photoInput.current?.click()} aria-label={tr("Cambiar foto de perfil", "Change profile picture")} className="grid size-9 place-items-center rounded-full border border-line bg-card2 text-fg hover:border-brand disabled:opacity-50">
+            <IconCamera className="size-4" />
+          </button>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-xl font-extrabold sm:text-2xl">{name || emailValue}</h2>
+          <p className="mt-1 flex min-w-0 items-center gap-2 text-sm text-muted"><IconMail className="size-4 shrink-0" /><span className="truncate">{emailValue}</span></p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card2 px-3 py-1 text-xs font-semibold text-muted"><IconCalendar className="size-3.5" />{tr("Miembro desde", "Member since")} {memberSince}</span>
+            <span className="rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-bold text-brand">{provider === "email" ? "Email" : provider}</span>
+          </div>
+          <p className="mt-2 text-[11px] text-muted">JPG o PNG · {tr("Máximo 5 MB", "Up to 5 MB")}</p>
+        </div>
       </div>
     </section>
-  </div>, document.body)}
-  </>;
+
+    {notice && <p role={noticeError ? "alert" : "status"} className={`rounded-xl border px-3 py-2.5 text-sm ${noticeError ? "border-loss/40 bg-loss/10 text-loss" : "border-win/40 bg-win/10 text-win"}`}>{notice}</p>}
+
+    <div className="grid gap-5 lg:grid-cols-2">
+      <section className="card min-w-0 p-4 sm:p-5">
+        <div className="mb-4">
+          <h2 className="text-base font-extrabold">{tr("Información personal", "Personal information")}</h2>
+          <p className="mt-1 text-xs text-muted">{tr("Los datos que aparecen en tu cuenta.", "The details shown on your account.")}</p>
+        </div>
+        <div className="space-y-5">
+          <form onSubmit={saveName} className="space-y-2">
+            <label htmlFor="profile-name" className="block text-sm font-semibold">{tr("Nombre", "Name")}</label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input id="profile-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={60} autoComplete="name" className={fieldClass} />
+              <button type="submit" disabled={busy || !name.trim() || name.trim() === savedName} className={`${actionClass} shrink-0`}>{busy ? tr("Guardando…", "Saving…") : tr("Guardar", "Save")}</button>
+            </div>
+          </form>
+
+          <div className="space-y-2 border-t border-line pt-4">
+            <span className="block text-sm font-semibold">Email</span>
+            {!emailEdit ? <div className="flex min-h-11 items-center gap-2 rounded-xl bg-card2 px-3 py-2"><span className="min-w-0 flex-1 break-all text-sm">{emailValue}</span>{provider === "email" && <button type="button" onClick={() => { setEmailEdit(true); setPasswordEdit(false); report(""); }} className={actionClass}>{tr("Editar", "Edit")}</button>}</div> : <form onSubmit={updateEmail} className="space-y-2">
+              <input type="email" required autoComplete="email" placeholder={tr("Nuevo correo", "New email")} value={newEmail} onChange={(event) => setNewEmail(event.target.value)} className={fieldClass} />
+              <input type="password" required autoComplete="current-password" placeholder={tr("Contraseña actual", "Current password")} value={emailPassword} onChange={(event) => setEmailPassword(event.target.value)} className={fieldClass} />
+              <div className="flex flex-wrap gap-2">
+                <button type="submit" disabled={busy} className={`${actionClass} border-brand bg-brand text-black`}>{tr("Enviar confirmación", "Send confirmation")}</button>
+                <button type="button" onClick={() => setEmailEdit(false)} className={actionClass}>{tr("Cancelar", "Cancel")}</button>
+              </div>
+            </form>}
+          </div>
+        </div>
+      </section>
+
+      <section className="card min-w-0 p-4 sm:p-5">
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2 text-base font-extrabold"><IconLock className="size-4 text-brand" />{tr("Acceso y seguridad", "Sign-in and security")}</h2>
+          <p className="mt-1 text-xs text-muted">{tr("Mantén protegida tu cuenta.", "Keep your account secure.")}</p>
+        </div>
+        {provider !== "email" ? <div className="rounded-xl border border-line bg-card2 p-3 text-sm text-muted">{tr("La contraseña está gestionada por tu proveedor de acceso.", "Your password is managed by your sign-in provider.")}</div> : !passwordEdit ? <div className="flex flex-col gap-3 rounded-xl border border-line bg-card2 p-3 sm:flex-row sm:items-center">
+          <span aria-hidden="true" className="flex-1 text-base tracking-[0.3em]">••••••••</span>
+          <button type="button" onClick={() => { setPasswordEdit(true); setEmailEdit(false); report(""); }} className={actionClass}>{tr("Cambiar contraseña", "Change password")}</button>
+        </div> : <form onSubmit={updatePassword} className="space-y-2">
+          <input type="password" required autoComplete="current-password" placeholder={tr("Contraseña actual", "Current password")} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className={fieldClass} />
+          <input type="password" required minLength={8} maxLength={128} autoComplete="new-password" placeholder={tr("Nueva contraseña", "New password")} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className={fieldClass} />
+          <input type="password" required minLength={8} maxLength={128} autoComplete="new-password" placeholder={tr("Confirmar contraseña", "Confirm password")} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={fieldClass} />
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button type="submit" disabled={busy} className={`${actionClass} border-brand bg-brand text-black`}>{busy ? tr("Guardando…", "Saving…") : tr("Guardar contraseña", "Save password")}</button>
+            <button type="button" onClick={() => setPasswordEdit(false)} className={actionClass}>{tr("Cancelar", "Cancel")}</button>
+          </div>
+        </form>}
+      </section>
+    </div>
+
+    <section className="card p-4 sm:p-5">
+      <div className="mb-4">
+        <h2 className="text-base font-extrabold">{tr("Preferencias", "Preferences")}</h2>
+        <p className="mt-1 text-xs text-muted">{tr("Ajusta PICKZONE a tu idioma, tema y horario.", "Choose your language, theme and time zone.")}</p>
+      </div>
+      <SettingsOptions tz={tz} />
+    </section>
+
+    <section className="grid gap-3 sm:grid-cols-2">
+      <Link href="/favoritos" className="card group flex items-center gap-3 p-4 transition hover:border-brand/50">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-win/10 text-win"><IconGo className="size-5" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{tr("Mis favoritos", "My favorites")}</span><span className="mt-0.5 block text-xs text-muted">{tr("Accede a tus equipos y partidos guardados.", "View your saved teams and matches.")}</span></span>
+        <IconGo className="size-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" />
+      </Link>
+      <Link href="/premium" className="card group flex items-center gap-3 p-4 transition hover:border-brand/50">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><IconTrophy className="size-5" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{tr("PICKZONE Premium", "PICKZONE Premium")}</span><span className="mt-0.5 block text-xs text-muted">{tr("Consulta las opciones de tu suscripción.", "View your subscription options.")}</span></span>
+        <IconGo className="size-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" />
+      </Link>
+    </section>
+  </div>;
 }

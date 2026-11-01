@@ -163,6 +163,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
     .find((team) => team.id === id);
   const teamName = name ?? fixtureTeam?.name ?? `Equipo ${id}`;
   const country = leagueInfo?.country ?? upcoming[0]?.country ?? recent[0]?.country ?? "";
+  const rosterLeagueId = leagueId ?? teamCompetitions[0]?.id ?? recent[0]?.leagueId ?? upcoming[0]?.leagueId;
   const standingsLeagueId = leagueId ?? recent[0]?.leagueId ?? upcoming[0]?.leagueId;
   const standingsSeason = (leagueId ? season : undefined)
     ?? recent.find((fixture) => fixture.leagueId === standingsLeagueId)?.season
@@ -322,6 +323,9 @@ export default async function Page({ params, searchParams }: { params: { id: str
           upcoming={<FixtureGroups fixtures={upcoming} favoriteIds={favoriteLookup.favoriteIds} isAuthenticated={!!user} showDate />}
           statistics={statistics}
           standings={standings}
+          teamId={id}
+          rosterLeagueId={rosterLeagueId}
+          rosterSeason={chartSeason}
         />
         {recent.length === 0 && upcoming.length === 0 && !fixtureError && (
           <div className="text-center text-xs text-muted"><SearchLauncher className="text-brand"><I18nText text="Buscar equipos" /></SearchLauncher></div>

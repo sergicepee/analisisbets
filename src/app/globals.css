@@ -7,7 +7,6 @@
 @media (prefers-color-scheme: light) {
   [data-theme="system"] { --bg: 244 246 248; --card: 255 255 255; --card2: 238 241 244; --line: 221 227 232; --muted: 93 107 120; --fg: 11 17 21; --league-strip: 230 233 237; color-scheme: light; }
   [data-theme="system"] .text-slate-200, [data-theme="system"] .text-slate-300 { color: rgb(var(--fg) / 0.85); }
-  [data-theme="system"] .profile-hero .text-slate-200 { color: #e2e8f0; }
   [data-theme="system"] .text-brand, [data-theme="system"] .text-win, [data-theme="system"] .text-chartHit { color: #557548; }
   [data-theme="system"] .text-loss { color: #bd2f3c; }
   [data-theme="system"] .text-warn { color: #8a6500; }
@@ -54,7 +53,6 @@ html[data-app-standalone="true"] .app-launch-splash { display: grid; position: f
 
 /* Ajustes de contraste para utilidades fijas en el tema claro. */
 [data-theme="light"] .text-slate-200, [data-theme="light"] .text-slate-300 { color: rgb(var(--fg) / 0.85); }
-[data-theme="light"] .profile-hero .text-slate-200 { color: #e2e8f0; }
 [data-theme="light"] .text-brand, [data-theme="light"] .text-win, [data-theme="light"] .text-chartHit { color: #557548; }
 [data-theme="light"] .text-loss { color: #bd2f3c; }
 [data-theme="light"] .text-warn { color: #8a6500; }

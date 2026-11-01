@@ -2,6 +2,19 @@ export type Metric = "goals" | "shots" | "shotsOn" | "corners" | "cards";
 export type StatusGroup = "live" | "finished" | "upcoming" | "pending" | "other";
 
 export interface TeamRef { id: number; name: string; logo: string | null; logoFallback?: string | null }
+export interface TeamRosterPlayer {
+  id: number | null;
+  name: string;
+  jersey: string | null;
+  position: string;
+  positionAbbreviation: string | null;
+  age: number | null;
+  nationality: string | null;
+}
+export interface TeamRoster {
+  players: TeamRosterPlayer[];
+  teamColor: string | null;
+}
 export interface FixtureEvent {
   minute: number; extra: number | null; teamId: number;
   player: string; type: string; detail: string;

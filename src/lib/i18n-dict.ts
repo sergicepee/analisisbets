@@ -4,7 +4,7 @@ export type LangCode = "es" | "en";
 /** Clave = texto en español. Si no hay traducción, se muestra el español. */
 const EN: Record<string, string> = {
   // navegación
-  "Partidos": "Matches", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "Estadísticas": "Stats", "Ligas": "Leagues",
+  "Partidos": "Matches", "Plantilla": "Squad", "Mejores partidos": "Top picks", "Los 3 mejores": "Top 3", "Estadísticas": "Stats", "Ligas": "Leagues",
   "Buscar equipos, ligas...": "Search teams, leagues...",
   "Buscando...": "Searching...",
   "Escribe al menos 2 letras para buscar equipos o ligas.": "Type at least 2 letters to search teams or leagues.",
@@ -29,6 +29,16 @@ const EN: Record<string, string> = {
   "Local": "Home", "Visitante": "Away", "Empate": "Draw",
   // ficha
   "General": "General", "Goles": "Goals", "Tiros": "Shots", "Esquinas": "Corners", "Tarjetas": "Cards",
+  "Cargando plantilla...": "Loading squad...", "No hay plantilla disponible para esta temporada.": "No squad is available for this season.",
+  "No se pudo determinar la competición del equipo.": "Could not determine the team's competition.",
+  "No se pudo cargar la plantilla.": "Could not load the squad.",
+  "La respuesta de la plantilla no es válida.": "The squad response is invalid.",
+  "No se pudo cargar la plantilla. Inténtalo de nuevo más tarde.": "Could not load the squad. Please try again later.",
+  "Porteros": "Goalkeepers", "Defensas": "Defenders", "Centrocampistas": "Midfielders", "Delanteros": "Forwards",
+  "Portero": "Goalkeeper", "Defensor": "Defender", "Defensa central": "Center back",
+  "Lateral izquierdo": "Left back", "Lateral derecho": "Right back", "Mediocentro defensivo": "Defensive midfielder",
+  "Centrocampista": "Midfielder", "Extremo": "Winger", "Delantero": "Forward", "Jugador": "Player",
+  "año": "year", "años": "years",
   "Análisis": "Analysis", "Alineaciones": "Lineups", "Tiros a puerta": "Shots on target",
   "Secciones del partido": "Match sections", "Apartados del análisis": "Analysis sections", "Desgloses del análisis": "Analysis breakdowns", "Campo de fútbol": "Football pitch",
   "Cargando análisis...": "Loading analysis...", "Cargando estadísticas...": "Loading statistics...", "Cargando alineaciones...": "Loading lineups...",
