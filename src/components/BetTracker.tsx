@@ -766,17 +766,14 @@ export function BetTracker({
               <h2 className="mt-1 text-lg font-black">{tr("Elige el partido", "Choose the match")}</h2>
               <p className="mt-1 text-xs text-muted">{tr("Puedes elegir cualquier fecha; también aparecen los partidos terminados.", "Choose any date; finished matches are included too.")}</p>
             </div>
-            <div className="grid w-full gap-2 sm:flex sm:w-auto">
-            <form action="/mis-apuestas" method="get" className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-none">
-              <label className="min-w-0">
+            <div className="grid w-full gap-2">
+            <form action="/mis-apuestas" method="get" className="w-full min-w-0">
+              <label className="block w-full">
                 <span className="sr-only">{tr("Fecha de los partidos", "Match date")}</span>
-                <input type="date" name="date" defaultValue={fixturesDate} className="min-h-11 w-full rounded-xl border border-line bg-bg px-3 text-sm outline-none focus:border-brand sm:w-auto" />
+                <input type="date" name="date" defaultValue={fixturesDate} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="min-h-11 w-full rounded-xl border border-line bg-bg px-3 text-sm outline-none focus:border-brand" />
               </label>
-              <button type="submit" className="min-h-11 whitespace-nowrap rounded-xl border border-line px-3 text-xs font-bold transition hover:border-brand sm:px-4">
-                {tr("Ver fecha", "Show date")}
-              </button>
             </form>
-            <button type="button" onClick={useManualEntry} className="min-h-11 w-full whitespace-nowrap rounded-xl border border-line px-4 text-xs font-semibold text-muted transition hover:border-brand hover:text-brand sm:w-auto">
+            <button type="button" onClick={useManualEntry} className="min-h-11 w-full whitespace-nowrap rounded-xl border border-line px-4 text-xs font-semibold text-muted transition hover:border-brand hover:text-brand sm:w-auto sm:justify-self-start">
               {tr("Introducir manualmente", "Enter manually")}
             </button>
             </div>
