@@ -149,7 +149,7 @@ export default async function Page({ params, searchParams }: { params: { id: str
   if (seriesResult.status === "fulfilled") {
     chartGames = seriesResult.value.map((game) => ({
       ...game,
-      opponentLogo: getTeamLogoUrl(game.opponent, game.country),
+      opponentLogo: game.opponentLogo ?? getTeamLogoUrl(game.opponent, game.country),
       opponentLogoFallback: getTeamLogoFallbackUrl(game.opponent, game.country),
     }));
   } else seriesError = errMsg(seriesResult.reason);

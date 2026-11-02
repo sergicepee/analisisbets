@@ -761,7 +761,8 @@ function toTeamRow(fixture: Fixture, teamId: number, stats: StoredStats | null):
   const homeStats = stats?.hasData ? stats.home : null;
   const awayStats = stats?.hasData ? stats.away : null;
   return {
-    fixtureId: fixture.id, ts: fixture.timestamp, isHome, goalsFor, goalsAgainst,
+    fixtureId: fixture.id, ts: fixture.timestamp, isHome,
+    leagueId: fixture.leagueId, season: fixture.season, goalsFor, goalsAgainst,
     htFor: isHome ? fixture.htHome : fixture.htAway,
     htAgainst: isHome ? fixture.htAway : fixture.htHome,
     result: goalsFor > goalsAgainst ? "W" : goalsFor === goalsAgainst ? "D" : "L",
@@ -801,14 +802,14 @@ export async function getEspnTeamProfile(
   const selectedLeague = leagueId ? leagueFor(leagueId) : null;
   if (leagueId && !selectedLeague) return { teamId, rows: [] };
   const selectedSeason = season ?? (new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1);
-  return cached(`espn:profile:v9:${leagueId ?? "all"}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}:${withHalfTime}`, 30 * 60, async () => {
+  return cached(`espn:profile:v10:${leagueId ?? "all"}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}:${withHalfTime}`, 30 * 60, async () => {
     const leagues = selectedLeague ? [selectedLeague] : (await getEspnTeamCompetitions(teamId))
       .flatMap((competition) => {
         const league = leagueFor(competition.id);
         return league ? [league] : [];
       });
     if (!leagues.length) return { teamId, rows: [] };
-    const seasons = limit > FORM_MATCHES ? [selectedSeason] : [selectedSeason, selectedSeason - 1];
+    const seasons = [selectedSeason, selectedSeason - 1];
     const scheduleResults = await Promise.allSettled(leagues.flatMap((league) =>
       seasons.map((item) => getEspnTeamSchedule(league, teamId, item)),
     ));
@@ -875,6 +876,7 @@ export async function getEspnSeasonMatchSeries(teamId: number, leagueId: number 
       leagueId: fixture.leagueId, leagueName: fixture.leagueName, leagueLogo: fixture.leagueLogo,
       country: fixture.country,
       opponent: isHome ? fixture.away.name : fixture.home.name,
+      opponentLogo: isHome ? fixture.away.logo : fixture.home.logo,
       own: { goals: isHome ? fixture.goalsHome ?? 0 : fixture.goalsAway ?? 0, ...own },
       against: { goals: isHome ? fixture.goalsAway ?? 0 : fixture.goalsHome ?? 0, ...against },
     };

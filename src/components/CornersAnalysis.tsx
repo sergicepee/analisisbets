@@ -6,7 +6,7 @@ import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconCorner } from "@/components/icons";
 import { PeriodTabs } from "@/components/PeriodTabs";
-import { expectedFor, MIN_SAMPLES, profileForPeriod, recentValues } from "@/lib/metrics";
+import { blendedAverage, blendedRate, expectedFor, profileForPeriod } from "@/lib/metrics";
 import type { Fixture, MatchPeriod, TeamProfile, TeamRow, TeamRef } from "@/lib/types";
 
 type CornerRow = {
@@ -30,21 +30,17 @@ function cornerValue(row: TeamRow, side: "for" | "against"): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function average(rows: TeamRow[], selector: (row: TeamRow) => number | null, sampleSize: number): number | null {
-  const values = recentValues(rows, selector, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
+function average(profile: TeamProfile, selector: (row: TeamRow) => number | null, sampleSize: number): number | null {
+  return blendedAverage(profile, selector, sampleSize);
 }
 
 function rate(
-  rows: TeamRow[],
+  profile: TeamProfile,
   selector: (row: TeamRow) => number | null,
   predicate: (value: number) => boolean,
   sampleSize: number,
 ): number | null {
-  const values = recentValues(rows, selector, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  return values.filter(predicate).length * 100 / values.length;
+  return blendedRate(profile, selector, predicate, sampleSize);
 }
 
 function matchCorners(row: TeamRow): number | null {
@@ -56,8 +52,8 @@ function matchCorners(row: TeamRow): number | null {
 function matchRows(home: TeamProfile, away: TeamProfile, sampleSize: number, period: MatchPeriod): CornerRow[] {
   const lines = period === "full" ? MATCH_LINES : HALF_MATCH_LINES;
   return lines.map((line) => {
-    const homeRate = rate(home.rows, matchCorners, (value) => value > line, sampleSize);
-    const awayRate = rate(away.rows, matchCorners, (value) => value > line, sampleSize);
+    const homeRate = rate(home, matchCorners, (value) => value > line, sampleSize);
+    const awayRate = rate(away, matchCorners, (value) => value > line, sampleSize);
     return {
       key: `match-over-${line}`,
       label: `Más de ${line}`,
@@ -74,16 +70,16 @@ function teamRows(home: TeamProfile, away: TeamProfile, sampleSize: number, loca
     {
       key: "corners-for-average",
       label: "Córners ganados/partido",
-      home: average(home.rows, (row) => cornerValue(row, "for"), sampleSize),
-      away: average(away.rows, (row) => cornerValue(row, "for"), sampleSize),
+      home: average(home, (row) => cornerValue(row, "for"), sampleSize),
+      away: average(away, (row) => cornerValue(row, "for"), sampleSize),
       mean: null,
       kind: "number",
     },
     {
       key: "corners-against-average",
       label: "Córners en contra/partido",
-      home: average(home.rows, (row) => cornerValue(row, "against"), sampleSize),
-      away: average(away.rows, (row) => cornerValue(row, "against"), sampleSize),
+      home: average(home, (row) => cornerValue(row, "against"), sampleSize),
+      away: average(away, (row) => cornerValue(row, "against"), sampleSize),
       mean: null,
       kind: "number",
     },
@@ -93,8 +89,8 @@ function teamRows(home: TeamProfile, away: TeamProfile, sampleSize: number, loca
       rows.push({
         key: `corners-${side}-over-${line}`,
         label: <><I18nText text="Más de" /> {formatNumber(line, locale)} · <I18nText text={label} /></>,
-        home: rate(home.rows, (row) => cornerValue(row, side), (value) => value > line, sampleSize),
-        away: rate(away.rows, (row) => cornerValue(row, side), (value) => value > line, sampleSize),
+        home: rate(home, (row) => cornerValue(row, side), (value) => value > line, sampleSize),
+        away: rate(away, (row) => cornerValue(row, side), (value) => value > line, sampleSize),
         mean: null,
         kind: "percent",
       });
@@ -173,8 +169,8 @@ function CornerSummary({
   home: TeamRef; away: TeamRef; homeProfile: TeamProfile; awayProfile: TeamProfile; sampleSize: number; locale: string;
 }) {
   const expected = expectedFor(homeProfile, awayProfile, "corners");
-  const homeAvg = expected?.home ?? average(homeProfile.rows, (row) => cornerValue(row, "for"), sampleSize);
-  const awayAvg = expected?.away ?? average(awayProfile.rows, (row) => cornerValue(row, "for"), sampleSize);
+  const homeAvg = expected?.home ?? average(homeProfile, (row) => cornerValue(row, "for"), sampleSize);
+  const awayAvg = expected?.away ?? average(awayProfile, (row) => cornerValue(row, "for"), sampleSize);
   const total = homeAvg === null || awayAvg === null ? null : homeAvg + awayAvg;
   const number = (value: number | null) => value === null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: 1 });
   return (
@@ -242,6 +238,9 @@ export function CornersAnalysis({
           ))}
         </div>
         <Table firstColumn={view === "match" ? "Córners de partido" : "Córners del equipo"} home={fixture.home} away={fixture.away} rows={rows} locale={locale} />
+        <p className="mt-3 text-[10px] leading-relaxed text-muted">
+          <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
+        </p>
         {view === "match" && leagueAverage !== null && (
           <p className="mt-2 text-[10px] leading-relaxed text-muted"><I18nText text="Media de liga" />: {leagueAverage.toLocaleString(locale, { maximumFractionDigits: 1 })}</p>
         )}

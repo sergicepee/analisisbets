@@ -1,6 +1,8 @@
 import type { MatchPeriod, Metric, TeamProfile, TeamRow } from "./types";
+import { FORM_MATCHES } from "./config";
 
 export const MIN_SAMPLES = 3;
+const COMPETITION_PRIOR_MATCHES = 5;
 export function recentValues<T>(
   rows: readonly T[],
   selector: (row: T) => number | null,
@@ -12,6 +14,55 @@ export function recentValues<T>(
     const value = selector(row);
     return value !== null && Number.isFinite(value) ? [value] : [];
   }).slice(-limit);
+}
+
+function sampleRows(profile: TeamProfile, selector: (row: TeamRow) => number | null, sampleSize: number) {
+  const competitionRows = profile.competitionRows ?? [];
+  const competitionFixtureIds = new Set(competitionRows.map((row) => row.fixtureId));
+  const overallRows = profile.rows.filter((row) => !competitionFixtureIds.has(row.fixtureId));
+  const values = (rows: TeamRow[]) => recentValues(rows, selector, sampleSize);
+  return {
+    overall: values(overallRows),
+    competition: values(competitionRows),
+  };
+}
+
+function blendSamples(overall: number[], competition: number[], minimumSamples = MIN_SAMPLES): number | null {
+  const overallValue = overall.length >= minimumSamples ? mean(overall) : null;
+  const competitionValue = competition.length ? mean(competition) : null;
+  if (overallValue === null) return competition.length >= minimumSamples ? competitionValue : null;
+  if (competitionValue === null) return overallValue;
+  const weight = competition.length / (competition.length + COMPETITION_PRIOR_MATCHES);
+  return overallValue * (1 - weight) + competitionValue * weight;
+}
+
+export function blendedAverage(
+  profile: TeamProfile,
+  selector: (row: TeamRow) => number | null,
+  sampleSize: number,
+): number | null {
+  const samples = sampleRows(profile, selector, sampleSize);
+  return blendSamples(samples.overall, samples.competition);
+}
+
+export function blendedRate(
+  profile: TeamProfile,
+  selector: (row: TeamRow) => number | null,
+  predicate: (value: number) => boolean,
+  sampleSize: number,
+): number | null {
+  const samples = sampleRows(profile, selector, sampleSize);
+  const rate = (values: number[]) => values.length >= MIN_SAMPLES
+    ? values.filter(predicate).length * 100 / values.length
+    : null;
+  const overallRate = rate(samples.overall);
+  const competitionRate = samples.competition.length
+    ? samples.competition.filter(predicate).length * 100 / samples.competition.length
+    : null;
+  if (overallRate === null) return samples.competition.length >= MIN_SAMPLES ? competitionRate : null;
+  if (competitionRate === null) return overallRate;
+  const weight = samples.competition.length / (samples.competition.length + COMPETITION_PRIOR_MATCHES);
+  return overallRate * (1 - weight) + competitionRate * weight;
 }
 
 export const METRIC_LABEL: Record<Metric, string> = {
@@ -63,6 +114,11 @@ export function profileForPeriod(profile: TeamProfile, period: MatchPeriod): Tea
       sFor: row.sFor?.halves?.[key] ?? null,
       sAgainst: row.sAgainst?.halves?.[key] ?? null,
     })),
+    competitionRows: profile.competitionRows?.map((row) => ({
+      ...row,
+      sFor: row.sFor?.halves?.[key] ?? null,
+      sAgainst: row.sAgainst?.halves?.[key] ?? null,
+    })),
   };
 }
 
@@ -74,19 +130,34 @@ export function teamAvg(p: TeamProfile, m: Metric, side: "for" | "against"): num
 }
 
 function venueAvg(p: TeamProfile, m: Metric, side: "for" | "against", homeVenue: boolean): number | null {
-  const all = p.rows.filter((r) => rowVal(r, m, side) !== null);
-  const venue = all.filter((r) => r.isHome === homeVenue);
   const halfLife = m === "goals" ? GOAL_HALF_LIFE_SECONDS : COUNT_HALF_LIFE_SECONDS;
-  if (all.length < MIN_SAMPLES) return null;
-  const overall = weightedMean(all, (r) => rowVal(r, m, side), halfLife);
-  if (overall === null) return null;
-  if (venue.length < MIN_SAMPLES) return overall;
-  const venueMean = weightedMean(venue, (r) => rowVal(r, m, side), halfLife);
-  if (venueMean === null) return overall;
-  // Venue splits are useful but noisy (often only 8–10 of the last 20 games).
-  // Shrink them toward the team's overall rate to avoid overreacting to a few games.
-  const venueWeight = venue.length / (venue.length + 5);
-  return venueMean * venueWeight + overall * (1 - venueWeight);
+  const selector = (row: TeamRow) => rowVal(row, m, side);
+  const competitionRows = p.competitionRows ?? [];
+  const competitionFixtureIds = new Set(competitionRows.map((row) => row.fixtureId));
+  const overallRows = p.rows
+    .filter((row) => !competitionFixtureIds.has(row.fixtureId) && selector(row) !== null)
+    .slice(-FORM_MATCHES);
+  const overallVenueRows = overallRows.filter((row) => row.isHome === homeVenue);
+  const overallMean = weightedMean(overallRows, selector, halfLife);
+  if (overallRows.length < MIN_SAMPLES || overallMean === null) {
+    const competitionVenueRows = competitionRows
+      .filter((row) => row.isHome === homeVenue && selector(row) !== null)
+      .slice(-FORM_MATCHES);
+    return competitionVenueRows.length >= MIN_SAMPLES
+      ? weightedMean(competitionVenueRows, selector, halfLife)
+      : null;
+  }
+  const baseline = overallVenueRows.length >= MIN_SAMPLES
+    ? weightedMean(overallVenueRows, selector, halfLife) ?? overallMean
+    : overallMean;
+  const competitionVenueRows = competitionRows
+    .filter((row) => row.isHome === homeVenue && selector(row) !== null)
+    .slice(-FORM_MATCHES);
+  if (!competitionVenueRows.length) return baseline;
+  const competitionMean = weightedMean(competitionVenueRows, selector, halfLife);
+  if (competitionMean === null) return baseline;
+  const competitionWeight = competitionVenueRows.length / (competitionVenueRows.length + COMPETITION_PRIOR_MATCHES);
+  return baseline * (1 - competitionWeight) + competitionMean * competitionWeight;
 }
 
 /**

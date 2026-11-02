@@ -82,12 +82,17 @@ export interface StoredStats {
 }
 export interface TeamRow {
   fixtureId: number; ts: number; isHome: boolean;
+  leagueId?: number; season?: number;
   goalsFor: number; goalsAgainst: number;
   htFor: number | null; htAgainst: number | null;
   result: "W" | "D" | "L";
   sFor: MatchStat | null; sAgainst: MatchStat | null;
 }
-export interface TeamProfile { teamId: number; rows: TeamRow[] }
+export interface TeamProfile {
+  teamId: number;
+  rows: TeamRow[];
+  competitionRows?: TeamRow[];
+}
 export interface LeagueCardLeader {
   id: number;
   name: string;

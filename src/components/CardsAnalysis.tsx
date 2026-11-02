@@ -6,7 +6,7 @@ import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconCard } from "@/components/icons";
 import { PeriodTabs } from "@/components/PeriodTabs";
-import { expectedFor, MIN_SAMPLES, profileForPeriod, recentValues } from "@/lib/metrics";
+import { blendedAverage, blendedRate, expectedFor, profileForPeriod } from "@/lib/metrics";
 import type { Fixture, LeagueCardLeader, MatchPeriod, TeamProfile, TeamRef, TeamRow } from "@/lib/types";
 
 type CardRow = {
@@ -32,24 +32,20 @@ function cardValue(row: TeamRow, side: "for" | "against"): number | null {
 }
 
 function average(
-  rows: TeamRow[],
+  profile: TeamProfile,
   selector: (row: TeamRow) => number | null,
   sampleSize: number,
 ): number | null {
-  const values = recentValues(rows, selector, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
+  return blendedAverage(profile, selector, sampleSize);
 }
 
 function rate(
-  rows: TeamRow[],
+  profile: TeamProfile,
   selector: (row: TeamRow) => number | null,
   line: number,
   sampleSize: number,
 ): number | null {
-  const values = recentValues(rows, selector, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  return values.filter((value) => value > line).length * 100 / values.length;
+  return blendedRate(profile, selector, (value) => value > line, sampleSize);
 }
 
 function mean(home: number | null, away: number | null) {
@@ -149,8 +145,8 @@ function Summary({
   const activeHomeProfile = profileForPeriod(homeProfile, period);
   const activeAwayProfile = profileForPeriod(awayProfile, period);
   const expected = expectedFor(activeHomeProfile, activeAwayProfile, "cards");
-  const homeAverage = expected?.home ?? average(activeHomeProfile.rows, (row) => cardValue(row, "for"), sampleSize);
-  const awayAverage = expected?.away ?? average(activeAwayProfile.rows, (row) => cardValue(row, "for"), sampleSize);
+  const homeAverage = expected?.home ?? average(activeHomeProfile, (row) => cardValue(row, "for"), sampleSize);
+  const awayAverage = expected?.away ?? average(activeAwayProfile, (row) => cardValue(row, "for"), sampleSize);
   const expectedTotal = homeAverage === null || awayAverage === null ? null : homeAverage + awayAverage;
   const matchLines = period === "full" ? MATCH_LINES : HALF_MATCH_LINES;
   const teamLines = period === "full" ? TEAM_LINES : HALF_TEAM_LINES;
@@ -159,11 +155,11 @@ function Summary({
         ...matchLines.map((line) => ({
           key: `match-over-${line}`,
           label: <><I18nText text="Más de" /> {numberText(line, locale)}</>,
-          home: rate(activeHomeProfile.rows, (row) => {
+          home: rate(activeHomeProfile, (row) => {
             const own = cardValue(row, "for"), against = cardValue(row, "against");
             return own === null || against === null ? null : own + against;
           }, line, sampleSize),
-          away: rate(activeAwayProfile.rows, (row) => {
+          away: rate(activeAwayProfile, (row) => {
             const own = cardValue(row, "for"), against = cardValue(row, "against");
             return own === null || against === null ? null : own + against;
           }, line, sampleSize),
@@ -175,16 +171,16 @@ function Summary({
         {
           key: "team-card-average",
           label: <I18nText text="Tarjetas recibidas/partido" />,
-          home: average(activeHomeProfile.rows, (row) => cardValue(row, "for"), sampleSize),
-          away: average(activeAwayProfile.rows, (row) => cardValue(row, "for"), sampleSize),
+          home: average(activeHomeProfile, (row) => cardValue(row, "for"), sampleSize),
+          away: average(activeAwayProfile, (row) => cardValue(row, "for"), sampleSize),
           mean: null,
           kind: "number",
         },
         {
           key: "team-opponent-card-average",
           label: <I18nText text="Tarjetas del rival/partido" />,
-          home: average(activeHomeProfile.rows, (row) => cardValue(row, "against"), sampleSize),
-          away: average(activeAwayProfile.rows, (row) => cardValue(row, "against"), sampleSize),
+          home: average(activeHomeProfile, (row) => cardValue(row, "against"), sampleSize),
+          away: average(activeAwayProfile, (row) => cardValue(row, "against"), sampleSize),
           mean: null,
           kind: "number",
         },
@@ -194,8 +190,8 @@ function Summary({
             return {
               key: `team-${side}-${line}`,
               label: <><I18nText text="Más de" /> {numberText(line, locale)} · <I18nText text={sideLabel} /></>,
-              home: rate(activeHomeProfile.rows, (row) => cardValue(row, side), line, sampleSize),
-              away: rate(activeAwayProfile.rows, (row) => cardValue(row, side), line, sampleSize),
+              home: rate(activeHomeProfile, (row) => cardValue(row, side), line, sampleSize),
+              away: rate(activeAwayProfile, (row) => cardValue(row, side), line, sampleSize),
               mean: null,
               kind: "percent" as const,
             };
@@ -238,6 +234,9 @@ function Summary({
       </div>
       <div className="mt-3">
         <CardTable firstColumn="Métrica" home={home} away={away} rows={normalizedRows} locale={locale} />
+        <p className="mt-3 text-[10px] leading-relaxed text-muted">
+          <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
+        </p>
       </div>
       {view === "match" && leagueAverage !== null && (
         <p className="mt-2 text-[10px] leading-relaxed text-muted">

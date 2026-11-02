@@ -24,6 +24,7 @@ import { getSubscriberAccess } from "@/lib/subscriptions";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
+import { savePreMatchPrediction, settleSavedPrediction, type ExpectedMetrics } from "@/lib/prediction-ledger";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
 import { jerseyStyle, normalizedTeamColor } from "@/lib/teamColor";
@@ -63,6 +64,13 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   }
   const f = fixtureResult.fixture;
   if (!f) notFound();
+  if (["FT", "AET", "PEN"].includes(f.statusShort)) {
+    try {
+      await settleSavedPrediction(f);
+    } catch (error) {
+      console.error(`No se pudo evaluar la predicción guardada del partido ${f.id}:`, error);
+    }
+  }
   const [subscriptionAccess, favoriteLookup] = await Promise.all([
     user ? getSubscriberAccess(user.id) : Promise.resolve({ active: false, error: false }),
     user ? getFavoriteFixtureIds(user.id, [f.id]) : Promise.resolve({ favoriteIds: new Set<number>(), error: false }),
@@ -133,16 +141,16 @@ async function MatchData({
     return null;
   });
   const homeProfilePromise = includeStats
-    ? grab(getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId))
+    ? grab(getTeamProfile(f.home.id, true, f.season, f.timestamp, f.leagueId, { blendCompetitions: true }))
     : Promise.resolve(null);
   const awayProfilePromise = includeStats
-    ? grab(getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId))
+    ? grab(getTeamProfile(f.away.id, true, f.season, f.timestamp, f.leagueId, { blendCompetitions: true }))
     : Promise.resolve(null);
   const goalHomeProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, { venue: "home", withHalfTime: true }))
+    ? grab(getTeamProfile(f.home.id, false, f.season, f.timestamp, f.leagueId, { venue: "home", withHalfTime: true, blendCompetitions: true }))
     : Promise.resolve(null);
   const goalAwayProfilePromise = includeGoalProfiles
-    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away", withHalfTime: true }))
+    ? grab(getTeamProfile(f.away.id, false, f.season, f.timestamp, f.leagueId, { venue: "away", withHalfTime: true, blendCompetitions: true }))
     : Promise.resolve(null);
   const actualStatsPromise = section === "statistics" ? getFixtureStatsFor(f) : Promise.resolve(null);
   const lineupsPromise = section === "lineups" || section === "timeline"
@@ -166,6 +174,9 @@ async function MatchData({
   const goalRowsForViewer = (rows: typeof goalPa.rows) => isSubscriber
     ? rows
     : rows.map((row) => ({ ...row, htFor: null, htAgainst: null }));
+  const goalCompetitionRowsForViewer = (rows: typeof goalPa.rows) => isSubscriber
+    ? rows
+    : rows.map((row) => ({ ...row, htFor: null, htAgainst: null }));
   const analysisProfileMissing = analysisTab === "goles"
     ? !goalPa0 || !goalPb0
     : !pa0 || !pb0;
@@ -177,7 +188,7 @@ async function MatchData({
           {!premiumLocked && analysisProfileMissing ? <Notice tone="warn"><I18nText text="Algunas estadísticas no se pudieron cargar." /> {profileErr ? friendlyApiError(profileErr) : <I18nText text="Sin datos suficientes." />}</Notice> : null}
           {analysisTab === "general" && <General f={f} pa={pa} pb={pb} />}
           {premiumLocked && <PremiumLockedPreview tab={analysisTab as "tiros" | "corners" | "tarjetas"} home={{ name: f.home.name, logo: f.home.logo }} away={{ name: f.away.name, logo: f.away.logo }} locale={getLocale()} />}
-          {analysisTab === "goles" && <GoalsAnalysis home={f.home} away={f.away} homeRows={goalRowsForViewer(goalPa.rows)} awayRows={goalRowsForViewer(goalPb.rows)} sampleSize={FORM_MATCHES} locale={getLocale()} isSubscriber={isSubscriber} />}
+          {analysisTab === "goles" && <GoalsAnalysis home={f.home} away={f.away} homeRows={goalRowsForViewer(goalPa.rows)} awayRows={goalRowsForViewer(goalPb.rows)} homeCompetitionRows={goalCompetitionRowsForViewer(goalPa.competitionRows ?? [])} awayCompetitionRows={goalCompetitionRowsForViewer(goalPb.competitionRows ?? [])} sampleSize={FORM_MATCHES} locale={getLocale()} isSubscriber={isSubscriber} />}
           {!premiumLocked && analysisTab === "tiros" && <Block f={f} pa={pa} pb={pb} tab="tiros" />}
           {!premiumLocked && analysisTab === "corners" && <Block f={f} pa={pa} pb={pb} tab="corners" />}
           {!premiumLocked && analysisTab === "tarjetas" && <Block f={f} pa={pa} pb={pb} tab="tarjetas" />}
@@ -812,6 +823,24 @@ async function General({ f, pa, pb }: { f: Fixture; pa: TeamProfile; pb: TeamPro
   const lavg = await getLeagueAverages(f.leagueId, f.season).catch(() => null);
   const eg = ownGoalEstimate;
   const model = eg ? poissonModel(eg.home, eg.away) : null;
+  const expected: ExpectedMetrics = {
+    goals: ownGoalEstimate,
+    shots: expectedFor(pa, pb, "shots"),
+    shotsOn: expectedFor(pa, pb, "shotsOn"),
+    corners: expectedFor(pa, pb, "corners"),
+    cards: expectedFor(pa, pb, "cards"),
+  };
+  if (model) {
+    try {
+      await savePreMatchPrediction(f, pa, pb, {
+        outcomes: { home: model.home / 100, draw: model.draw / 100, away: model.away / 100 },
+        markets: { over15: model.over15 / 100, over25: model.over25 / 100, btts: model.btts / 100 },
+        expected,
+      });
+    } catch (error) {
+      console.error(`No se pudo guardar la predicción previa al partido ${f.id}:`, error);
+    }
+  }
   const p1x2 = model;
   const topOutcome = p1x2
     ? [

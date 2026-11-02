@@ -5,10 +5,10 @@ import { useState, type ReactNode } from "react";
 import { I18nText } from "@/components/I18nProvider";
 import { Shield } from "@/components/Shield";
 import { IconLock, IconNet } from "@/components/icons";
-import { MIN_SAMPLES, recentValues } from "@/lib/metrics";
+import { blendedRate } from "@/lib/metrics";
 import type { TeamRef, TeamRow } from "@/lib/types";
 
-type History = { team: TeamRef; rows: TeamRow[] };
+type History = { team: TeamRef; rows: TeamRow[]; competitionRows: TeamRow[] };
 type GoalRow = { key: string; label: ReactNode; home: number | null; away: number | null; mean?: number | null };
 type GoalTab = { key: string; label: string };
 type ValueSelector = (row: TeamRow) => number | null;
@@ -25,11 +25,12 @@ function percentage(
   selector: ValueSelector,
   predicate: (value: number) => boolean,
   sampleSize: number,
-): { value: number; hits: number; total: number } | null {
-  const values = recentValues(history.rows, selector, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  const hits = values.filter(predicate).length;
-  return { value: hits * 100 / values.length, hits, total: values.length };
+): number | null {
+  return blendedRate({
+    teamId: history.team.id,
+    rows: history.rows,
+    competitionRows: history.competitionRows,
+  }, selector, predicate, sampleSize);
 }
 
 function scoredValue(row: TeamRow, period: 0 | 1 | 2): number | null {
@@ -67,8 +68,8 @@ function thresholdRows(
 ): GoalRow[] {
   return lines.map((line) => {
     const predicate = (value: number) => direction === "over" ? value > line : value < line;
-    const homeRate = percentage(home, selector, predicate, sampleSize)?.value ?? null;
-    const awayRate = percentage(away, selector, predicate, sampleSize)?.value ?? null;
+    const homeRate = percentage(home, selector, predicate, sampleSize);
+    const awayRate = percentage(away, selector, predicate, sampleSize);
     return {
       key: `${direction}-${line}-${qualifier ?? ""}`,
       label: <><I18nText text={direction === "over" ? "Más de" : "Menos de"} /> {displayNumber(line, locale)}{qualifier ? <> · <I18nText text={qualifier} /></> : null}</>,
@@ -83,14 +84,15 @@ function rowPercentage(
   history: History,
   predicate: (row: TeamRow) => boolean,
   sampleSize: number,
-): { value: number; hits: number; total: number } | null {
-  const values = recentValues(history.rows, (row) => {
+): number | null {
+  return blendedRate({
+    teamId: history.team.id,
+    rows: history.rows,
+    competitionRows: history.competitionRows,
+  }, (row) => {
     if (!Number.isFinite(row.goalsFor) || !Number.isFinite(row.goalsAgainst)) return null;
     return predicate(row) ? 1 : 0;
-  }, sampleSize);
-  if (values.length < MIN_SAMPLES) return null;
-  const hits = values.filter((value) => value === 1).length;
-  return { value: hits * 100 / values.length, hits, total: values.length };
+  }, (selected) => selected === 1, sampleSize);
 }
 
 function marketRows(home: History, away: History, sampleSize: number, locale: string, view: "over" | "under"): GoalRow[] {
@@ -106,8 +108,8 @@ function marketRows(home: History, away: History, sampleSize: number, locale: st
     { key: "no-btts-over25", label: "AEM no y más de 2,5", test: (row) => !(row.goalsFor > 0 && row.goalsAgainst > 0) && totalGoals(row) > 2.5 },
   ];
   return [...rows, ...predicates.map((item) => {
-    const homeRate = rowPercentage(home, item.test, sampleSize)?.value ?? null;
-    const awayRate = rowPercentage(away, item.test, sampleSize)?.value ?? null;
+    const homeRate = rowPercentage(home, item.test, sampleSize);
+    const awayRate = rowPercentage(away, item.test, sampleSize);
     return {
       key: item.key,
       label: <I18nText text={item.label} />,
@@ -121,16 +123,16 @@ function marketRows(home: History, away: History, sampleSize: number, locale: st
 function halfMarketRows(home: History, away: History, sampleSize: number, locale: string, period: 1 | 2): GoalRow[] {
   const selector = (row: TeamRow) => halfTotalGoals(row, period);
   const rows = thresholdRows(home, away, selector, [0.5, 1.5, 2.5], sampleSize, locale, "over", undefined, true);
-  const makeBttsRate = (history: History) => {
-    const values = recentValues(history.rows, (row) => {
+  const makeBttsRate = (history: History) => blendedRate({
+    teamId: history.team.id,
+    rows: history.rows,
+    competitionRows: history.competitionRows,
+  }, (row) => {
       const forGoals = scoredValue(row, period);
       const againstGoals = concededValue(row, period);
       if (forGoals === null || againstGoals === null) return null;
       return forGoals > 0 && againstGoals > 0 ? 1 : 0;
-    }, sampleSize);
-    if (values.length < MIN_SAMPLES) return null;
-    return values.filter((value) => value === 1).length * 100 / values.length;
-  };
+    }, (value) => value === 1, sampleSize);
   const homeRate = makeBttsRate(home), awayRate = makeBttsRate(away);
   rows.push({
     key: `btts-half-${period}`,
@@ -245,7 +247,7 @@ function GoalRatePanel({
     const selector: ValueSelector = (row) => getValue(row, period);
     const rows = thresholdRows(home, away, selector, period === 0 ? TEAM_LINES : HALF_TEAM_LINES, sampleSize, locale);
     const zeroLabel = isScored ? "Sin marcar" : "Porterías a 0";
-    const zero = (history: History) => percentage(history, selector, (value) => value === 0, sampleSize)?.value ?? null;
+    const zero = (history: History) => percentage(history, selector, (value) => value === 0, sampleSize);
     rows.push({
       key: `zero-${kind}-${period}`,
       label: <I18nText text={zeroLabel} />,
@@ -361,12 +363,25 @@ function OverAemPanel({ home, away, sampleSize, locale, isSubscriber }: {
 }
 
 export function GoalsAnalysis({
-  home, away, homeRows, awayRows, sampleSize, locale, isSubscriber,
-}: { home: TeamRef; away: TeamRef; homeRows: TeamRow[]; awayRows: TeamRow[]; sampleSize: number; locale: string; isSubscriber: boolean }) {
-  const homeHistory = { team: home, rows: homeRows };
-  const awayHistory = { team: away, rows: awayRows };
+  home, away, homeRows, awayRows, homeCompetitionRows, awayCompetitionRows, sampleSize, locale, isSubscriber,
+}: {
+  home: TeamRef;
+  away: TeamRef;
+  homeRows: TeamRow[];
+  awayRows: TeamRow[];
+  homeCompetitionRows: TeamRow[];
+  awayCompetitionRows: TeamRow[];
+  sampleSize: number;
+  locale: string;
+  isSubscriber: boolean;
+}) {
+  const homeHistory = { team: home, rows: homeRows, competitionRows: homeCompetitionRows };
+  const awayHistory = { team: away, rows: awayRows, competitionRows: awayCompetitionRows };
   return (
     <div className="min-w-0 space-y-3">
+      <p className="rounded-xl border border-line bg-card px-3 py-2 text-[10px] leading-relaxed text-muted">
+        <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
+      </p>
       <GoalRatePanel home={homeHistory} away={awayHistory} sampleSize={sampleSize} locale={locale} kind="scored" isSubscriber={isSubscriber} />
       <GoalRatePanel home={homeHistory} away={awayHistory} sampleSize={sampleSize} locale={locale} kind="conceded" isSubscriber={isSubscriber} />
       <OverAemPanel home={homeHistory} away={awayHistory} sampleSize={sampleSize} locale={locale} isSubscriber={isSubscriber} />

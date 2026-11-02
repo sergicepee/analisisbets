@@ -129,6 +129,7 @@ export async function getCsvTeamProfile(teamId: number, withStats: boolean, befo
     const goalsAgainst = isHome ? match.goalsAway : match.goalsHome;
     return {
       fixtureId: -Math.abs(match.timestamp * (isHome ? 1 : -1)), ts: match.timestamp, isHome,
+      leagueId: match.leagueId, season: match.season,
       goalsFor, goalsAgainst,
       htFor: isHome ? match.htHome : match.htAway, htAgainst: isHome ? match.htAway : match.htHome,
       result: goalsFor > goalsAgainst ? "W" : goalsFor === goalsAgainst ? "D" : "L",

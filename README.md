@@ -70,9 +70,11 @@ Ya incluido: `/registro`, `/login`, `/recuperar`, `/restablecer` y `/cuenta`. Us
 - `FORM_MATCHES` (10 por defecto), `LEAGUE_IDS` y `MAX_ANALYSIS_FIXTURES` permiten ajustar el tamaño del análisis y las ligas consideradas.
 
 ## Cómo se calculan los datos (no se inventa nada)
-- **Esperado por equipo** = media(lo que produce, lo que el rival concede) en sus últimos N partidos; total = suma.
-- **Probabilidades** de más de 1,5/2,5, ambos marcan y 1X2: modelo de Poisson calculado a partir de los partidos disponibles.
-- **Tendencias**: % de los últimos N partidos de cada equipo en que el total superó la línea; “Partido” promedia ambos.
+- **Forma para el análisis de un partido**: combina los últimos partidos del equipo en las competiciones ESPN configuradas con sus partidos disponibles en la competición analizada. El peso de la competición aumenta con el tamaño de su muestra (`n / (n + 5)`); las muestras insuficientes se muestran como “—”.
+- **Esperado por equipo** = media(lo que produce, lo que el rival concede) en la muestra disponible; total = suma.
+- **Estimaciones de más de 1,5/2,5, ambos marcan y 1X2**: modelo de Poisson calculado a partir de los partidos disponibles.
+- **Tendencias**: frecuencia histórica de los últimos N partidos que superaron la línea, combinada entre competiciones; “Partido” promedia ambos.
+- Estas cifras son estimaciones basadas en históricos, no probabilidades calibradas. El peso de mezcla es provisional y debe validarse con un backtest temporal antes de ajustar o tratar los porcentajes como probabilidades fiables.
 - **Media de liga**: se calcula con los partidos disponibles de ESPN.
 - **Los 3 mejores**: mayor probabilidad 1X2 entre los próximos partidos analizados. Estimación, no pick seguro.
 - Sin datos suficientes se muestra “—” o un aviso.
