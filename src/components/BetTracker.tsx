@@ -48,17 +48,32 @@ const BOTH_TEAMS_TO_SCORE: Array<[string, string]> = [
 
 type LineDirection = "over" | "under";
 type ShotMetric = "shots" | "shotsOn";
+type SelectionScope = "match" | "home" | "away";
 
-function lineSettings(market: MarketChoice, shotMetric: ShotMetric) {
-  if (market === "Goles") return { min: 0.5, max: 4.5, defaultValue: 1.5 };
-  if (market === "Tarjetas") return { min: 1.5, max: 6.5, defaultValue: 3.5 };
+function lineSettings(market: MarketChoice, shotMetric: ShotMetric, scope: SelectionScope) {
+  const teamSpecific = scope !== "match";
+  if (market === "Goles") return { min: 0.5, max: teamSpecific ? 5.5 : 10.5, defaultValue: teamSpecific ? 0.5 : 1.5 };
+  if (market === "Tarjetas") return { min: 0.5, max: teamSpecific ? 8.5 : 15.5, defaultValue: teamSpecific ? 1.5 : 3.5 };
   if (market === "Tiros") {
-    return shotMetric === "shots"
-      ? { min: 15.5, max: 29.5, defaultValue: 21.5 }
-      : { min: 5.5, max: 10.5, defaultValue: 7.5 };
+    if (shotMetric === "shots") {
+      return { min: 0.5, max: teamSpecific ? 40.5 : 60.5, defaultValue: teamSpecific ? 10.5 : 21.5 };
+    }
+    return { min: 0.5, max: teamSpecific ? 20.5 : 30.5, defaultValue: teamSpecific ? 3.5 : 7.5 };
   }
-  if (market === "Córners") return { min: 5.5, max: 11.5, defaultValue: 8.5 };
+  if (market === "Córners") return { min: 0.5, max: teamSpecific ? 15.5 : 25.5, defaultValue: teamSpecific ? 4.5 : 8.5 };
   return null;
+}
+
+function selectionScope(selection: string, homeTeam: string, awayTeam: string): SelectionScope {
+  const value = selection.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/\b(local|home)\b/.test(value)) return "home";
+  if (/\b(visitante|away)\b/.test(value)) return "away";
+  const matches = [homeTeam, awayTeam].map((team) =>
+    team.trim() && value.includes(team.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()),
+  );
+  if (matches[0] && !matches[1]) return "home";
+  if (matches[1] && !matches[0]) return "away";
+  return "match";
 }
 
 function parseLineSelection(selection: string) {
@@ -73,48 +88,70 @@ function parseLineSelection(selection: string) {
 function SelectionPicker({
   marketChoice,
   selection,
+  homeTeam,
+  awayTeam,
   english,
   translate,
   onChange,
 }: {
   marketChoice: MarketChoice;
   selection: string;
+  homeTeam: string;
+  awayTeam: string;
   english: boolean;
   translate: (spanish: string, english: string) => string;
   onChange: (selection: string) => void;
 }) {
   const parsedLine = parseLineSelection(selection);
-  const [line, setLine] = useState(parsedLine?.line ?? lineSettings(marketChoice, "shots")?.defaultValue ?? 1.5);
+  const [line, setLine] = useState(parsedLine?.line ?? lineSettings(marketChoice, "shots", "match")?.defaultValue ?? 1.5);
   const [direction, setDirection] = useState<LineDirection>(parsedLine?.direction ?? "over");
+  const scope = selectionScope(selection, homeTeam, awayTeam);
   const [shotMetric, setShotMetric] = useState<ShotMetric>(
     /tiros a puerta|shots on target/i.test(selection) ? "shotsOn" : "shots",
   );
-  const settings = lineSettings(marketChoice, shotMetric);
+  const settings = lineSettings(marketChoice, shotMetric, scope);
 
   useEffect(() => {
     const parsed = parseLineSelection(selection);
+    const nextScope = selectionScope(selection, homeTeam, awayTeam);
     const nextShotMetric: ShotMetric = /tiros a puerta|shots on target/i.test(selection) ? "shotsOn" : "shots";
-    const nextSettings = lineSettings(marketChoice, nextShotMetric);
+    const nextSettings = lineSettings(marketChoice, nextShotMetric, nextScope);
     setShotMetric(nextShotMetric);
     setLine(parsed && nextSettings && parsed.line >= nextSettings.min && parsed.line <= nextSettings.max
       ? parsed.line
       : nextSettings?.defaultValue ?? 1.5);
     setDirection(parsed?.direction ?? "over");
-  }, [marketChoice, selection]);
+  }, [marketChoice, selection, homeTeam, awayTeam]);
 
-  function selectionLabel(nextDirection = direction, nextLine = line, nextMetric = shotMetric) {
+  function selectionLabel(
+    nextDirection = direction,
+    nextLine = line,
+    nextMetric = shotMetric,
+    nextScope = scope,
+  ) {
     const formattedLine = nextLine.toFixed(1).replace(".", english ? "." : ",");
     const marketLabel = marketChoice === "Goles" ? translate("goles", "goals")
       : marketChoice === "Tarjetas" ? translate("tarjetas", "cards")
         : marketChoice === "Tiros"
           ? nextMetric === "shotsOn" ? translate("tiros a puerta", "shots on target") : translate("tiros", "shots")
           : translate("córners", "corners");
-    return `${translate(nextDirection === "over" ? "Más de" : "Menos de", nextDirection === "over" ? "Over" : "Under")} ${formattedLine} ${marketLabel}`;
+    const teamName = nextScope === "home" ? homeTeam : nextScope === "away" ? awayTeam : "";
+    const teamLabel = nextScope === "home" ? translate("Local", "Home")
+      : nextScope === "away" ? translate("Visitante", "Away") : "";
+    const scopeLabel = nextScope === "match" ? "" : ` · ${teamLabel}${teamName ? ` (${teamName})` : ""}`;
+    return `${translate(nextDirection === "over" ? "Más de" : "Menos de", nextDirection === "over" ? "Over" : "Under")} ${formattedLine} ${marketLabel}${scopeLabel}`;
   }
 
   function chooseLine(nextLine: number) {
     setLine(nextLine);
     onChange(selectionLabel(direction, nextLine));
+  }
+
+  function chooseScope(nextScope: SelectionScope) {
+    const nextSettings = lineSettings(marketChoice, shotMetric, nextScope);
+    if (!nextSettings) return;
+    setLine(nextSettings.defaultValue);
+    onChange(selectionLabel(direction, nextSettings.defaultValue, shotMetric, nextScope));
   }
 
   return (
@@ -139,6 +176,23 @@ function SelectionPicker({
       )}
       {settings && (
         <>
+          <div className="grid grid-cols-3 gap-2" role="group" aria-label={translate("Ámbito de la apuesta", "Bet scope")}>
+            {([
+              ["match", translate("Partido", "Match")],
+              ["home", homeTeam || translate("Local", "Home")],
+              ["away", awayTeam || translate("Visitante", "Away")],
+            ] as const).map(([nextScope, label]) => (
+              <button
+                key={nextScope}
+                type="button"
+                aria-pressed={scope === nextScope}
+                onClick={() => chooseScope(nextScope)}
+                className={`min-w-0 min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold transition ${scope === nextScope ? "border-brand bg-brand/10 text-brand" : "border-line bg-bg text-muted hover:border-brand/50"}`}
+              >
+                <span className="block truncate">{label}</span>
+              </button>
+            ))}
+          </div>
           {marketChoice === "Tiros" && (
             <div className="grid grid-cols-2 gap-2" role="group" aria-label={translate("Tipo de tiros", "Shot type")}>
               {([["shots", translate("Tiros totales", "Total shots")], ["shotsOn", translate("A puerta", "On target")]] as const).map(([metric, label]) => (
@@ -148,7 +202,7 @@ function SelectionPicker({
                   aria-pressed={shotMetric === metric}
                   onClick={() => {
                     const nextMetric = metric as ShotMetric;
-                    const nextSettings = lineSettings(marketChoice, nextMetric);
+                    const nextSettings = lineSettings(marketChoice, nextMetric, scope);
                     if (!nextSettings) return;
                     setShotMetric(nextMetric);
                     setLine(nextSettings.defaultValue);
@@ -164,7 +218,23 @@ function SelectionPicker({
           <div className="rounded-2xl bg-bg p-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs font-bold uppercase tracking-wide text-muted">{translate("Línea", "Line")}</span>
-              <output className="rounded-lg bg-brand/10 px-3 py-1 text-lg font-black text-brand">{line.toFixed(1).replace(".", english ? "." : ",")}</output>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label={translate("Bajar línea", "Lower line")}
+                  disabled={line <= settings.min}
+                  onClick={() => chooseLine(Math.max(settings.min, line - 0.5))}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-line font-bold text-fg disabled:opacity-40"
+                >−</button>
+                <output className="min-w-12 rounded-lg bg-brand/10 px-3 py-1 text-center text-lg font-black text-brand">{line.toFixed(1).replace(".", english ? "." : ",")}</output>
+                <button
+                  type="button"
+                  aria-label={translate("Subir línea", "Raise line")}
+                  disabled={line >= settings.max}
+                  onClick={() => chooseLine(Math.min(settings.max, line + 0.5))}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-line font-bold text-fg disabled:opacity-40"
+                >+</button>
+              </div>
             </div>
             <label className="mt-2 block">
               <span className="sr-only">{translate("Arrastra para elegir la línea", "Drag to choose the line")}</span>
@@ -172,7 +242,7 @@ function SelectionPicker({
                 type="range"
                 min={settings.min}
                 max={settings.max}
-                step="1"
+                step="0.5"
                 value={line}
                 onChange={(event) => chooseLine(Number(event.target.value))}
                 className="h-2 w-full cursor-pointer accent-statOrange"
@@ -344,6 +414,8 @@ function BetLegEditor({
       <SelectionPicker
         marketChoice={leg.marketChoice}
         selection={leg.selection}
+        homeTeam={selectedFixture?.home.name ?? leg.homeTeam}
+        awayTeam={selectedFixture?.away.name ?? leg.awayTeam}
         english={english}
         translate={translate}
         onChange={(selection) => onChange(index, { selection })}
@@ -1048,10 +1120,10 @@ export function BetTracker({
                     <span className="block text-sm font-bold">{label}</span>
                     <span className="mt-1 block text-[10px] font-medium opacity-75">
                       {choice === "1X2" ? tr("Local · empate · visitante", "Home · draw · away")
-                        : choice === "Goles" ? tr("Total y ambos marcan", "Total and both teams to score")
-                          : choice === "Tarjetas" ? tr("Total del partido", "Match total")
-                            : choice === "Tiros" ? tr("Tiros y a puerta", "Shots and on target")
-                              : choice === "Córners" ? tr("Total del partido", "Match total")
+                        : choice === "Goles" ? tr("Total, por equipo y ambos marcan", "Total, per team and both teams to score")
+                          : choice === "Tarjetas" ? tr("Total o por equipo", "Match total or per team")
+                            : choice === "Tiros" ? tr("Tiros, a puerta y por equipo", "Shots, on target, and per team")
+                              : choice === "Córners" ? tr("Total o por equipo", "Match total or per team")
                                 : tr("Mercado personalizado", "Custom market")}
                     </span>
                   </button>
@@ -1070,6 +1142,8 @@ export function BetTracker({
             <SelectionPicker
               marketChoice={marketChoice}
               selection={selection}
+              homeTeam={selectedFixture?.home.name ?? manualHome}
+              awayTeam={selectedFixture?.away.name ?? manualAway}
               english={en}
               translate={tr}
               onChange={setSelection}

@@ -51,6 +51,20 @@ function isTeamOrPlayerSpecific(leg: BetLeg, fixture: Fixture) {
     .some((name) => name.length >= 3 && selection.includes(` ${name} `));
 }
 
+function selectedTeamSide(leg: BetLeg, fixture: Fixture): "home" | "away" | null {
+  const selection = normalize(leg.selection);
+  const isHome = /\b(home|local)\b/.test(selection);
+  const isAway = /\b(away|visitante)\b/.test(selection);
+  if (isHome !== isAway) return isHome ? "home" : "away";
+
+  const homeName = normalize(fixture.home.name);
+  const awayName = normalize(fixture.away.name);
+  const mentionsHome = homeName.length >= 3 && selection.includes(homeName);
+  const mentionsAway = awayName.length >= 3 && selection.includes(awayName);
+  if (mentionsHome !== mentionsAway) return mentionsHome ? "home" : "away";
+  return null;
+}
+
 export function resolveBetLeg(leg: BetLeg, fixture: Fixture, stats: StoredStats | null): SettledOutcome {
   if (fixture.statusShort !== "FT" || fixture.goalsHome === null || fixture.goalsAway === null) return null;
   const kind = marketKind(leg);
@@ -71,19 +85,25 @@ export function resolveBetLeg(leg: BetLeg, fixture: Fixture, stats: StoredStats 
       const expectsYes = !/no|ninguno|ninguna/.test(selection);
       return bothScored === expectsYes ? "won" : "lost";
     }
-    if (isTeamOrPlayerSpecific(leg, fixture)) return null;
     const line = overUnder(leg);
-    return line ? compare(fixture.goalsHome + fixture.goalsAway, line.direction, line.line) : null;
+    if (!line) return null;
+    const side = selectedTeamSide(leg, fixture);
+    if (isTeamOrPlayerSpecific(leg, fixture) && !side) return null;
+    const actual = side === "home" ? fixture.goalsHome
+      : side === "away" ? fixture.goalsAway
+        : fixture.goalsHome + fixture.goalsAway;
+    return compare(actual, line.direction, line.line);
   }
 
   if (kind === "shots" || kind === "shotsOn" || kind === "corners" || kind === "cards") {
-    if (isTeamOrPlayerSpecific(leg, fixture)) return null;
     const line = overUnder(leg);
     if (!line || !stats) return null;
     const home = stats.home[kind];
     const away = stats.away[kind];
     if (typeof home !== "number" || typeof away !== "number") return null;
-    return compare(home + away, line.direction, line.line);
+    const side = selectedTeamSide(leg, fixture);
+    if (isTeamOrPlayerSpecific(leg, fixture) && !side) return null;
+    return compare(side === "home" ? home : side === "away" ? away : home + away, line.direction, line.line);
   }
 
   return null;
