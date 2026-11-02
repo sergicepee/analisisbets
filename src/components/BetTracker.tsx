@@ -275,7 +275,7 @@ function BetLegEditor({
   const selectedFixture = fixtures.find((fixture) => String(fixture.id) === leg.fixtureId);
 
   return (
-    <section className="space-y-3 rounded-2xl border border-line bg-bg p-3 sm:p-4">
+    <section className="space-y-4 rounded-2xl border border-line bg-bg p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-bold">{translate("Selección", "Selection")} {index + 1}</h3>
         {canRemove && (
@@ -305,7 +305,9 @@ function BetLegEditor({
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className={labelClass}>{translate("Fecha", "Date")}</p>
-            <CalendarDatePicker date={leg.eventDate} english={english} onSelect={(eventDate) => onChange(index, { eventDate })} />
+            <div className="mt-1">
+              <CalendarDatePicker date={leg.eventDate} english={english} onSelect={(eventDate) => onChange(index, { eventDate })} />
+            </div>
           </div>
           <label className={labelClass}>{translate("Liga (opcional)", "League (optional)")}
             <input value={leg.leagueName} onChange={(event) => onChange(index, { leagueName: event.target.value })} maxLength={100} className={inputClass} />
@@ -869,7 +871,7 @@ export function BetTracker({
       {notice && <p role="status" className="rounded-xl border border-statGreen/40 bg-statGreen/10 px-3 py-2.5 text-sm text-statGreen">{notice}</p>}
 
       {showForm && (
-        <form key={`${betType}-${selectedFixture?.id ?? "manual"}`} onSubmit={submitBet} className="card space-y-5 p-4 sm:p-5">
+        <form key={`${betType}-${selectedFixture?.id ?? "manual"}`} onSubmit={submitBet} className="card space-y-6 p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-brand">{tr("Nueva apuesta", "New bet")}</p>
@@ -963,7 +965,9 @@ export function BetTracker({
               <div className="grid gap-3 rounded-2xl border border-line bg-bg/60 p-3 sm:grid-cols-2">
                 <div>
                   <p className={labelClass}>{tr("Fecha del partido", "Match date")}</p>
-                  <CalendarDatePicker date={manualDate} english={en} onSelect={setManualDate} />
+                  <div className="mt-1">
+                    <CalendarDatePicker date={manualDate} english={en} onSelect={setManualDate} />
+                  </div>
                 </div>
                 <label className={labelClass}>{tr("Liga (opcional)", "League (optional)")}
                   <input className={inputClass} name="leagueName" maxLength={100} value={manualLeague} onChange={(event) => setManualLeague(event.target.value)} placeholder={tr("LaLiga", "LaLiga")} />
@@ -1070,7 +1074,7 @@ export function BetTracker({
               translate={tr}
               onChange={setSelection}
             />
-            <label className={labelClass}>{tr("Selección", "Selection")}
+            <label className={`${labelClass} mt-4`}>{tr("Selección", "Selection")}
               <input className={inputClass} value={selection} onChange={(event) => setSelection(event.target.value)} maxLength={120} placeholder={tr("Ajusta el deslizador o escribe una selección", "Move the slider or type a selection")} required />
             </label>
           </section>
