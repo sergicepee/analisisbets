@@ -476,27 +476,31 @@ function localDate(timestamp: number, timeZone: string): string {
 
 export async function getEspnFixturesByDate(date: string): Promise<Fixture[]> {
   const timeZone = getTz();
-  const days = [shiftDay(date, -1), shiftDay(date, 0), shiftDay(date, 1)];
-  const results = await Promise.allSettled(ESPN_LEAGUES.flatMap((league) =>
-    days.map(async (day) => {
-      const data = await scoreboardDay(league, day);
-      const leagueLogo = data.leagues?.[0]?.logos?.find((item) => item.rel?.includes("default"))?.href
-        ?? data.leagues?.[0]?.logos?.[0]?.href ?? null;
-      return data.events.flatMap((event) => {
-        const fixture = normalizeFixture(event, league, leagueLogo);
-        return fixture ? [fixture] : [];
-      });
-    }),
-  ));
-  const fixtures = results.flatMap((result) => {
-    if (result.status === "fulfilled") return result.value;
-    console.error("No se pudo cargar un calendario ESPN para el día:", result.reason);
-    return [];
+  const dateMs = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
+  const recent = Math.abs(Date.now() - dateMs) < 3 * DAY * 1000;
+  return cached(`espn:fixtures-date:v1:${timeZone}:${date}`, recent ? 45 : 6 * HOUR, async () => {
+    const days = [shiftDay(date, -1), shiftDay(date, 0), shiftDay(date, 1)];
+    const results = await Promise.allSettled(ESPN_LEAGUES.flatMap((league) =>
+      days.map(async (day) => {
+        const data = await scoreboardDay(league, day);
+        const leagueLogo = data.leagues?.[0]?.logos?.find((item) => item.rel?.includes("default"))?.href
+          ?? data.leagues?.[0]?.logos?.[0]?.href ?? null;
+        return data.events.flatMap((event) => {
+          const fixture = normalizeFixture(event, league, leagueLogo);
+          return fixture ? [fixture] : [];
+        });
+      }),
+    ));
+    const fixtures = results.flatMap((result) => {
+      if (result.status === "fulfilled") return result.value;
+      console.error("No se pudo cargar un calendario ESPN para el día:", result.reason);
+      return [];
+    });
+    if (!results.some((result) => result.status === "fulfilled")) throw new Error("No se pudieron cargar los partidos de ESPN");
+    const unique = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
+    return [...unique.values()].filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
+      .sort((a, b) => a.timestamp - b.timestamp);
   });
-  if (!results.some((result) => result.status === "fulfilled")) throw new Error("No se pudieron cargar los partidos de ESPN");
-  const unique = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
-  return [...unique.values()].filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
-    .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export async function getEspnFixture(id: number, leagueId?: number, date?: string): Promise<Fixture | null> {

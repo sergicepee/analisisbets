@@ -31,10 +31,7 @@ export async function cacheSet(key: string, value: unknown, ttlSec: number) {
   } catch { /* ignorar */ }
 }
 
-/**
- * Devuelve el valor en caché si sigue vigente; si no, ejecuta fn y lo guarda.
- * Si fn falla y hay un valor caducado, lo devuelve (mejor dato viejo que error).
- */
+/** Devuelve la copia vigente; si caducó, la sirve mientras refresca en segundo plano. */
 export async function cached<T>(
   key: string,
   ttl: number | ((d: T) => number),
@@ -42,21 +39,26 @@ export async function cached<T>(
 ): Promise<T> {
   const hit = await cacheGet<T>(key);
   if (hit !== null) return hit;
+
+  const stale = await cacheGet<T>(key, true);
   const running = inflight.get(key) as Promise<T> | undefined;
-  if (running) return running;
+  if (running) return stale ?? running;
   const p = (async () => {
     try {
       const fresh = await fn();
       await cacheSet(key, fresh, typeof ttl === "function" ? ttl(fresh) : ttl);
       return fresh;
-    } catch (e) {
-      const stale = await cacheGet<T>(key, true);
-      if (stale !== null) return stale;
-      throw e;
+    } catch (error) {
+      if (stale !== null) {
+        console.error(`No se pudo actualizar la caché ${key}; se conserva el dato anterior:`, error);
+        return stale;
+      }
+      throw error;
     } finally {
       inflight.delete(key);
     }
   })();
   inflight.set(key, p);
+  if (stale !== null) return stale;
   return p;
 }
