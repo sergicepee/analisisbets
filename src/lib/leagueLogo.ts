@@ -1,6 +1,6 @@
 const LIGUE_1_LOGO = "https://assets.football-logos.cc/logos/france/512x512/ligue-1.bcb13eb0.png";
 const ESPN_LEAGUE_LOGOS: Record<number, number> = {
-  2: 2, 3: 4, 39: 23, 40: 24, 61: 9, 62: 9, 78: 10, 79: 10,
+  2: 2, 3: 2310, 39: 23, 40: 24, 61: 9, 62: 9, 78: 10, 79: 10,
   88: 11, 94: 14, 135: 12, 136: 12, 140: 15, 141: 15,
 };
 
