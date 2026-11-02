@@ -303,9 +303,10 @@ function BetLegEditor({
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          <label className={labelClass}>{translate("Fecha", "Date")}
-            <input type="date" value={leg.eventDate} onChange={(event) => onChange(index, { eventDate: event.target.value })} className={inputClass} required />
-          </label>
+          <div>
+            <p className={labelClass}>{translate("Fecha", "Date")}</p>
+            <CalendarDatePicker date={leg.eventDate} english={english} onSelect={(eventDate) => onChange(index, { eventDate })} />
+          </div>
           <label className={labelClass}>{translate("Liga (opcional)", "League (optional)")}
             <input value={leg.leagueName} onChange={(event) => onChange(index, { leagueName: event.target.value })} maxLength={100} className={inputClass} />
           </label>
@@ -960,9 +961,10 @@ export function BetTracker({
                 </button>
               )}
               <div className="grid gap-3 rounded-2xl border border-line bg-bg/60 p-3 sm:grid-cols-2">
-                <label className={labelClass}>{tr("Fecha del partido", "Match date")}
-                  <input className={inputClass} name="eventDate" type="date" value={manualDate} onChange={(event) => setManualDate(event.target.value)} required />
-                </label>
+                <div>
+                  <p className={labelClass}>{tr("Fecha del partido", "Match date")}</p>
+                  <CalendarDatePicker date={manualDate} english={en} onSelect={setManualDate} />
+                </div>
                 <label className={labelClass}>{tr("Liga (opcional)", "League (optional)")}
                   <input className={inputClass} name="leagueName" maxLength={100} value={manualLeague} onChange={(event) => setManualLeague(event.target.value)} placeholder={tr("LaLiga", "LaLiga")} />
                 </label>
