@@ -66,7 +66,8 @@ function selectedTeamSide(leg: BetLeg, fixture: Fixture): "home" | "away" | null
 }
 
 export function resolveBetLeg(leg: BetLeg, fixture: Fixture, stats: StoredStats | null): SettledOutcome {
-  if (fixture.statusShort !== "FT" || fixture.goalsHome === null || fixture.goalsAway === null) return null;
+  if (!["FT", "AET", "PEN"].includes(fixture.statusShort) ||
+      fixture.goalsHome === null || fixture.goalsAway === null) return null;
   const kind = marketKind(leg);
   const selection = normalize(leg.selection);
 

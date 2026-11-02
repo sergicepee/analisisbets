@@ -65,3 +65,13 @@ test("settles full-match and selected-team shots, corners, and cards", () => {
   assert.equal(resolveBetLeg(leg("Tarjetas", "Más de 5,5 tarjetas"), fixture, stats), "won");
   assert.equal(resolveBetLeg(leg("Tarjetas", "Menos de 2 tarjetas · Local (Real Madrid)"), fixture, stats), "void");
 });
+
+test("settles matches finished after extra time or penalties", () => {
+  for (const statusShort of ["AET", "PEN"]) {
+    assert.equal(resolveBetLeg(
+      leg("Goles", "Más de 2,5 goles"),
+      { ...fixture, statusShort },
+      null,
+    ), "won");
+  }
+});
