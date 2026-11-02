@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { Clock3, Plus, Search, Target, TrendingUp, Trash2, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLang } from "./I18nProvider";
+import { CalendarDatePicker } from "./DatePicker";
 import type { BetStatus, TrackedBet } from "@/lib/bet-tracker";
 import { Shield } from "./Shield";
 import type { Fixture } from "@/lib/types";
@@ -362,6 +364,7 @@ export function BetTracker({
   selectedFixtureError,
   timeZone,
 }: Props) {
+  const router = useRouter();
   const en = useLang() === "en";
   const tr = (es: string, english: string) => en ? english : es;
   const locale = en ? "en-GB" : "es-ES";
@@ -767,12 +770,7 @@ export function BetTracker({
               <p className="mt-1 text-xs text-muted">{tr("Puedes elegir cualquier fecha; también aparecen los partidos terminados.", "Choose any date; finished matches are included too.")}</p>
             </div>
             <div className="grid w-full gap-2">
-            <form action="/mis-apuestas" method="get" className="w-full min-w-0">
-              <label className="block w-full">
-                <span className="sr-only">{tr("Fecha de los partidos", "Match date")}</span>
-                <input type="date" name="date" defaultValue={fixturesDate} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="min-h-11 w-full rounded-xl border border-line bg-bg px-3 text-sm outline-none focus:border-brand" />
-              </label>
-            </form>
+            <CalendarDatePicker date={fixturesDate} english={en} onSelect={(date) => router.push(`/mis-apuestas?date=${date}`)} />
             <button type="button" onClick={useManualEntry} className="min-h-11 w-full whitespace-nowrap rounded-xl border border-line px-4 text-xs font-semibold text-muted transition hover:border-brand hover:text-brand sm:w-auto sm:justify-self-start">
               {tr("Introducir manualmente", "Enter manually")}
             </button>
