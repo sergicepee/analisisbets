@@ -34,8 +34,17 @@ function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoritePr
       return;
     }
     if (busy) return;
+    const previousFavorite = favorite;
+    const nextFavorite = !previousFavorite;
     setBusy(true);
     setError(null);
+    setFavorite(nextFavorite);
+    const dispatchFavorite = (value: boolean) => {
+      window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
+        detail: { fixtureId, favorite: value },
+      }));
+    };
+    dispatchFavorite(nextFavorite);
     try {
       const response = await fetch("/api/favorites", {
         method: favorite ? "DELETE" : "POST",
@@ -47,11 +56,10 @@ function useFavorite({ fixtureId, isAuthenticated, initialFavorite }: FavoritePr
         throw new Error(result.error || "No se pudo actualizar el favorito.");
       }
       setFavorite(result.favorite);
-      window.dispatchEvent(new CustomEvent("pickzone:favorite-updated", {
-        detail: { fixtureId, favorite: result.favorite },
-      }));
-      router.refresh();
+      dispatchFavorite(result.favorite);
     } catch (cause) {
+      setFavorite(previousFavorite);
+      dispatchFavorite(previousFavorite);
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar el favorito.");
     } finally {
       setBusy(false);

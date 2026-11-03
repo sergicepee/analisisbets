@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { CalendarDays, Trash2 } from "lucide-react";
 import type { Fixture } from "@/lib/types";
 import { useT } from "./I18nProvider";
@@ -41,14 +40,21 @@ export function FavoritesCollections({
   const [fixtures, setFixtures] = useState(initialFixtures);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const t = useT();
+  const hadInitialItems = initialLeagues.length > 0 || initialTeams.length > 0 || initialFixtures.length > 0;
 
   async function removeLeague(league: FollowedLeagueCard) {
     const key = `league:${league.id}`;
     if (busy) return;
     setBusy(key);
     setError(null);
+    setLeagues((current) => current.filter((item) => item.id !== league.id));
+    const dispatchFollowing = (following: boolean) => {
+      window.dispatchEvent(new CustomEvent("pickzone:league-follow-updated", {
+        detail: { leagueId: league.id, following },
+      }));
+    };
+    dispatchFollowing(false);
     try {
       const response = await fetch("/api/league-follows", {
         method: "DELETE",
@@ -59,9 +65,9 @@ export function FavoritesCollections({
       if (!response.ok || result.following !== false) {
         throw new Error(result.error || "No se pudo dejar de seguir la liga.");
       }
-      setLeagues((current) => current.filter((item) => item.id !== league.id));
-      router.refresh();
     } catch (cause) {
+      setLeagues((current) => current.some((item) => item.id === league.id) ? current : [...current, league]);
+      dispatchFollowing(true);
       setError(cause instanceof Error ? cause.message : "No se pudo dejar de seguir la liga.");
     } finally {
       setBusy(null);
@@ -73,17 +79,61 @@ export function FavoritesCollections({
       const detail = (event as CustomEvent<{ fixtureId: number; favorite: boolean }>).detail;
       if (!detail.favorite) {
         setFixtures((current) => current.filter((item) => item.fixture.id !== detail.fixtureId));
+        return;
+      }
+      const restored = initialFixtures.find((item) => item.fixture.id === detail.fixtureId);
+      if (restored) {
+        setFixtures((current) => {
+          if (current.some((item) => item.fixture.id === detail.fixtureId)) return current;
+          const next = [...current, restored];
+          return initialFixtures.filter((item) => next.some((candidate) => candidate.fixture.id === item.fixture.id));
+        });
       }
     };
     window.addEventListener("pickzone:favorite-updated", syncFavorite);
     return () => window.removeEventListener("pickzone:favorite-updated", syncFavorite);
-  }, []);
+  }, [initialFixtures]);
+
+  useEffect(() => {
+    const syncTeam = (event: Event) => {
+      const detail = (event as CustomEvent<{ teamId: number; following: boolean }>).detail;
+      if (!detail.following) {
+        setTeams((current) => current.filter((item) => item.id !== detail.teamId));
+        return;
+      }
+      const restored = initialTeams.find((item) => item.id === detail.teamId);
+      if (restored) setTeams((current) => current.some((item) => item.id === detail.teamId) ? current : [...current, restored]);
+    };
+    window.addEventListener("pickzone:team-follow-updated", syncTeam);
+    return () => window.removeEventListener("pickzone:team-follow-updated", syncTeam);
+  }, [initialTeams]);
+
+  useEffect(() => {
+    const syncLeague = (event: Event) => {
+      const detail = (event as CustomEvent<{ leagueId: number; following: boolean }>).detail;
+      if (!detail.following) {
+        setLeagues((current) => current.filter((item) => item.id !== detail.leagueId));
+        return;
+      }
+      const restored = initialLeagues.find((item) => item.id === detail.leagueId);
+      if (restored) setLeagues((current) => current.some((item) => item.id === detail.leagueId) ? current : [...current, restored]);
+    };
+    window.addEventListener("pickzone:league-follow-updated", syncLeague);
+    return () => window.removeEventListener("pickzone:league-follow-updated", syncLeague);
+  }, [initialLeagues]);
 
   async function removeTeam(team: FollowedTeamCard) {
     const key = `team:${team.id}`;
     if (busy) return;
     setBusy(key);
     setError(null);
+    setTeams((current) => current.filter((item) => item.id !== team.id));
+    const dispatchFollowing = (following: boolean) => {
+      window.dispatchEvent(new CustomEvent("pickzone:team-follow-updated", {
+        detail: { teamId: team.id, following, teamName: team.name },
+      }));
+    };
+    dispatchFollowing(false);
     try {
       const response = await fetch("/api/team-follows", {
         method: "DELETE",
@@ -94,11 +144,9 @@ export function FavoritesCollections({
       if (!response.ok || result.following !== false) {
         throw new Error(result.error || "No se pudo dejar de seguir al equipo.");
       }
-      setTeams((current) => current.filter((item) => item.id !== team.id));
-      window.dispatchEvent(new CustomEvent("pickzone:team-follow-updated", {
-        detail: { teamId: team.id, following: false, teamName: team.name },
-      }));
     } catch (cause) {
+      setTeams((current) => current.some((item) => item.id === team.id) ? current : [...current, team]);
+      dispatchFollowing(true);
       setError(cause instanceof Error ? cause.message : "No se pudo dejar de seguir al equipo.");
     } finally {
       setBusy(null);
@@ -108,6 +156,16 @@ export function FavoritesCollections({
   return (
     <div className="space-y-6">
       {error && <p role="alert" className="rounded-xl border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">{t(error)}</p>}
+      {hadInitialItems && leagues.length === 0 && teams.length === 0 && fixtures.length === 0 && (
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-line bg-card px-6 py-10 text-center">
+          <p className="max-w-md text-sm leading-relaxed text-muted">
+            {t("Todavía no tienes favoritos. Usa el buscador de arriba o pulsa la estrella en cualquier partido.")}
+          </p>
+          <Link href="/buscar" className="mt-4 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-black">
+            {t("Buscar partidos")}
+          </Link>
+        </div>
+      )}
       {leagues.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-xl font-extrabold uppercase leading-none text-brand">{t("Ligas")} ({leagues.length})</h2>

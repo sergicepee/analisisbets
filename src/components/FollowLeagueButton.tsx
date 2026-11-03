@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { useT } from "./I18nProvider";
@@ -26,6 +26,15 @@ export function FollowLeagueButton({
   const router = useRouter();
   const t = useT();
 
+  useEffect(() => {
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<{ leagueId: number; following: boolean }>).detail;
+      if (detail.leagueId === leagueId) setFollowing(detail.following);
+    };
+    window.addEventListener("pickzone:league-follow-updated", sync);
+    return () => window.removeEventListener("pickzone:league-follow-updated", sync);
+  }, [leagueId]);
+
   async function toggle() {
     if (!isAuthenticated) {
       const next = `${window.location.pathname}${window.location.search}`;
@@ -33,8 +42,17 @@ export function FollowLeagueButton({
       return;
     }
     if (busy) return;
+    const previousFollowing = following;
+    const nextFollowing = !previousFollowing;
     setBusy(true);
     setError(null);
+    setFollowing(nextFollowing);
+    const dispatchFollowing = (value: boolean) => {
+      window.dispatchEvent(new CustomEvent("pickzone:league-follow-updated", {
+        detail: { leagueId, following: value },
+      }));
+    };
+    dispatchFollowing(nextFollowing);
     try {
       const response = await fetch("/api/league-follows", {
         method: following ? "DELETE" : "POST",
@@ -46,8 +64,10 @@ export function FollowLeagueButton({
         throw new Error(result.error || "No se pudo actualizar el seguimiento.");
       }
       setFollowing(result.following);
-      router.refresh();
+      dispatchFollowing(result.following);
     } catch (cause) {
+      setFollowing(previousFollowing);
+      dispatchFollowing(previousFollowing);
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar el seguimiento.");
     } finally {
       setBusy(false);

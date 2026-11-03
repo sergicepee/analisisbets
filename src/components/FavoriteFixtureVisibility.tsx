@@ -8,7 +8,7 @@ export function FavoriteFixtureVisibility({ fixtureId, children }: { fixtureId: 
   useEffect(() => {
     const removeFavorite = (event: Event) => {
       const detail = (event as CustomEvent<{ fixtureId: number; favorite: boolean }>).detail;
-      if (detail.fixtureId === fixtureId && !detail.favorite) setVisible(false);
+      if (detail.fixtureId === fixtureId) setVisible(detail.favorite);
     };
     window.addEventListener("pickzone:favorite-updated", removeFavorite);
     return () => window.removeEventListener("pickzone:favorite-updated", removeFavorite);

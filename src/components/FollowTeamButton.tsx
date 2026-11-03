@@ -40,8 +40,17 @@ export function FollowTeamButton({
       return;
     }
     if (busy) return;
+    const previousFollowing = following;
+    const nextFollowing = !previousFollowing;
     setBusy(true);
     setError(null);
+    setFollowing(nextFollowing);
+    const dispatchFollowing = (value: boolean) => {
+      window.dispatchEvent(new CustomEvent("pickzone:team-follow-updated", {
+        detail: { teamId, following: value, teamName },
+      }));
+    };
+    dispatchFollowing(nextFollowing);
     try {
       const response = await fetch("/api/team-follows", {
         method: following ? "DELETE" : "POST",
@@ -53,10 +62,10 @@ export function FollowTeamButton({
         throw new Error(result.error || "No se pudo actualizar el seguimiento.");
       }
       setFollowing(result.following);
-      window.dispatchEvent(new CustomEvent("pickzone:team-follow-updated", {
-        detail: { teamId, following: result.following, teamName },
-      }));
+      dispatchFollowing(result.following);
     } catch (cause) {
+      setFollowing(previousFollowing);
+      dispatchFollowing(previousFollowing);
       setError(cause instanceof Error && cause.message ? cause.message : "Error al actualizar seguimiento.");
     } finally {
       setBusy(false);
