@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, ChevronDown, MapPin, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { t } from "@/lib/i18n";
 import { I18nText } from "@/components/I18nProvider";
-import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchList } from "@/components/MatchList";
 import { GoalsAnalysis } from "@/components/GoalsAnalysis";
 import { CornersAnalysis } from "@/components/CornersAnalysis";
@@ -27,6 +27,7 @@ import { apiEnabled, FORM_MATCHES } from "@/lib/config";
 import { savePreMatchPrediction, settleSavedPrediction, type ExpectedMetrics } from "@/lib/prediction-ledger";
 import { errMsg, friendlyApiError, isDate, num, pct, statusGroup, timeStr, todayStr } from "@/lib/format";
 import { getLeagueLogoUrl } from "@/lib/leagueLogo";
+import { shouldRefreshFixtureStatus, shouldRefreshRecentlyFinishedFixture } from "@/lib/fixtureStatus";
 import { jerseyStyle, normalizedTeamColor } from "@/lib/teamColor";
 import { getLocale, getTz } from "@/lib/prefs";
 import {
@@ -77,6 +78,11 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   ]);
   const isSubscriber = subscriptionAccess.active;
   const g = statusGroup(f);
+  const refreshMatch = apiEnabled && (
+    g === "live"
+    || shouldRefreshFixtureStatus(f)
+    || shouldRefreshRecentlyFinishedFixture(f)
+  );
   const cardCounts = f.events.reduce((counts, event) => {
     if (event.type !== "Card") return counts;
     const home = event.teamId === f.home.id;
@@ -88,7 +94,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
   return (
     <>
       <Header back={`/?date=${date}`} />
-      {apiEnabled && g === "live" ? <AutoRefresh seconds={45} /> : null}
+      {refreshMatch && <AutoRefresh seconds={g === "finished" ? 15 : 5} />}
       <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} userId={user?.id ?? null} isSubscriber={isSubscriber} subscriptionError={subscriptionAccess.error} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}

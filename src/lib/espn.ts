@@ -156,11 +156,11 @@ function scoreboard(league: EspnLeague, year: number, limit = 1000): Promise<Esp
 function scoreboardDay(league: EspnLeague, day: string): Promise<EspnScoreboard> {
   const dayMs = Date.UTC(Number(day.slice(0, 4)), Number(day.slice(4, 6)) - 1, Number(day.slice(6, 8)));
   const recent = Math.abs(Date.now() - dayMs) < 3 * DAY * 1000;
-  return cached(`espn:scoreboard-day:${league.slug}:${day}`, recent ? 45 : 6 * HOUR, async () => {
+  return cached(`espn:scoreboard-day:${league.slug}:${day}`, recent ? 5 : 6 * HOUR, async () => {
     const data = await requestJson<Partial<EspnScoreboard>>(`${SITE}/${league.slug}/scoreboard?dates=${day}&limit=100`);
     if (!Array.isArray(data.events)) throw new Error(`ESPN no devolvió eventos para ${league.slug} (${day})`);
     return data as EspnScoreboard;
-  });
+  }, { staleWhileRevalidate: false });
 }
 
 function shiftDay(date: string, offset: number): string {
@@ -438,8 +438,9 @@ function fixturesFromEvents(events: EspnEvent[], league: EspnLeague, leagueLogo:
 }
 
 async function getEspnTeamSchedule(league: EspnLeague, teamId: number, season: number): Promise<Fixture[]> {
-  const ttl = season === new Date().getFullYear() ? 45 : 6 * HOUR;
-  return cached(`espn:team-schedule:v3:${league.slug}:${teamId}:${season}`, ttl, async () => {
+  const recent = season === new Date().getFullYear();
+  const ttl = recent ? 10 : 6 * HOUR;
+  return cached(`espn:team-schedule:v4:${league.slug}:${teamId}:${season}`, ttl, async () => {
     const data = await requestJson<EspnTeamSchedule>(
       `${SITE}/${league.slug}/teams/${teamId}/schedule?season=${season}`,
     );
@@ -447,7 +448,7 @@ async function getEspnTeamSchedule(league: EspnLeague, teamId: number, season: n
       throw new Error(`ESPN no devolvió el calendario del equipo ${teamId} (${league.slug}, ${season})`);
     }
     return fixturesFromEvents(data.events, league, null);
-  });
+  }, { staleWhileRevalidate: !recent });
 }
 
 export async function getEspnLeagueFixtures(leagueId: number, season: number): Promise<Fixture[]> {
@@ -476,31 +477,27 @@ function localDate(timestamp: number, timeZone: string): string {
 
 export async function getEspnFixturesByDate(date: string): Promise<Fixture[]> {
   const timeZone = getTz();
-  const dateMs = Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
-  const recent = Math.abs(Date.now() - dateMs) < 3 * DAY * 1000;
-  return cached(`espn:fixtures-date:v1:${timeZone}:${date}`, recent ? 45 : 6 * HOUR, async () => {
-    const days = [shiftDay(date, -1), shiftDay(date, 0), shiftDay(date, 1)];
-    const results = await Promise.allSettled(ESPN_LEAGUES.flatMap((league) =>
-      days.map(async (day) => {
-        const data = await scoreboardDay(league, day);
-        const leagueLogo = data.leagues?.[0]?.logos?.find((item) => item.rel?.includes("default"))?.href
-          ?? data.leagues?.[0]?.logos?.[0]?.href ?? null;
-        return data.events.flatMap((event) => {
-          const fixture = normalizeFixture(event, league, leagueLogo);
-          return fixture ? [fixture] : [];
-        });
-      }),
-    ));
-    const fixtures = results.flatMap((result) => {
-      if (result.status === "fulfilled") return result.value;
-      console.error("No se pudo cargar un calendario ESPN para el día:", result.reason);
-      return [];
-    });
-    if (!results.some((result) => result.status === "fulfilled")) throw new Error("No se pudieron cargar los partidos de ESPN");
-    const unique = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
-    return [...unique.values()].filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
-      .sort((a, b) => a.timestamp - b.timestamp);
+  const days = [shiftDay(date, -1), shiftDay(date, 0), shiftDay(date, 1)];
+  const results = await Promise.allSettled(ESPN_LEAGUES.flatMap((league) =>
+    days.map(async (day) => {
+      const data = await scoreboardDay(league, day);
+      const leagueLogo = data.leagues?.[0]?.logos?.find((item) => item.rel?.includes("default"))?.href
+        ?? data.leagues?.[0]?.logos?.[0]?.href ?? null;
+      return data.events.flatMap((event) => {
+        const fixture = normalizeFixture(event, league, leagueLogo);
+        return fixture ? [fixture] : [];
+      });
+    }),
+  ));
+  const fixtures = results.flatMap((result) => {
+    if (result.status === "fulfilled") return result.value;
+    console.error("No se pudo cargar un calendario ESPN para el día:", result.reason);
+    return [];
   });
+  if (!results.some((result) => result.status === "fulfilled")) throw new Error("No se pudieron cargar los partidos de ESPN");
+  const unique = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
+  return [...unique.values()].filter((fixture) => localDate(fixture.timestamp, timeZone) === date)
+    .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export async function getEspnFixture(id: number, leagueId?: number, date?: string): Promise<Fixture | null> {
@@ -611,7 +608,7 @@ export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats
   const league = leagueFor(fixture.leagueId);
   if (!league) return direct;
   try {
-    const summary = await cached(`espn:fixture-stats:v4:${fixture.id}`, live ? 30 : 30 * DAY, async () => {
+    const summary = await cached(`espn:fixture-stats:v4:${fixture.id}`, live ? 5 : 30 * DAY, async () => {
       const data = await requestJson<EspnSummary>(`${SITE}/${league.slug}/summary?event=${fixture.id}`);
       const teams = data.boxscore?.teams ?? [];
       const halves = periodStatsFromSummary(data, fixture);
@@ -637,7 +634,7 @@ export async function getEspnFixtureStats(fixture: Fixture): Promise<StoredStats
         goalsHome: fixture.goalsHome ?? 0, goalsAway: fixture.goalsAway ?? 0,
         hasData: [home, away].some(hasMatchStatData),
       };
-    });
+    }, { staleWhileRevalidate: false });
     const merge = (primary: MatchStat, fallback: MatchStat): MatchStat => ({
       shots: primary.shots ?? fallback.shots,
       shotsOn: primary.shotsOn ?? fallback.shotsOn,
@@ -802,7 +799,10 @@ export async function getEspnTeamProfile(
   const selectedLeague = leagueId ? leagueFor(leagueId) : null;
   if (leagueId && !selectedLeague) return { teamId, rows: [] };
   const selectedSeason = season ?? (new Date().getMonth() >= 5 ? new Date().getFullYear() : new Date().getFullYear() - 1);
-  return cached(`espn:profile:v10:${leagueId ?? "all"}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}:${withHalfTime}`, 30 * 60, async () => {
+  const recentFormOnly = limit === 5 && !withStats && !venue && !withHalfTime;
+  const version = recentFormOnly ? "v11" : "v10";
+  const ttl = recentFormOnly ? 10 : 30 * 60;
+  return cached(`espn:profile:${version}:${leagueId ?? "all"}:${teamId}:${selectedSeason}:${Math.floor(beforeTimestamp / DAY)}:${withStats}:${limit}:${venue ?? "all"}:${withHalfTime}`, ttl, async () => {
     const leagues = selectedLeague ? [selectedLeague] : (await getEspnTeamCompetitions(teamId))
       .flatMap((competition) => {
         const league = leagueFor(competition.id);
@@ -844,7 +844,7 @@ export async function getEspnTeamProfile(
       return toTeamRow({ ...fixture, ...halftime }, teamId, stats);
     }));
     return { teamId, rows };
-  });
+  }, { staleWhileRevalidate: !recentFormOnly });
 }
 
 export async function getEspnSeasonMatchSeries(teamId: number, leagueId: number | undefined, season: number) {

@@ -36,13 +36,14 @@ export async function cached<T>(
   key: string,
   ttl: number | ((d: T) => number),
   fn: () => Promise<T>,
+  { staleWhileRevalidate = true }: { staleWhileRevalidate?: boolean } = {},
 ): Promise<T> {
   const hit = await cacheGet<T>(key);
   if (hit !== null) return hit;
 
   const stale = await cacheGet<T>(key, true);
   const running = inflight.get(key) as Promise<T> | undefined;
-  if (running) return stale ?? running;
+  if (running) return stale !== null && staleWhileRevalidate ? stale : running;
   const p = (async () => {
     try {
       const fresh = await fn();
@@ -59,6 +60,6 @@ export async function cached<T>(
     }
   })();
   inflight.set(key, p);
-  if (stale !== null) return stale;
+  if (stale !== null && staleWhileRevalidate) return stale;
   return p;
 }

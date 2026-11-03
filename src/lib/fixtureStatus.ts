@@ -1,6 +1,9 @@
 import type { Fixture, StatusGroup } from "./types";
 
 const CSV_LIVE_WINDOW_SECONDS = 110 * 60;
+const KICKOFF_REFRESH_EARLY_SECONDS = 15 * 60;
+const KICKOFF_REFRESH_LATE_SECONDS = 150 * 60;
+const RECENT_FINISHED_REFRESH_SECONDS = 150 * 60;
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
@@ -37,4 +40,16 @@ export function isNearCsvLiveWindow(fixture: Fixture, now = Date.now() / 1000) {
   return ["NS", "TBD"].includes(fixture.statusShort)
     && now >= fixture.timestamp - CSV_LIVE_WINDOW_SECONDS
     && now < fixture.timestamp + CSV_LIVE_WINDOW_SECONDS;
+}
+
+export function shouldRefreshFixtureStatus(fixture: Fixture, now = Date.now() / 1000) {
+  return ["NS", "TBD"].includes(fixture.statusShort)
+    && now >= fixture.timestamp - KICKOFF_REFRESH_EARLY_SECONDS
+    && now < fixture.timestamp + KICKOFF_REFRESH_LATE_SECONDS;
+}
+
+export function shouldRefreshRecentlyFinishedFixture(fixture: Fixture, now = Date.now() / 1000) {
+  return FINISHED_STATUSES.includes(fixture.statusShort)
+    && now >= fixture.timestamp
+    && now < fixture.timestamp + RECENT_FINISHED_REFRESH_SECONDS;
 }

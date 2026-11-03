@@ -15,6 +15,7 @@ import { I18nText } from "./I18nProvider";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { getDisplaySubscriberAccess } from "@/lib/subscriptions";
+import { shouldRefreshFixtureStatus, shouldRefreshRecentlyFinishedFixture } from "@/lib/fixtureStatus";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ["live", "En vivo"],
@@ -53,12 +54,19 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
     : { active: isSubscriber ?? false, error: subscriptionError };
 
   const filters = FILTERS.filter(([key]) => key !== "live" || apiEnabled || counts.live > 0);
+  const refreshStatuses = date === today && fixtures.some((fixture) => shouldRefreshFixtureStatus(fixture));
+  const selectedFixture = selectedId === undefined ? undefined : fixtures.find((fixture) => fixture.id === selectedId);
+  const selectedPageRefreshes = selectedFixture !== undefined && (
+    statusGroup(selectedFixture) === "live"
+    || shouldRefreshFixtureStatus(selectedFixture)
+    || shouldRefreshRecentlyFinishedFixture(selectedFixture)
+  );
   const href = (key: string) => `/?date=${date}${leagueId ? `&league=${leagueId}` : ""}${key !== "all" ? `&f=${key}` : ""}`;
   const banner = SHOW_PREMIUM && !subscriptionAccess.active && !subscriptionAccess.error ? <PremiumBanner /> : null;
 
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">
-      {apiEnabled && counts.live > 0 && date === today && <AutoRefresh seconds={60} />}
+      {apiEnabled && date === today && !selectedPageRefreshes && (counts.live > 0 || refreshStatuses) && <AutoRefresh seconds={5} />}
       <div className="card rounded-xl p-2.5 sm:p-3">
         <DateNav date={date} base="/" extra={`${leagueId ? `&league=${leagueId}` : ""}${filter !== "all" ? `&f=${filter}` : ""}`} />
       </div>
