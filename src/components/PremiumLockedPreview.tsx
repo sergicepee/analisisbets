@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { I18nText } from "./I18nProvider";
 import { IconCard, IconCorner, IconLock, IconTarget } from "./icons";
+import { PeriodTabs } from "./PeriodTabs";
 import { Shield } from "./Shield";
+import type { MatchPeriod } from "@/lib/types";
 
 type Tab = "tiros" | "corners" | "tarjetas";
 type Teams = { home: { name: string; logo: string | null }; away: { name: string; logo: string | null } };
@@ -87,6 +89,7 @@ function LockedStatsTable({ teams, rows, firstColumn = "Métrica" }: {
 
 function CornersLockedPreview({ teams, locale }: { teams: Teams; locale: string }) {
   const [view, setView] = useState<"match" | "team">("match");
+  const [period, setPeriod] = useState<MatchPeriod>("full");
   const rows = view === "match"
     ? Array.from({ length: 8 }, (_, index) => `Más de ${index + 6}`)
     : [
@@ -98,6 +101,7 @@ function CornersLockedPreview({ teams, locale }: { teams: Teams; locale: string 
       ];
   return (
     <div className="min-w-0 space-y-3">
+      <PeriodTabs value={period} onChange={setPeriod} label="Periodo de córners" />
       <section className="rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3 flex items-center gap-2">
           <IconCorner className="h-4 w-4 text-brand" />
@@ -142,6 +146,7 @@ function CornersLockedPreview({ teams, locale }: { teams: Teams; locale: string 
 
 function CardsLockedPreview({ teams, locale }: { teams: Teams; locale: string }) {
   const [view, setView] = useState<"match" | "team">("match");
+  const [period, setPeriod] = useState<MatchPeriod>("full");
   const unlockText = "Desbloquea el análisis de tarjetas con Premium";
   const rows = view === "match"
     ? [2.5, 3.5, 4.5, 5.5, 6.5].map((line) => `Más de ${num(line, locale)}`)
@@ -154,6 +159,7 @@ function CardsLockedPreview({ teams, locale }: { teams: Teams; locale: string })
       ];
   return (
     <div className="min-w-0 space-y-3">
+      <PeriodTabs value={period} onChange={setPeriod} label="Periodo de tarjetas" />
       <section className="rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3 flex items-center gap-2">
           <IconCard className="h-4 w-4 text-brand" />
@@ -213,6 +219,7 @@ function CardsLockedPreview({ teams, locale }: { teams: Teams; locale: string })
 
 function ShotsLockedPreview({ teams, locale }: { teams: Teams; locale: string }) {
   const [scope, setScope] = useState<"match" | "team">("match");
+  const [period, setPeriod] = useState<MatchPeriod>("full");
   const unlockText = "Desbloquea el análisis de tiros con Premium";
   const metrics = scope === "match"
     ? [
@@ -229,6 +236,7 @@ function ShotsLockedPreview({ teams, locale }: { teams: Teams; locale: string })
   }));
   return (
     <div className="min-w-0 space-y-3">
+      <PeriodTabs value={period} onChange={setPeriod} label="Periodo de tiros" />
       <section className="rounded-2xl border border-line bg-card p-3 sm:p-4">
         <div className="mb-3">
           <div className="flex items-center gap-2">

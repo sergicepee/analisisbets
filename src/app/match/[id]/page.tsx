@@ -20,7 +20,7 @@ import { IconAssist, IconBall, IconBars, IconCard, IconCorner, IconNet, IconNext
 import { Notice, Panel, StatCard } from "@/components/ui";
 import { getFixture, getFixtureLineups, getFixtureStatsFor, getLeagueAverages, getLeagueCardLeaders, getTeamProfile } from "@/lib/apifootball";
 import { getUser } from "@/lib/auth";
-import { getSubscriberAccess } from "@/lib/subscriptions";
+import { getDisplaySubscriberAccess } from "@/lib/subscriptions";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
 import { PremiumLockedPreview } from "@/components/PremiumLockedPreview";
 import { apiEnabled, FORM_MATCHES } from "@/lib/config";
@@ -72,7 +72,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     }
   }
   const [subscriptionAccess, favoriteLookup] = await Promise.all([
-    user ? getSubscriberAccess(user.id) : Promise.resolve({ active: false, error: false }),
+    user ? getDisplaySubscriberAccess(user.id) : Promise.resolve({ active: false, error: false, developerMode: null }),
     user ? getFavoriteFixtureIds(user.id, [f.id]) : Promise.resolve({ favoriteIds: new Set<number>(), error: false }),
   ]);
   const isSubscriber = subscriptionAccess.active;
@@ -89,7 +89,7 @@ export default async function MatchPage({ params, searchParams }: { params: { id
     <>
       <Header back={`/?date=${date}`} />
       {apiEnabled && g === "live" ? <AutoRefresh seconds={45} /> : null}
-      <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} userId={user?.id ?? null} />}>
+      <Workspace hideListOnMobile list={<MatchList date={date} selectedId={f.id} userId={user?.id ?? null} isSubscriber={isSubscriber} subscriptionError={subscriptionAccess.error} />}>
       <main className="space-y-4 px-3 pb-8 pt-4 sm:px-4 lg:px-0">
         {favoriteLookup.error && <Notice tone="warn"><I18nText text="No se pudieron cargar tus favoritos. Comprueba que la tabla esté configurada en Supabase." /></Notice>}
         {subscriptionAccess.error && <Notice tone="warn"><I18nText text="No se pudo verificar tu acceso Premium. Las funciones Premium están bloqueadas hasta que se recupere la conexión." /></Notice>}

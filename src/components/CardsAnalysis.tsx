@@ -235,7 +235,6 @@ function Summary({
       <div className="mt-3">
         <CardTable firstColumn="Métrica" home={home} away={away} rows={normalizedRows} locale={locale} />
         <p className="mt-3 text-[10px] leading-relaxed text-muted">
-          <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
         </p>
       </div>
       {view === "match" && leagueAverage !== null && (

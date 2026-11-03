@@ -380,7 +380,6 @@ export function GoalsAnalysis({
   return (
     <div className="min-w-0 space-y-3">
       <p className="rounded-xl border border-line bg-card px-3 py-2 text-[10px] leading-relaxed text-muted">
-        <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
       </p>
       <GoalRatePanel home={homeHistory} away={awayHistory} sampleSize={sampleSize} locale={locale} kind="scored" isSubscriber={isSubscriber} />
       <GoalRatePanel home={homeHistory} away={awayHistory} sampleSize={sampleSize} locale={locale} kind="conceded" isSubscriber={isSubscriber} />

@@ -14,13 +14,14 @@ import type { Fixture, StatusGroup } from "@/lib/types";
 import { I18nText } from "./I18nProvider";
 import { getUser } from "@/lib/auth";
 import { getFavoriteFixtureIds } from "@/lib/favorites";
+import { getDisplaySubscriberAccess } from "@/lib/subscriptions";
 
 const FILTERS: [string, string][] = [
   ["all", "Todos"], ["live", "En vivo"],
   ["finished", "Finalizados"],
   ["upcoming", "Próximos"], ["pending", "Pendientes de actualizar"],
 ];
-export async function MatchList({ date, filter = "all", leagueId = null, selectedId, userId }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number; userId?: string | null }) {
+export async function MatchList({ date, filter = "all", leagueId = null, selectedId, userId, isSubscriber, subscriptionError = false }: { date: string; filter?: string; leagueId?: number | null; selectedId?: number; userId?: string | null; isSubscriber?: boolean; subscriptionError?: boolean }) {
   const today = todayStr();
   const fixturesPromise = getFixturesByDate(date, date === today)
     .then((fixtures) => ({ fixtures, error: null as string | null }))
@@ -47,10 +48,13 @@ export async function MatchList({ date, filter = "all", leagueId = null, selecte
   const favoriteLookup = resolvedUserId
     ? await getFavoriteFixtureIds(resolvedUserId, shown.map((fixture) => fixture.id))
     : { favoriteIds: new Set<number>(), error: false };
+  const subscriptionAccess = isSubscriber === undefined && resolvedUserId
+    ? await getDisplaySubscriberAccess(resolvedUserId)
+    : { active: isSubscriber ?? false, error: subscriptionError };
 
   const filters = FILTERS.filter(([key]) => key !== "live" || apiEnabled || counts.live > 0);
   const href = (key: string) => `/?date=${date}${leagueId ? `&league=${leagueId}` : ""}${key !== "all" ? `&f=${key}` : ""}`;
-  const banner = SHOW_PREMIUM ? <PremiumBanner /> : null;
+  const banner = SHOW_PREMIUM && !subscriptionAccess.active && !subscriptionAccess.error ? <PremiumBanner /> : null;
 
   return (
     <div className="space-y-4 px-4 pb-6 pt-4 lg:px-0">

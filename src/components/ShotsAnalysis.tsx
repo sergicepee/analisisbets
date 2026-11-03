@@ -274,7 +274,7 @@ export function ShotsAnalysis({
         </div>
         {scope === "match" && period === "full" && <LeagueAverage leagueAverage={leagueAverage} locale={locale} />}
         <p className="mt-3 text-[10px] leading-relaxed text-muted">
-          <I18nText text="Estimaciones históricas combinadas, aún no calibradas. Se requieren al menos" /> {MIN_SAMPLES} <I18nText text="partidos válidos." />
+          <I18nText text="Se requieren al menos" /> {MIN_SAMPLES} <I18nText text="partidos válidos." />
         </p>
       </section>
     </div>

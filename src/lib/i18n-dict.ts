@@ -398,8 +398,6 @@ const EN: Record<string, string> = {
   "Media de disparos": "Average shots",
   "Promedio de disparos": "Average shots",
   "Tendencias de disparos": "Shots trends",
-  "Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas.": "Historical estimates: they combine recent form across competitions with the available data in this competition, weighted by sample size. They are not calibrated probabilities yet.",
-  "Estimaciones históricas combinadas, aún no calibradas. Se requieren al menos": "Combined historical estimates, not yet calibrated. At least",
   "Mi cuenta ": "My account ",
 };
 

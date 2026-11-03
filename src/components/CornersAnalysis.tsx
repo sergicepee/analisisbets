@@ -239,7 +239,6 @@ export function CornersAnalysis({
         </div>
         <Table firstColumn={view === "match" ? "Córners de partido" : "Córners del equipo"} home={fixture.home} away={fixture.away} rows={rows} locale={locale} />
         <p className="mt-3 text-[10px] leading-relaxed text-muted">
-          <I18nText text="Estimaciones históricas: combinan la forma reciente en distintas competiciones con los datos disponibles en este torneo, ponderados por su muestra. Aún no son probabilidades calibradas." />
         </p>
         {view === "match" && leagueAverage !== null && (
           <p className="mt-2 text-[10px] leading-relaxed text-muted"><I18nText text="Media de liga" />: {leagueAverage.toLocaleString(locale, { maximumFractionDigits: 1 })}</p>
